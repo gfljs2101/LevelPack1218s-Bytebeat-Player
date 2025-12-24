@@ -13,10 +13,10 @@ export function getCodeFromUrl(hash) {
 		} catch(err) {
 			console.error(`Couldn't load data from url: ${ err }`);
 		}
-	} else if(hash.startsWith('#v3b64') || hash.startsWith('#EnBeat2-')) {
+	} else if(hash.startsWith('#v3b64') || hash.startsWith('#bytebeat2-') || hash.startsWith('#GFLJBeat2-') || hash.startsWith('#GFLJBeat3-') || hash.startsWith('#LevelPack-') || hash.startsWith('#EnBeat2-')) {
 		try {
 			songData = inflateRaw(
-				Uint8Array.from(atob(hash.substring(hash.startsWith('#EnBeat2-') ? 9 : 6)), el => el.charCodeAt()), { to: 'string' });
+				Uint8Array.from(hash.startsWith('#LevelPack-') ? atob(hash.slice(11)) : hash.startsWith('#GFLJBeat3-') ? atob(hash.slice(11)) : hash.startsWith('#GFLJBeat2-') ? atob(hash.slice(11)) : hash.startsWith('#EnBeat2-') ? atob(hash.slice(9)) : atob(hash.slice(6)), el => el.charCodeAt()), { to: 'string' });
 			if(songData.startsWith('{')) {
 				songData = JSON.parse(songData);
 				if(songData.formula) { // XXX: old format
