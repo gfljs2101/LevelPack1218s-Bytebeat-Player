@@ -45,7 +45,7 @@ export class Scope {
  
         const width = this.canvasWidth;
         const height = this.canvasHeight;
-        const scale = this.settings?.drawScale ?? this.drawScale ?? 0;
+        const scale = this.drawScale;
         const mod = this.mod?.bind(this) ?? ((n, m) => ((n % m) + m) % m);
  
         const pbSpeed = globalThis?.bytebeat?.playbackSpeed ?? this.playbackSpeed ?? 1;
