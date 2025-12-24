@@ -27,132 +27,105 @@ export class Scope {
 	clearCanvas() {
 		this.canvasCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 	}
-    drawGraphics(endTime) {
-        if (!isFinite(endTime)) {
-            if (typeof this.resetTime === 'function') {
-                this.resetTime();
-            } else if (globalThis?.bytebeat?.resetTime) {
-                globalThis.bytebeat.resetTime();
-            }
-            return;
-        }
- 
-        const buffer = this.drawBuffer;
-        const bufferLen = buffer.length;
-        if (!bufferLen || bufferLen === 1) {
-            return;
-        }
- 
-        const width = this.canvasWidth;
-        const height = this.canvasHeight;
-        const scale = this.drawScale;
-        const mod = this.mod?.bind(this) ?? ((n, m) => ((n % m) + m) % m);
- 
-        const pbSpeed = globalThis?.bytebeat?.playbackSpeed ?? this.playbackSpeed ?? 1;
-        const sampleRateSign = (this.songData?.sampleRate ?? 1);
-        const isReverse = (pbSpeed < 0) ^ (sampleRateSign < 0);
- 
-        let startTime = buffer[0].t;
-        let startX = mod(Math.floor(this.getX(startTime)), width);
-        let endX = Math.floor(startX + this.getX(endTime - startTime));
-        startX = Math.floor(startX);
-        let drawWidth = Math.abs(endX - startX) + 1;
- 
-        if (drawWidth > width) {
-            startTime = (this.getX(endTime) - width) * (1 << scale);
-            startX = mod(Math.floor(this.getX(startTime)), width);
-            endX = Math.floor(startX + this.getX(endTime - startTime));
-            startX = Math.floor(startX);
-            drawWidth = Math.abs(endX - startX) + 1;
-        }
-        startX = Math.min(startX, endX);
- 
-        const imageData = this.canvasCtx.createImageData(drawWidth, height);
-        const {
-            data
-        } = imageData;
- 
-        const status = [];
- 
-        if (scale) {
-            const x = isReverse ? drawWidth - 1 : 0;
-            for (let y = 0; y < height; ++y) {
-                const drawEndBuffer = this.drawEndBuffer?. [y];
-                if (drawEndBuffer) {
-                    let idx = drawWidth * (255 - y) + x;
-                    status[idx] = drawEndBuffer[3] ?? 0;
-                    idx *= 4;
-                    data[idx++] = drawEndBuffer[0];
-                    data[idx++] = drawEndBuffer[1];
-                    data[idx] = drawEndBuffer[2];
-                }
-            }
-        }
- 
-        for (let x = 0; x < drawWidth; ++x) {
-            for (let y = 0; y < height; ++y) {
-                data[((drawWidth * y + x) * 4) + 3] = 255;
-            }
-        }
-
-        const isCombined = this.drawMode === 'Combined';
-        const isDiagram = this.drawMode === 'Diagram';
-        const isWaveform = this.drawMode === 'Waveform';
-        const isWaveformAlt = this.drawMode === 'WaveformAlt';
-        const isCombinedOld = this.drawMode === 'CombinedOld';
-        const colorDiagram = this.colorDiagram;
-        const colorPoints = this.colorWaveform;
-        const colorWaveform = [
-            Math.floor((isWaveformAlt || isCombinedOld ? 1 : 0.6) * colorPoints[0]) | 0,
-            Math.floor((isWaveformAlt || isCombinedOld ? 1 : 0.6) * colorPoints[1]) | 0,
-            Math.floor((isWaveformAlt || isCombinedOld ? 1 : 0.6) * colorPoints[2]) | 0
-        ];
- 
-        const drawDiagramPointFn = (isCombined || isCombinedOld ? (this.drawSoftPoint || drawSoftPoint) : (this.drawPoint || drawPoint));
-        const drawPointFn = this.drawPoint || drawPoint;
-        const drawWavePointFn = this.drawPoint || drawPoint; // Old points and waveform combined with default behavior
-        for (let i = 0; i < bufferLen; ++i) {
-            const curY = buffer[i].value;
-            const prevY = buffer[i - 1]?.value ?? [NaN, NaN, NaN];
-            const isNaNCurY = [
-                isNaN(curY[0]),
-                isNaN(curY[1]),
-                isNaN(curY[2])
-            ];
-            const curTime = buffer[i].t;
-            const nextTime = buffer[i + 1]?.t ?? endTime;
- 
-            const curX = mod(Math.floor(this.getX(isReverse ? nextTime + 1 : curTime)) - startX, width);
-            const nextX = mod(Math.ceil(this.getX(isReverse ? curTime + 1 : nextTime)) - startX, width);
- 
-            let diagramSize, diagramStart;
-            if (isCombined || isCombinedOld || isDiagram) {
-                diagramSize = Math.max(1, 256 >> scale);
-                diagramStart = diagramSize * mod(curTime, 1 << scale);
-            } else if (isNaNCurY[0] || isNaNCurY[1] || isNaNCurY[2]) {
-                for (let x = curX; x !== nextX; x = mod(x + 1, width)) {
-                    for (let y = 0; y < height; ++y) {
-                        const idx = (drawWidth * y + x) * 4;
-                        if (!data[idx + 1] && !data[idx + 2]) {
-                            data[idx] = 100;
-                        }
-                    }
-                }
-            }
- 
-            const channelCount = Math.max(1, curY.length);
-            for (let ch = 0; ch < channelCount; ++ch) {
-                const curYCh = curY[ch];
-                const colorCh = this.colorChannels ?? [0, 1, 2];
-				if(isCombined || isCombinedOld || isDiagram) {
+	drawGraphics(endTime) {
+		if(!isFinite(endTime)) {
+			this.resetTime();
+			return;
+		}
+		const buffer = this.drawBuffer;
+		const bufferLen = buffer.length;
+		if(!bufferLen) {
+			return;
+		}
+		const width = this.canvasWidth;
+		const height = this.canvasHeight;
+		const scale = this.settings.drawScale;
+		const isReverse = this.playbackSpeed < 0;
+		let startTime = buffer[0].t;
+		let startX = this.mod(this.getX(startTime), width);
+		let endX = Math.floor(startX + this.getX(endTime - startTime));
+		startX = Math.floor(startX);
+		let drawWidth = Math.abs(endX - startX) + 1;
+		// Truncate large segments (for high playback speed or 512px canvas)
+		if(drawWidth > width) {
+			startTime = (this.getX(endTime) - width) * (1 << scale);
+			startX = this.mod(this.getX(startTime), width);
+			endX = Math.floor(startX + this.getX(endTime - startTime));
+			startX = Math.floor(startX);
+			drawWidth = Math.abs(endX - startX) + 1;
+		}
+		startX = Math.min(startX, endX);
+		// Restoring the last points of a previous segment
+		const imageData = this.canvasCtx.createImageData(drawWidth, height);
+		const { data } = imageData;
+		if(scale) {
+			const x = isReverse ? drawWidth - 1 : 0;
+			for(let y = 0; y < height; ++y) {
+				const drawEndBuffer = this.drawEndBuffer[y];
+				if(drawEndBuffer) {
+					let idx = (drawWidth * (255 - y) + x) << 2;
+					data[idx++] = drawEndBuffer[0];
+					data[idx++] = drawEndBuffer[1];
+					data[idx] = drawEndBuffer[2];
+				}
+			}
+		}
+		// Filling an alpha channel in a segment
+		for(let x = 0; x < drawWidth; ++x) {
+			for(let y = 0; y < height; ++y) {
+				data[((drawWidth * y + x) << 2) + 3] = 255;
+			}
+		}
+		// Drawing in a segment
+		const isCombined = this.drawMode === 'Combined';
+		const isDiagram = this.drawMode === 'Diagram';
+		const isWaveform = this.drawMode === 'Waveform';
+		const { colorDiagram } = this;
+		const colorPoints = this.colorWaveform;
+		const colorWaveform = !isWaveform ? colorPoints : [
+			Math.floor(.6 * colorPoints[0] | 0),
+			Math.floor(.6 * colorPoints[1] | 0),
+			Math.floor(.6 * colorPoints[2] | 0)];
+		for(let i = 0; i < bufferLen; ++i) {
+			const curY = buffer[i].value;
+			const prevY = buffer[i - 1]?.value ?? [NaN, NaN, NaN];
+			const isNaNCurY = [isNaN(curY[0]), isNaN(curY[1]), isNaN(curY[2])];
+			const curTime = buffer[i].t;
+			const nextTime = buffer[i + 1]?.t ?? endTime;
+			const curX = this.mod(Math.floor(this.getX(isReverse ? nextTime + 1 : curTime)) - startX, width);
+			const nextX = this.mod(Math.ceil(this.getX(isReverse ? curTime + 1 : nextTime)) - startX, width);
+			let diagramSize, diagramStart;
+			if(isCombined || isDiagram) {
+				diagramSize = Math.max(1, 256 >> scale);
+				diagramStart = diagramSize * this.mod(curTime, 1 << scale);
+			} else if(isNaNCurY[0] || isNaNCurY[1] || isNaNCurY[2]) {
+				// Error value - filling with red color
+				for(let x = curX; x !== nextX; x = this.mod(x + 1, width)) {
+					for(let y = 0; y < height; ++y) {
+						const idx = (drawWidth * y + x) << 2;
+						if(!data[idx + 1] && !data[idx + 2]) {
+							data[idx] = 100; // Error: red color
+						}
+					}
+				}
+			}
+			let ch = 3;
+			const drawDiagramPointFn = isCombined ? this.drawSoftPoint : this.drawPoint;
+			const drawPointFn = this.drawPoint;
+			const drawWavePointFn = isCombined ? this.drawPoint : this.drawSoftPoint;
+			while(ch--) {
+				const curYCh = curY[ch];
+				const colorCh = this.colorChannels;
+				// Diagram drawing
+				if(isCombined || isDiagram) {
 					const isNaNCurYCh = isNaNCurY[ch];
 					const value = (curYCh & 255) / 256;
 					const color = [
 						value * colorDiagram[0] | 0,
 						value * colorDiagram[1] | 0,
 						value * colorDiagram[2] | 0];
-					for(let y = 0; y < diagramSize; ++y) {
-						for(let x = curX; x !== nextX; x = mod(x + 1, width)) {
+					for(let x = curX; x !== nextX; x = this.mod(x + 1, width)) {
+						for(let y = 0; y < diagramSize; ++y) {
 							const idx = (drawWidth * (diagramStart + y) + x) << 2;
 							if(isNaNCurYCh) {
 								data[idx] = 100; // Error: red color
@@ -162,56 +135,48 @@ export class Scope {
 						}
 					}
 				}
- 
-                if (isNaNCurY[ch] || isDiagram) {
-                    continue;
-                }
-
-                for (let x = curX; x !== nextX; x = mod(x + 1, width)) {
-                    const idx = drawWidth * (255 - curYCh) + x;
-                    status[idx] = 1;
-                    drawPointFn(data, idx * 4, colorPoints, colorCh, ch);
-                }
- 
-                if (isCombined || isCombinedOld || isWaveform || isWaveformAlt) {
-                    const prevYCh = prevY[ch];
-                    if (isNaN(prevYCh)) {
-                        continue;
-                    }
-                    const x = isReverse ? mod(Math.floor(this.getX(curTime)) - startX, width) : curX;
-                    for (let dy = prevYCh < curYCh ? 1 : -1, y = prevYCh; y !== curYCh; y += dy) {
-                        drawWavePointFn(data, (drawWidth * (255 - y) + x) * 4, colorWaveform, colorCh, ch);
-                    }
-                }
-            }
-        }
- 
-        if (scale) {
-            const x = isReverse ? 0 : drawWidth - 1;
-            for (let y = 0; y < height; ++y) {
-                let idx = drawWidth * (255 - y) + x;
-                const s = status[idx];
-                idx *= 4;
-                this.drawEndBuffer[y] = [data[idx], data[idx + 1], data[idx + 2], s];
-            }
-        }
- 
-        this.canvasCtx.putImageData(imageData, startX, 0);
-        if (endX >= width) {
-            this.canvasCtx.putImageData(imageData, startX - width, 0);
-        } else if (endX <= 0) {
-            this.canvasCtx.putImageData(imageData, startX + width, 0);
-        }
- 
-        if (this.timeCursorEnabled) {
-            this.canvasTimeCursor.style.left = (endX / width * 100) + '%';
-        }
- 
-        this.drawBuffer = [{
-            t: endTime,
-            value: buffer[bufferLen - 1].value
-        }];
-    }
+				if(isNaNCurY[ch] || isDiagram) {
+					continue;
+				}
+				// Points drawing
+				for(let x = curX; x !== nextX; x = this.mod(x + 1, width)) {
+					drawPointFn(data, (drawWidth * (255 - curYCh) + x) << 2, colorPoints, colorCh, ch);
+				}
+				// Waveform vertical lines drawing
+				if(isCombined || isWaveform) {
+					const prevYCh = prevY[ch];
+					if(isNaN(prevYCh)) {
+						continue;
+					}
+					const x = isReverse ? this.mod(Math.floor(this.getX(curTime)) - startX, width) : curX;
+					for(let dy = prevYCh < curYCh ? 1 : -1, y = prevYCh; y !== curYCh; y += dy) {
+						drawWavePointFn(data, (drawWidth * (255 - y) + x) << 2, colorWaveform, colorCh, ch);
+					}
+				}
+			}
+		}
+		// Saving the last points of a segment
+		if(scale) {
+			const x = isReverse ? 0 : drawWidth - 1;
+			for(let y = 0; y < height; ++y) {
+				let idx = (drawWidth * (255 - y) + x) << 2;
+				this.drawEndBuffer[y] = [data[idx], data[idx+1], data[idx+2]];
+			}
+		}
+		// Placing a segment on the canvas
+		this.canvasCtx.putImageData(imageData, startX, 0);
+		if(endX >= width) {
+			this.canvasCtx.putImageData(imageData, startX - width, 0);
+		} else if(endX <= 0) {
+			this.canvasCtx.putImageData(imageData, startX + width, 0);
+		}
+		// Move the cursor to the end of the segment
+		if(this.timeCursorEnabled) {
+			this.canvasTimeCursor.style.left = endX / width * 100 + '%';
+		}
+		// Clear buffer
+		this.drawBuffer = [{ t: endTime, value: buffer[bufferLen - 1].value }];
+	}
 	drawPoint(data, i, color, colorCh, ch) {
 		data[i + colorCh[ch]] = color[colorCh[ch]]
 	}
