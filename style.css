@@ -403,6 +403,14 @@ html[data-theme="Teal"] {
 	text-align: center;
 }
 
+#chasyxx-warning {
+	color: var(--warning-color);
+	font-size: 12px;
+	width: fit-content;
+	margin-inline: auto;
+	text-align: center;
+}
+
 #splash {
 	color: var(--splash-color);
 	font-size: 16px;
