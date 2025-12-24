@@ -1,24 +1,29 @@
+//Took the "audioProcessor.mjs" file from ludalm1's luddebeat (the stolen old GFLJBeat2 which I discontinued in) and modified it to be the current "audioProcessor.mjs" code
+
 class audioProcessor extends AudioWorkletProcessor {
 	constructor(...args) {
 		super(...args);
 		this.audioSample = 0;
+		this.scope = {};
 		this.byteSample = 0;
-		this.drawMode = 'Points';
 		this.errorDisplayed = true;
 		this.func = null;
 		this.getValues = (_s) => NaN;
+		this.isFuncbeat = false;
+		this.isRAW = false;
+		this.isSignedRAW = false;
+		this.isFloatRAW = false;
 		this.getValuesVisualizer = (_s) => 0;
 		this.lastValues = [0,0,0];
-		this.isFuncbeat = false;
 		this.isPlaying = false;
 		this.playbackSpeed = 1;
-		this.divisorStorage = 0;
 		this.lastTime = -1;
+		this.mode = 'Bytebeat';
 		this.outValue = [0, 0];
 		this.sampleRate = 8000;
 		this.sampleRatio = 1;
 		this.sampleDivisor/*PRO*/ = 1;
-		this.soundMode = 'Bytebeat';
+		this.DMode = 'Combined';
 		Object.seal(this);
 		audioProcessor.deleteGlobals();
 		audioProcessor.freezeGlobals();
@@ -27,13 +32,13 @@ class audioProcessor extends AudioWorkletProcessor {
 	}
 	static deleteGlobals() {
 		// Delete single letter variables to prevent persistent variable errors (covers a good enough range)
-		for(let i = 0; i < 26; ++i) {
+		for (let i = 0; i < 26; ++i) {
 			delete globalThis[String.fromCharCode(65 + i)];
 			delete globalThis[String.fromCharCode(97 + i)];
 		}
 		// Delete global variables
-		for(const name in globalThis) {
-			if(Object.prototype.hasOwnProperty.call(globalThis, name)) {
+		for (const name in globalThis) {
+			if (Object.prototype.hasOwnProperty.call(globalThis, name)) {
 				delete globalThis[name];
 			}
 		}
@@ -42,10 +47,10 @@ class audioProcessor extends AudioWorkletProcessor {
 		Object.getOwnPropertyNames(globalThis).forEach(name => {
 			const prop = globalThis[name];
 			const type = typeof prop;
-			if((type === 'object' || type === 'function') && name !== 'globalThis') {
+			if ((type === 'object' || type === 'function') && name !== 'globalThis') {
 				Object.freeze(prop);
 			}
-			if(type === 'function' && Object.prototype.hasOwnProperty.call(prop, 'prototype')) {
+			if (type === 'function' && Object.prototype.hasOwnProperty.call(prop, 'prototype')) {
 				Object.freeze(prop.prototype);
 			}
 			Object.defineProperty(globalThis, name, { writable: false, configurable: false });
@@ -53,21 +58,20 @@ class audioProcessor extends AudioWorkletProcessor {
 	}
 	static getErrorMessage(err, time) {
 		const when = time === null ? 'compilation' : 't=' + time;
-		if(!(err instanceof Error)) {
-			return `${ when } thrown: ${ typeof err === 'string' ? err : JSON.stringify(err) }`;
+		if (!(err instanceof Error)) {
+			return `${when} thrown: ${typeof err === 'string' ? err : JSON.stringify(err)}`;
 		}
 		const { message, lineNumber, columnNumber } = err;
-		return `${ when } error${ typeof lineNumber === 'number' && typeof columnNumber === 'number' ?
-			` (at line ${ lineNumber - 3 }, character ${ +columnNumber })` : '' }:`
-			+ (typeof message === 'string' ? message : JSON.stringify(message));
+		return `${when} error${typeof lineNumber === 'number' && typeof columnNumber === 'number' ?
+			` (at line ${lineNumber - 3}, character ${+columnNumber})` : ''}: ${typeof message === 'string' ? message : JSON.stringify(message)}`;
 	}
 	handleVisualizerPixels(a) {
 		let b = Array.isArray(a) ? a.slice() : a;
 		if (Array.isArray(b)) {
-			if (b.length == 2) b = [b[1], b[0], b[1]];
-			if (b.length > 2) b = [b[0], b[1], b[2]];
-			else if (b.length == 1) b = [b[0], b[0], b[0]];
+			if (b.length == 2) b = [b[0], b[1], b[1]];
+			else if (b.length == 1) b = [b[0], NaN, NaN];
 			else if (b.length == 0) b = [NaN, NaN, NaN];
+			else if (b.length > 2) b = [b[0], b[1], b[2]]
 		} else {
 			b = [b, b, b];
 		}
@@ -89,7 +93,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		if (Array.isArray(b)) {
 			if (b.length == 2) b = [b[0], b[1]];
 			if (b.length > 2) { b = [b[0], b[1], b[2]]; triples = true; }
-			else if (b.length == 1) b = [b[0], b[0]];
+			else if (b.length == 1) b = [b[0], NaN];
 			else if (b.length == 0) b = [NaN, NaN];
 		} else {
 			b = [b, b];
@@ -109,37 +113,38 @@ class audioProcessor extends AudioWorkletProcessor {
 		else c = [b[0], b[1]];
 		this.outValue = c;
 	}
-	process(inputs, [outputData]) {
-		const chDataLen = outputData[0].length;
-		if(!chDataLen || !this.isPlaying) {
+	process(_inputs, [chData], _parameters) {
+		this.sampleDivisor = Math.trunc(this.sampleDivisor);
+		const chDataLen = chData[0].length;
+		const isDiagram = this.DMode === 'Diagram' || this.DMode === 'Combined' || this.DMode === 'Spectrogram'
+		if (!chDataLen || !this.isPlaying) {
 			return true;
 		}
 		let time = this.sampleRatio * this.audioSample;
+		let divisor = this.sampleDivisor;
 		let { byteSample } = this;
 		const drawBuffer = [];
-		const isDiagram = this.drawMode === 'Combined' || this.drawMode === 'Diagram';
-		for(let i = 0; i < chDataLen; ++i) {
+		for (let i = 0; i < chDataLen; ++i) {
 			time += this.sampleRatio;
-			const currentTime = Math.floor(time);
-			if(this.lastTime !== currentTime) {
+			const currentTime = Math.floor(time / this.sampleDivisor) * this.sampleDivisor;
+			if (this.lastTime !== currentTime) {
 				let funcValue;
-				const currentSample = Math.floor(byteSample);
+				const currentSample = Math.floor(byteSample / this.sampleDivisor) * this.sampleDivisor;
 				try {
 					// long cascade of null handlers
-					const inputs0 = inputs[0] ?? [ ];
+					const inputs0 = _inputs[0] ?? [ ];
 					const inputs00 = inputs0[0] ?? [ ];
 					const inputs01 = inputs0[1] ?? inputs00;
 					const inputs00i = inputs00[i] ?? 0;
 					const inputs01i = inputs01[i] ?? 0;
 					const micSample = [inputs00i, inputs01i, inputs00i / 2 + inputs01i / 2];
 					if(this.isFuncbeat) {
-						funcValue = this.func(currentSample / this.sampleRate, this.sampleRate,
-							currentSample, micSample);
+						funcValue = this.func(currentSample / this.sampleRate, this.sampleRate, currentSample, micSample);
 					} else {
 						funcValue = this.func(currentSample, micSample);
 					}
-				} catch(err) {
-					if(this.errorDisplayed) {
+				} catch (err) {
+					if (this.errorDisplayed) {
 						this.errorDisplayed = false;
 						this.sendData({
 							error: {
@@ -155,87 +160,94 @@ class audioProcessor extends AudioWorkletProcessor {
 				let visualizerValues = this.handleVisualizerPixels(funcValue);
 				drawBuffer.push({ t: currentSample, value: [...visualizerValues] });
 				byteSample += currentTime - this.lastTime;
+				this.lastTime = currentTime;
 			}
-			outputData[0][i] = this.outValue[0];
-			outputData[1][i] = this.outValue[1];
+			chData[0][i] = this.outValue[0];
+			chData[1][i] = this.outValue[1];
 		}
-		if(Math.abs(byteSample) > Number.MAX_SAFE_INTEGER) {
+		if (Math.abs(byteSample) > Number.MAX_SAFE_INTEGER) {
 			this.resetTime();
 			return true;
 		}
 		this.audioSample += chDataLen;
 		let isSend = false;
 		const data = {};
-		if(byteSample !== this.byteSample) {
+		if (byteSample !== this.byteSample) {
 			isSend = true;
 			data.byteSample = this.byteSample = byteSample;
 		}
-		if(drawBuffer.length) {
+		if (drawBuffer.length) {
 			isSend = true;
 			data.drawBuffer = drawBuffer;
 		}
-		if(isSend) {
+		if (isSend) {
 			this.sendData(data);
 		}
 		return true;
 	}
 	receiveData(data) {
-		if(data.byteSample !== undefined) {
+		if (data.byteSample !== undefined) {
 			this.byteSample = +data.byteSample || 0;
 			this.resetValues();
 		}
-		if(data.errorDisplayed === true) {
+		if (data.errorDisplayed === true) {
 			this.errorDisplayed = true;
 		}
-		if(data.isPlaying !== undefined) {
+		if (data.isPlaying !== undefined) {
 			this.isPlaying = data.isPlaying;
 		}
-		if(data.playbackSpeed !== undefined) {
+		if (data.playbackSpeed !== undefined) {
 			const sampleRatio = this.sampleRatio / this.playbackSpeed;
 			this.playbackSpeed = data.playbackSpeed;
 			this.setSampleRatio(sampleRatio);
 		}
-		if(data.mode !== undefined) {
+		if (data.mode !== undefined) {
 			this.isFuncbeat = data.mode === 'Funcbeat';
+			this.isRAW = data.mode === 'RAW';
+			this.isSignedRAW = data.mode === 'Signed RAW';
+			this.isFloatRAW = data.mode === 'FloatRAW';
 			switch (data.mode) {
-				case 'Bytebeat':
-					this.getValues = (funcValue, ch) => (funcValue & 255) / 127.5 - 1;
-					this.getValuesVisualizer = (funcValue) => (funcValue & 255);
-					break;
-				case 'Signed Bytebeat':
-					this.getValues = (funcValue, ch) =>
-						((funcValue + 128) & 255) / 127.5 - 1;
-					this.getValuesVisualizer = (funcValue) => (funcValue + 128 & 255);
-					break;
-				case 'Floatbeat':
-				case 'Funcbeat':
-					this.getValues = (funcValue, ch) => {
-						const limited = Math.max(Math.min(funcValue, 1), -1);
-						return limited * 127.5 + 127.5;
-					};
-					this.getValuesVisualizer = (funcValue) => (Math.max(Math.min(funcValue, 1), -1) * 127.5 + 128);
-					break;
-
+			case 'Bytebeat':
+			case 'RAW':
+				this.getValues = (funcValue) => (funcValue & 255) / 127.5 - 1;
+				this.getValuesVisualizer = (funcValue) => (funcValue & 255);
+				break;
+			case 'Signed Bytebeat':
+			case 'Signed RAW':
+				this.getValues = (funcValue) => (funcValue + 128 & 255) / 127.5 - 1;
+				this.getValuesVisualizer = (funcValue) => (funcValue + 128 & 255);
+				break;
+			case 'Floatbeat':
+			case 'Funcbeat':
+			case 'FloatRAW':
+				this.getValues = (funcValue) => {
+					const outValue = Math.max(Math.min(funcValue, 1), -1);
+					return outValue;
+				};
+				this.getValuesVisualizer = (funcValue) => (Math.max(Math.min(funcValue, 1), -1) * 127.5 + 128);
+				break;
+				
 				default: this.getValues = (_funcValue) => NaN;
+					this.getValues = (_funcValue) => 0;
 			}
 		}
-		if(data.setFunction !== undefined) {
+		if (data.setFunction !== undefined) {
 			this.setFunction(data.setFunction);
 		}
-		if(data.resetTime === true) {
+		if (data.resetTime === true) {
 			this.resetTime();
 		}
 		if(data.sampleRate !== undefined) {
 			this.sampleRate = data.sampleRate;
 		}
-		if(data.sampleRatio !== undefined) {
+		if (data.sampleRatio !== undefined) {
 			this.setSampleRatio(data.sampleRatio);
 		}
-		if(data.divisor !== undefined) {
+		if (data.divisor !== undefined) {
 			this.sampleDivisor/*PRO*/ = data.divisor;
 		}
-		if(data.drawMode !== undefined) {
-			this.drawMode = data.drawMode;
+		if (data.DMode !== undefined) {
+			this.DMode = data.DMode;
 		}
 	}
 	sendData(data) {
@@ -249,16 +261,18 @@ class audioProcessor extends AudioWorkletProcessor {
 	resetValues() {
 		this.audioSample = 0;
 		this.lastTime = -1;
-		this.outValue = [0, 0];
+		this.outValue = [0, 0, 0];
 	}
 	setFunction(codeText) {
-		const chyx = {
+		const gfjs = {
+			/*Chasyxx's exotic functions*/
+			
 			/*bit*/        "bitC": function (x, y, z) { return x & y ? z : 0 },
 			/*bit reverse*/"br": function (x, size = 8) {
-				if(size > 32) { throw new Error("br() Size cannot be greater than 32") } else {
+				if (size > 32) { throw new Error("br() Size cannot be greater than 32") } else {
 					let result = 0;
 					for (let idx = 0; idx < (size - 0); idx++) {
-						result += chyx.bitC(x, 2 ** idx, 2 ** (size - (idx + 1)))
+						result += gfjs.bitC(x, 2 ** idx, 2 ** (size - (idx + 1)))
 					}
 					return result
 				}
@@ -266,19 +280,34 @@ class audioProcessor extends AudioWorkletProcessor {
 			/*sin that loops every 128 "steps", instead of every pi steps*/"sinf": function (x) { return Math.sin(x / (128 / Math.PI)) },
 			/*cos that loops every 128 "steps", instead of every pi steps*/"cosf": function (x) { return Math.cos(x / (128 / Math.PI)) },
 			/*tan that loops every 128 "steps", instead of every pi steps*/"tanf": function (x) { return Math.tan(x / (128 / Math.PI)) },
-			/*converts t into a string composed of it's bits, regex's that*/"regG": function (t, X) { return X.test(t.toString(2)) }
-			/*corrupt sound"crpt": function(x,y=8) {return chyx.br(chyx.br(x,y)+t,y)^chyx.br(t,y)},
-			decorrupt sound"decrpt": function(x,y=8) {return chyx.br(chyx.br(x^chyx.br(t,y),y)-t,y)},*/
+			/*converts t into a string composed of it's bits, regex's that*/"regG": function (t, X) { return X.test(t.toString(2)) },
+
+			/*lehandsomeguy's functions*/
+			"fract": function (x) { return ((x%1)+1)%1 },
+			"mix": function (a,b,c) { return (a*(1-c))+(b*c) },
+			"mod": function (a,b) { return a%b },
+			"clamp": function (a,b,c) { return Math.max(Math.min(a,c),b) },
+			"tri": function (x) { return Math.asin(Math.sin(x))/(Math.PI/2.) },
+			"puls": function (x) { return (Math.floor(Math.sin(x))+0.5)*2. },
+			"saw": function (x) { return (gfjs.fract((x/2.)/Math.PI)-0.5)*2. },
+			"hash": function (x) { return gfjs.fract(Math.sin(x*1342.874+Math.sin(5212.42*x))*414.23) },
+			"noise": function (x) { return Math.sin((x+10)*Math.sin(Math.pow((x+10),gfjs.fract(x)+10))) },
+			
+			/*Chasyxx's exotic modes ported to a function by LevelPack1218*/
+			"LogHack2": function (x) { const neg = x < 0; return x == 0 ? 0 : ((Math.log2(Math.abs(x)) * (neg ? -16 : 16)) + (neg ? -127 : 128)) },
+			"LogHack": function (x) { return Math.log2(Math.abs(x)) * ((x < 0) ? -32 : 32) },
+			"Logmode": function (x) { return Math.log2(x) * 32 },
+			"Bitbeat": function (x) { return x & 1 && 255 }
 		}
 		// Create shortened Math functions
 		const params = Object.getOwnPropertyNames(Math);
 		const values = params.map(k => Math[k]);
-		const chyxNames = Object.getOwnPropertyNames(chyx);
-		const chyxFuncs = chyxNames.map(k => chyx[k]);
-		params.push('int', 'window', ...chyxNames);
-		values.push(Math.floor, globalThis, ...chyxFuncs);
+		const gfjsNames = Object.getOwnPropertyNames(gfjs);
+		const gfjsFuncs = gfjsNames.map(k => gfjs[k]);
+		params.push('int', 'window', ...gfjsNames);
+		values.push(Math.floor, globalThis, ...gfjsFuncs);
 		audioProcessor.deleteGlobals();
-		// Code testing
+		// Bytebeat code testing
 		let isCompiled = false;
 		const oldFunc = this.func;
 		try {
@@ -296,16 +325,18 @@ class audioProcessor extends AudioWorkletProcessor {
 			if(this.isFuncbeat) {
 				this.func = this.func();
 				this.func(0, this.sampleRate, 0, [0, 0, 0]);
-			} else {
-				this.func(0, [0, 0, 0]);
 			}
-		} catch(err) {
-			if(!isCompiled) {
+			this.func(0);
+		} catch (err) {
+			if (!isCompiled) {
 				this.func = oldFunc;
 			}
 			this.errorDisplayed = false;
 			this.sendData({
-				error: { message: audioProcessor.getErrorMessage(err, isCompiled ? 0 : null), isCompiled },
+				error: {
+					message: audioProcessor.getErrorMessage(err, isCompiled ? 0 : null),
+					isCompiled
+				},
 				updateUrl: isCompiled
 			});
 			return;
