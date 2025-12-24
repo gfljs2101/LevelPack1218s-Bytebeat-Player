@@ -26,166 +26,213 @@ export class Scope {
 		this.canvasCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 	}
 	drawGraphics(endTime) {
-		if (!isFinite(endTime)) {
-			// keep behavior consistent with other codepaths
-			if (typeof this.resetTime === 'function') {
-				this.resetTime();
-			} else if (globalThis.bytebeat && typeof globalThis.bytebeat.resetTime === 'function') {
-				globalThis.bytebeat.resetTime();
-			}
+		if(!isFinite(endTime)) {
+			globalThis.bytebeat.resetTime();
 			return;
 		}
 		const buffer = this.drawBuffer;
 		const bufferLen = buffer.length;
-		if (!bufferLen) {
+		if(!bufferLen) {
 			return;
 		}
 		const width = this.canvasWidth;
 		const height = this.canvasHeight;
-		const scale = this.settings?.drawScale ?? this.drawScale;
-		// Determine reverse direction using global bytebeat playback/sampleRate if available
-		const isReverse = (globalThis.bytebeat?.playbackSpeed < 0) ^ (globalThis.bytebeat?.sampleRate < 0);
+		const scale = this.drawScale;
+		const isReverse = globalThis.bytebeat.playbackSpeed < 0;
 		let startTime = buffer[0].t;
-		let startX = this.mod(this.getX(startTime), width);
+		let startX = mod(this.getX(startTime), width);
 		let endX = Math.floor(startX + this.getX(endTime - startTime));
 		startX = Math.floor(startX);
 		let drawWidth = Math.abs(endX - startX) + 1;
-		if (drawWidth > width) {
+		// Truncate large segments (for high playback speed or 512px canvas)
+		if(drawWidth > width) {
 			startTime = (this.getX(endTime) - width) * (1 << scale);
-			startX = this.mod(this.getX(startTime), width);
+			startX = mod(this.getX(startTime), width);
 			endX = Math.floor(startX + this.getX(endTime - startTime));
 			startX = Math.floor(startX);
 			drawWidth = Math.abs(endX - startX) + 1;
 		}
 		startX = Math.min(startX, endX);
+		// Restoring the last points of a previous segment
 		const imageData = this.canvasCtx.createImageData(drawWidth, height);
 		const { data } = imageData;
-		if (scale) {
+		if(scale) {
 			const x = isReverse ? drawWidth - 1 : 0;
-			for (let y = 0; y < height; ++y) {
+			for(let y = 0; y < height; ++y) {
 				const drawEndBuffer = this.drawEndBuffer[y];
-				if (drawEndBuffer) {
+				if(drawEndBuffer) {
 					let idx = (drawWidth * (255 - y) + x) << 2;
-					data[idx++] = drawEndBuffer[0];
-					data[idx++] = drawEndBuffer[1];
-					data[idx] = drawEndBuffer[2];
+					data[idx] = drawEndBuffer[0];
+					data[idx+1] = drawEndBuffer[1];
+					data[idx+2] = drawEndBuffer[2];
 				}
 			}
 		}
-		for (let x = 0; x < drawWidth; ++x) {
-			for (let y = 0; y < height; ++y) {
+		// Filling an alpha channel in a segment
+		for(let x = 0; x < drawWidth; ++x) {
+			for(let y = 0; y < height; ++y) {
 				data[((drawWidth * y + x) << 2) + 3] = 255;
 			}
 		}
-		const { drawMode } = this.settings ?? { drawMode: this.drawMode };
-		const isCombined = drawMode === 'Combined';
-		const isDiagram = drawMode === 'Diagram';
-		const isWaveform = drawMode === 'Waveform';
-		const isPointsAndWaveform = drawMode === 'PointsAndWaveform';
+		// Drawing in a segment
+		const isCombined = this.drawMode === 'Combined';
+		const isDiagram = this.drawMode === 'Diagram';
+		const isWaveform = this.drawMode === 'Waveform';
 		const { colorDiagram } = this;
 		const colorPoints = this.colorWaveform;
 		const colorWaveform = !isWaveform ? colorPoints : [
 			Math.floor(.6 * colorPoints[0] | 0),
 			Math.floor(.6 * colorPoints[1] | 0),
 			Math.floor(.6 * colorPoints[2] | 0)];
-		let ch, drawDiagramPoint, drawPoint, drawWavePoint;
-		for (let i = 0; i < bufferLen; ++i) {
+		for(let i = 0; i < bufferLen; ++i) {
 			const curY = buffer[i].value;
 			const prevY = buffer[i - 1]?.value ?? [NaN, NaN, NaN];
 			const isNaNCurY = [isNaN(curY[0]), isNaN(curY[1]), isNaN(curY[2])];
 			const curTime = buffer[i].t;
 			const nextTime = buffer[i + 1]?.t ?? endTime;
-			const curX = this.mod(Math.floor(this.getX(isReverse ? nextTime + 1 : curTime)) - startX, width);
-			const nextX = this.mod(Math.ceil(this.getX(isReverse ? curTime + 1 : nextTime)) - startX, width);
+			const curX = mod(Math.floor(this.getX(isReverse ? nextTime + 1 : curTime)) - startX, width);
+			const nextX = mod(Math.ceil(this.getX(isReverse ? curTime + 1 : nextTime)) - startX, width);
 			let diagramSize, diagramStart;
-			if (isCombined || isDiagram) {
+			if(isCombined || isDiagram) {
 				diagramSize = Math.max(1, 256 >> scale);
-				diagramStart = diagramSize * this.mod(curTime, 1 << scale);
-			} else if (isNaNCurY[0] || isNaNCurY[1] || isNaNCurY[2]) {
-				for (let x = curX; x !== nextX; x = this.mod(x + 1, width)) {
-					for (let y = 0; y < height; ++y) {
+				diagramStart = diagramSize * mod(curTime, 1 << scale);
+			} else if(isNaNCurY[0] || isNaNCurY[1] || isNaNCurY[2]) {
+				// Error value - filling with red color
+				for(let x = curX; x !== nextX; x = mod(x + 1, width)) {
+					for(let y = 0; y < height; ++y) {
 						const idx = (drawWidth * y + x) << 2;
-						if (!data[idx + 1] && !data[idx + 2]) {
-							data[idx] = 100;
+						if(!data[idx + 1] && !data[idx + 2]) {
+							data[idx] = 100; // Error: red color
 						}
 					}
 				}
 			}
-			ch = 3;
-			drawDiagramPoint = isCombined ? this.drawSoftPoint : this.drawPoint;
-			drawPoint = this.drawPoint;
-			drawWavePoint = isCombined ? this.drawPoint : this.drawSoftPoint;
-			while (ch--) {
+			// Select mono, stereo or triples drawing
+			if((curY && curY.length === 3) || (prevY && prevY.length === 3)) {
+				ch = 3;
+				drawDiagramPoint = isCombined ? this.drawSoftPointTriples : this.drawPointTriples;
+				drawPoint = this.drawPointTriples;
+				drawWavePoint = isCombined ? this.drawPointTriples : this.drawSoftPointTriples;
+			} else if((curY[0] === curY[1] || isNaNCurY[0] && isNaNCurY[1]) && prevY[0] === prevY[1]) {
+				ch = 1;
+				drawDiagramPoint = isCombined ? this.drawSoftPointMono : this.drawPointMono;
+				drawPoint = this.drawPointMono;
+				drawWavePoint = isCombined ? this.drawPointMono : this.drawSoftPointMono;
+			} else {
+				ch = 2;
+				drawDiagramPoint = isCombined ? this.drawSoftPointStereo : this.drawPointStereo;
+				drawPoint = this.drawPointStereo;
+				drawWavePoint = isCombined ? this.drawPointStereo : this.drawSoftPointStereo;
+			}
+			while(ch--) {
 				const curYCh = curY[ch];
 				const colorCh = this.colorChannels;
-				if (isCombined || isDiagram) {
+				// Diagram drawing
+				if(isCombined || isDiagram) {
 					const isNaNCurYCh = isNaNCurY[ch];
 					const value = (curYCh & 255) / 256;
-					// RGBA color: use diagram color and alpha = value*255, or clamp as needed
 					const color = [
-						(value * colorDiagram[0]) | 0,
-						(value * colorDiagram[1]) | 0,
-						(value * colorDiagram[2]) | 0,
-						255
-					];
-					for (let x = curX; x !== nextX; x = this.mod(x + 1, width)) {
-						for (let y = 0; y < diagramSize; ++y) {
+						value * colorDiagram[0] | 0,
+						value * colorDiagram[1] | 0,
+						value * colorDiagram[2] | 0];
+					for(let x = curX; x !== nextX; x = mod(x + 1, width)) {
+						for(let y = 0; y < diagramSize; ++y) {
 							const idx = (drawWidth * (diagramStart + y) + x) << 2;
-							if (isNaNCurYCh) {
-								data[idx] = 100;
-								data[idx + 3] = 255;
+							if(isNaNCurYCh) {
+								data[idx] = 100; // Error: red color
 							} else {
-								if (typeof drawDiagramPoint === 'function') {
-									drawDiagramPoint(data, idx, color, colorCh, ch);
-								}
+								drawDiagramPoint(data, idx, color, colorCh, ch);
 							}
 						}
 					}
 				}
-				if (isNaNCurY[ch] || isDiagram) {
+				if(isNaNCurY[ch] || isDiagram) {
 					continue;
 				}
-				for (let x = curX; x !== nextX; x = this.mod(x + 1, width)) {
-					if (typeof drawPoint === 'function') {
-						drawPoint(data, (drawWidth * (255 - curYCh) + x) << 2, colorPoints, colorCh, ch);
-					}
+				// Points drawing
+				for(let x = curX; x !== nextX; x = mod(x + 1, width)) {
+					drawPoint(data, (drawWidth * (255 - curYCh) + x) << 2, colorPoints, colorCh, ch);
 				}
-				if (isCombined || isWaveform || isPointsAndWaveform) {
+				// Waveform vertical lines drawing
+				if(isCombined || isWaveform) {
 					const prevYCh = prevY[ch];
-					if (isNaN(prevYCh)) {
+					if(isNaN(prevYCh)) {
 						continue;
 					}
-					const x = isReverse ? this.mod(Math.floor(this.getX(curTime)) - startX, width) : curX;
-					for (let dy = prevYCh < curYCh ? 1 : -1, y = prevYCh; y !== curYCh; y += dy) {
-						if (typeof drawWavePoint === 'function') {
-							drawWavePoint(data, (drawWidth * (255 - y) + x) << 2, colorWaveform, colorCh, ch);
-						}
+					const x = isReverse ? mod(Math.floor(this.getX(curTime)) - startX, width) : curX;
+					for(let dy = prevYCh < curYCh ? 1 : -1, y = prevYCh; y !== curYCh; y += dy) {
+						drawWavePoint(data, (drawWidth * (255 - y) + x) << 2, colorWaveform, colorCh, ch);
 					}
 				}
 			}
 		}
-		if (scale) {
+		// Saving the last points of a segment
+		if(scale) {
 			const x = isReverse ? 0 : drawWidth - 1;
-			for (let y = 0; y < height; ++y) {
+			for(let y = 0; y < height; ++y) {
 				let idx = (drawWidth * (255 - y) + x) << 2;
-				this.drawEndBuffer[y] = [data[idx], data[idx + 1], data[idx + 2]];
+				this.drawEndBuffer[y] = [data[idx++], data[idx++], data[idx]];
 			}
 		}
+		// Placing a segment on the canvas
 		this.canvasCtx.putImageData(imageData, startX, 0);
-		if (endX >= width) {
+		if(endX >= width) {
 			this.canvasCtx.putImageData(imageData, startX - width, 0);
-		} else if (endX <= 0) {
+		} else if(endX <= 0) {
 			this.canvasCtx.putImageData(imageData, startX + width, 0);
 		}
-		if (this.timeCursorEnabled) {
+		// Move the cursor to the end of the segment
+		if(this.timeCursorEnabled) {
 			this.canvasTimeCursor.style.left = endX / width * 100 + '%';
 		}
+		// Clear buffer
 		this.drawBuffer = [{ t: endTime, value: buffer[bufferLen - 1].value }];
 	}
-	drawPoint(data, i, color, colorCh, ch) {
+	drawPointMono(data, i, color) {
+		data[i++] = color[0];
+		data[i++] = color[1];
+		data[i] = color[2];
+	}
+	drawPointStereo(data, i, color, colorCh, isRight) {
+		if(isRight) {
+			const c1 = colorCh[1];
+			const c2 = colorCh[2];
+			data[i + c1] = color[c1];
+			data[i + c2] = color[c2];
+		} else {
+			const c0 = colorCh[0];
+			data[i + c0] = color[c0];
+		}
+	}
+	drawSoftPointMono(data, i, color) {
+		if(data[i] || data[i + 1] || data[i + 2]) {
+			return;
+		}
+		data[i++] = color[0];
+		data[i++] = color[1];
+		data[i] = color[2];
+	}
+	drawSoftPointStereo(data, i, color, colorCh, isRight) {
+		if(isRight) {
+			let i1, i2, c1, c2;
+			if(data[i1 = i + (c1 = colorCh[1])] || data[i2 = i + (c2 = colorCh[2])]) {
+				return;
+			}
+			data[i1] = color[c1];
+			data[i2] = color[c2];
+			return;
+		}
+		const c0 = colorCh[0];
+		const i0 = i + c0;
+		if(data[i0]) {
+			return;
+		}
+		data[i0] = color[c0];
+	}
+	drawPointTriples(data, i, color, colorCh, ch) {
 		data[i+colorCh[ch]] = color[colorCh[ch]];
 	}
-	drawSoftPoint(data, i, color, colorCh, ch) {
+	drawSoftPointTriples(data, i, color, colorCh, ch) {
 		if(data[i+colorCh[ch]]) {
 			return;
 		}
