@@ -27,9 +27,9 @@ globalThis.bytebeat = new class {
 		this.byteSample = 0;
 		this.defaultSettings = {
 			codeStyle: 'Atom Dark',
-			colorDiagram: '#0080ff',
-			colorStereo: 1,
-			colorTimeCursor: '#80bbff',
+			colorDiagram: '#9ee0b2',
+			colorStereo: 0,
+			colorTimeCursor: '#fbff00',
 			colorWaveform: '#ffffff',
 			drawMode: scope.drawMode,
 			drawScale: scope.drawScale,
@@ -661,9 +661,21 @@ globalThis.bytebeat = new class {
 			colorCursor = '#80c0ff';
 			colorDiagram = '#00ffff';
 			break;
-		default:
+		case 'Chasyxx':
 			colorCursor = '#00ff00';
 			colorDiagram = '#00c080';
+			break;
+		case 'Chasyxx Classic':
+			colorCursor = '#00ff00';
+			colorDiagram = '#00c080';
+			break;
+		case 'Dollchan':
+			colorCursor = '#80c0ff';
+			colorDiagram = '#0080ff';
+			break;
+		default:
+			colorCursor = '#fbff00';
+			colorDiagram = '#9ee0b2';
 		}
 		this.setColorTimeCursor(colorCursor);
 		this.setColorStereo(colorStereo);
