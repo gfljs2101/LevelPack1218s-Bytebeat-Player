@@ -84,6 +84,11 @@ export class Scope {
 			Math.floor(.6 * colorPoints[0] | 0),
 			Math.floor(.6 * colorPoints[1] | 0),
 			Math.floor(.6 * colorPoints[2] | 0)];
+		// Local references for draw helpers (declare locally — avoid implicit globals)
+		const drawDiagramPoint = isCombined ? this.drawSoftPoint.bind(this) : this.drawPoint.bind(this);
+		const drawPoint = this.drawPoint.bind(this);
+		const drawWavePoint = isCombined ? this.drawPoint.bind(this) : this.drawSoftPoint.bind(this);
+
 		for(let i = 0; i < bufferLen; ++i) {
 			const curY = buffer[i].value;
 			const prevY = buffer[i - 1]?.value ?? [NaN, NaN, NaN];
@@ -108,9 +113,6 @@ export class Scope {
 				}
 			}
 			let ch = 3;
-			drawDiagramPoint = isCombined ? this.drawSoftPoint : this.drawPoint;
-			drawPoint = this.drawPoint;
-			drawWavePoint = isCombined ? this.drawPoint : this.drawSoftPoint;
 			while(ch--) {
 				const curYCh = curY[ch];
 				const colorCh = this.colorChannels;
@@ -128,7 +130,7 @@ export class Scope {
 							if(isNaNCurYCh) {
 								data[idx] = 100; // Error: red color
 							} else {
-								drawDiagramPoint(data, idx, color, colorCh, ch);
+								this.drawDiagramPoint(data, idx, color, colorCh, ch);
 							}
 						}
 					}
@@ -138,7 +140,7 @@ export class Scope {
 				}
 				// Points drawing
 				for(let x = curX; x !== nextX; x = mod(x + 1, width)) {
-					drawPoint(data, (drawWidth * (255 - curYCh) + x) << 2, colorPoints, colorCh, ch);
+					this.drawPoint(data, (drawWidth * (255 - curYCh) + x) << 2, colorPoints, colorCh, ch);
 				}
 				// Waveform vertical lines drawing
 				if(isCombined || isWaveform) {
@@ -148,7 +150,7 @@ export class Scope {
 					}
 					const x = isReverse ? mod(Math.floor(this.getX(curTime)) - startX, width) : curX;
 					for(let dy = prevYCh < curYCh ? 1 : -1, y = prevYCh; y !== curYCh; y += dy) {
-						drawWavePoint(data, (drawWidth * (255 - y) + x) << 2, colorWaveform, colorCh, ch);
+						this.drawWavePoint(data, (drawWidth * (255 - y) + x) << 2, colorWaveform, colorCh, ch);
 					}
 				}
 			}
