@@ -107,24 +107,10 @@ export class Scope {
 					}
 				}
 			}
-			// Select mono, stereo or triples drawing
-			if((curY && curY.length === 3) || (prevY && prevY.length === 3)) {
-				ch = 3;
-				drawDiagramPoint = isCombined ? this.drawSoftPointTriples : this.drawPointTriples;
-				drawPoint = this.drawPointTriples;
-				drawWavePoint = isCombined ? this.drawPointTriples : this.drawSoftPointTriples;
-			} else if((curY[0] === curY[1] || isNaNCurY[0] && isNaNCurY[1]) && prevY[0] === prevY[1]) {
-				ch = 1;
-				drawDiagramPoint = isCombined ? this.drawSoftPointMono : this.drawPointMono;
-				drawPoint = this.drawPointMono;
-				drawWavePoint = isCombined ? this.drawPointMono : this.drawSoftPointMono;
-			} else {
-				ch = 2;
-				drawDiagramPoint = isCombined ? this.drawSoftPointStereo : this.drawPointStereo;
-				drawPoint = this.drawPointStereo;
-				drawWavePoint = isCombined ? this.drawPointStereo : this.drawSoftPointStereo;
-			}
-			while(ch--) {
+			for (let ch=0; ch<3; ch++) {
+		    	drawDiagramPoint = isCombined ? this.drawSoftPoint : this.drawPoint;
+            	drawPoint = this.drawPoint;
+            	drawWavePoint = isCombined ? this.drawPoint : this.drawSoftPoint;
 				const curYCh = curY[ch];
 				const colorCh = this.colorChannels;
 				// Diagram drawing
@@ -188,51 +174,10 @@ export class Scope {
 		// Clear buffer
 		this.drawBuffer = [{ t: endTime, value: buffer[bufferLen - 1].value }];
 	}
-	drawPointMono(data, i, color) {
-		data[i++] = color[0];
-		data[i++] = color[1];
-		data[i] = color[2];
-	}
-	drawPointStereo(data, i, color, colorCh, isRight) {
-		if(isRight) {
-			const c1 = colorCh[1];
-			const c2 = colorCh[2];
-			data[i + c1] = color[c1];
-			data[i + c2] = color[c2];
-		} else {
-			const c0 = colorCh[0];
-			data[i + c0] = color[c0];
-		}
-	}
-	drawSoftPointMono(data, i, color) {
-		if(data[i] || data[i + 1] || data[i + 2]) {
-			return;
-		}
-		data[i++] = color[0];
-		data[i++] = color[1];
-		data[i] = color[2];
-	}
-	drawSoftPointStereo(data, i, color, colorCh, isRight) {
-		if(isRight) {
-			let i1, i2, c1, c2;
-			if(data[i1 = i + (c1 = colorCh[1])] || data[i2 = i + (c2 = colorCh[2])]) {
-				return;
-			}
-			data[i1] = color[c1];
-			data[i2] = color[c2];
-			return;
-		}
-		const c0 = colorCh[0];
-		const i0 = i + c0;
-		if(data[i0]) {
-			return;
-		}
-		data[i0] = color[c0];
-	}
-	drawPointTriples(data, i, color, colorCh, ch) {
+	drawPoint(data, i, color, colorCh, ch) {
 		data[i+colorCh[ch]] = color[colorCh[ch]];
 	}
-	drawSoftPointTriples(data, i, color, colorCh, ch) {
+	drawSoftPoint(data, i, color, colorCh, ch) {
 		if(data[i+colorCh[ch]]) {
 			return;
 		}
