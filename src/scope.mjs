@@ -175,77 +175,56 @@ export class Scope {
 		// Clear buffer
 		this.drawBuffer = [{ t: endTime, value: buffer[bufferLen - 1].value }];
 	}
-	drawPointMono(data, i, color) {
-		data[i++] = color[0];
-		data[i++] = color[1];
-		data[i] = color[2];
-	}
-	drawPointStereo(data, i, color, colorCh, isRight) {
-		if(isRight) {
-			const c1 = colorCh[1];
-			const c2 = colorCh[2];
-			data[i + c1] = color[c1];
-			data[i + c2] = color[c2];
-		} else {
-			const c0 = colorCh[0];
-			data[i + c0] = color[c0];
-		}
-	}
-	drawSoftPointMono(data, i, color) {
-		if(data[i] || data[i + 1] || data[i + 2]) {
-			return;
-		}
-		data[i++] = color[0];
-		data[i++] = color[1];
-		data[i] = color[2];
-	}
-	drawSoftPointStereo(data, i, color, colorCh, isRight) {
-		if(isRight) {
-			let i1, i2, c1, c2;
-			if(data[i1 = i + (c1 = colorCh[1])] || data[i2 = i + (c2 = colorCh[2])]) {
-				return;
-			}
-			data[i1] = color[c1];
-			data[i2] = color[c2];
-			return;
-		}
-		const c0 = colorCh[0];
-		const i0 = i + c0;
-		if(data[i0]) {
-			return;
-		}
-		data[i0] = color[c0];
-	}
-	getColorTest(colorMode, newValue) {
-		if(newValue) {
-			this[colorMode] = [
-				parseInt(newValue.substr(1, 2), 16),
-				parseInt(newValue.substr(3, 2), 16),
-				parseInt(newValue.substr(5, 2), 16)];
-		}
-		let rgbTxt, leftColor, rightColor;
-		const value = this[colorMode];
+    drawPoint(data, i, color, colorCh, ch) {
+        data[i + colorCh[ch]] = color[colorCh[ch]];
+    }
+    drawSoftPoint(data, i, color, colorCh, ch) {
+        if (data[i + colorCh[ch]]) {
+            return;
+        }
+        data[i + colorCh[ch]] = color[colorCh[ch]];
+    }
+	getColorTest(value) {
+		let rgbTxt, leftColor, rightColor, triple0Color, triple1Color, triple2Color;
 		const c = this.colorChannels;
 		switch(c[0]) {
 		case 0:
-			rgbTxt = ['R', 'G', 'B']; // [Left, Rigtht1, Right2]
-			leftColor = `${ value[c[0]] }, 0, 0`;
-			rightColor = `0, ${ value[c[1]] }, ${ value[c[2]] }`;
-			break;
+		rgbTxt = ['R', 'G', 'B']; // [Left, Rigtht1, Right2]
+		triple0Color = `0, 0, ${ value[c[0]] }`;
+		triple1Color = `0, ${ value[c[1]] }, 0`;
+		triple2Color = `${ value[c[2]] }, 0, 0`;
+		
+		leftColor = `${ value[c[0]] }, 0, 0`;
+		rightColor = `0, ${ value[c[1]] }, ${ value[c[2]] }`;
+		break;
 		case 2:
-			rgbTxt = ['B', 'R', 'G'];
-			leftColor = `0, 0, ${ value[c[0]] }`;
-			rightColor = `${ value[c[1]] }, ${ value[c[2]] }, 0`;
-			break;
+		rgbTxt = ['B', 'R', 'G'];
+		triple0Color = `0, ${ value[c[2]] }, 0`;
+		triple1Color = `${ value[c[1]] }, 0, 0`;
+		triple2Color = `0, 0, ${ value[c[0]] }`;
+		
+		leftColor = `0, 0, ${ value[c[0]] }`;
+		rightColor = `${ value[c[1]] }, ${ value[c[2]] }, 0`;
+		break;
 		default:
-			rgbTxt = ['G', 'R', 'B'];
-			leftColor = `0, ${ value[c[0]] }, 0`;
-			rightColor = `${ value[c[1]] }, 0, ${ value[c[2]] }`;
+		rgbTxt = ['G', 'R', 'B'];
+		triple0Color = `0, 0, ${ value[c[2]] }`;
+		triple1Color = `${ value[c[1]] }, 0, 0`;
+		triple2Color = `0, ${ value[c[0]] }, 0`;
+		
+		leftColor = `0, ${ value[c[0]] }, 0`;
+		rightColor = `${ value[c[1]] }, 0, ${ value[c[2]] }`;
 		}
 		return `[ Left <span class="control-color-test" style="background: rgb(${ leftColor });"></span>
-			${ rgbTxt[0] }=${ value[c[0]] }, Right
-			<span class="control-color-test" style="background: rgb(${ rightColor });"></span>
-			${ rgbTxt[1] }=${ value[c[1]] } + ${ rgbTxt[2] }=${ value[c[2]] } ]`;
+		${ rgbTxt[0] }=${ value[c[0]] }, Right
+		<span class="control-color-test" style="background: rgb(${ rightColor });"></span>
+	${ rgbTxt[1] }=${ value[c[1]] } + ${ rgbTxt[2] }=${ value[c[2]] }] <br>[ Triples
+			<span class="control-color-test" style="background: rgb(${ triple2Color });"></span> 
+			${ rgbTxt[0] }=${ value[c[0]] }
+			<span class="control-color-test" style="background: rgb(${ triple1Color });"></span>
+			${ rgbTxt[1] }=${ value[c[1]] }
+			<span class="control-color-test" style="background: rgb(${ triple0Color });"></span>
+			${ rgbTxt[2] }=${ value[c[2]] } ]`;
 	}
 	getX(t) {
 		return t / (1 << this.drawScale);
