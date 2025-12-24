@@ -1,11 +1,9 @@
-//Took the "audioProcessor.mjs" file from ludalm1's luddebeat (the stolen old GFLJBeat2 which I discontinued in) and modified it to be the current "audioProcessor.mjs" code
-
 class audioProcessor extends AudioWorkletProcessor {
 	constructor(...args) {
 		super(...args);
 		this.audioSample = 0;
-		this.scope = {};
 		this.byteSample = 0;
+		this.drawMode = 'Points';
 		this.errorDisplayed = true;
 		this.func = null;
 		this.getValues = (_s) => NaN;
@@ -14,16 +12,16 @@ class audioProcessor extends AudioWorkletProcessor {
 		this.isSignedRAW = false;
 		this.isFloatRAW = false;
 		this.getValuesVisualizer = (_s) => 0;
-		this.lastValues = [0,0,0];
 		this.isPlaying = false;
 		this.playbackSpeed = 1;
+		this.divisorStorage = 0;
 		this.lastTime = -1;
-		this.mode = 'Bytebeat';
+		this.lastValues = [0,0,0];
 		this.outValue = [0, 0];
 		this.sampleRate = 8000;
 		this.sampleRatio = 1;
 		this.sampleDivisor/*PRO*/ = 1;
-		this.DMode = 'Combined';
+		this.soundMode = 'Bytebeat';
 		Object.seal(this);
 		audioProcessor.deleteGlobals();
 		audioProcessor.freezeGlobals();
@@ -32,13 +30,13 @@ class audioProcessor extends AudioWorkletProcessor {
 	}
 	static deleteGlobals() {
 		// Delete single letter variables to prevent persistent variable errors (covers a good enough range)
-		for (let i = 0; i < 26; ++i) {
+		for(let i = 0; i < 26; ++i) {
 			delete globalThis[String.fromCharCode(65 + i)];
 			delete globalThis[String.fromCharCode(97 + i)];
 		}
 		// Delete global variables
-		for (const name in globalThis) {
-			if (Object.prototype.hasOwnProperty.call(globalThis, name)) {
+		for(const name in globalThis) {
+			if(Object.prototype.hasOwnProperty.call(globalThis, name)) {
 				delete globalThis[name];
 			}
 		}
@@ -47,10 +45,10 @@ class audioProcessor extends AudioWorkletProcessor {
 		Object.getOwnPropertyNames(globalThis).forEach(name => {
 			const prop = globalThis[name];
 			const type = typeof prop;
-			if ((type === 'object' || type === 'function') && name !== 'globalThis') {
+			if((type === 'object' || type === 'function') && name !== 'globalThis') {
 				Object.freeze(prop);
 			}
-			if (type === 'function' && Object.prototype.hasOwnProperty.call(prop, 'prototype')) {
+			if(type === 'function' && Object.prototype.hasOwnProperty.call(prop, 'prototype')) {
 				Object.freeze(prop.prototype);
 			}
 			Object.defineProperty(globalThis, name, { writable: false, configurable: false });
@@ -58,12 +56,13 @@ class audioProcessor extends AudioWorkletProcessor {
 	}
 	static getErrorMessage(err, time) {
 		const when = time === null ? 'compilation' : 't=' + time;
-		if (!(err instanceof Error)) {
-			return `${when} thrown: ${typeof err === 'string' ? err : JSON.stringify(err)}`;
+		if(!(err instanceof Error)) {
+			return `${ when } thrown: ${ typeof err === 'string' ? err : JSON.stringify(err) }`;
 		}
 		const { message, lineNumber, columnNumber } = err;
-		return `${when} error${typeof lineNumber === 'number' && typeof columnNumber === 'number' ?
-			` (at line ${lineNumber - 3}, character ${+columnNumber})` : ''}: ${typeof message === 'string' ? message : JSON.stringify(message)}`;
+		return `${ when } error${ typeof lineNumber === 'number' && typeof columnNumber === 'number' ?
+			` (at line ${ lineNumber - 3 }, character ${ +columnNumber })` : '' }:`
+			+ (typeof message === 'string' ? message : JSON.stringify(message));
 	}
 	handleVisualizerPixels(a) {
 		let b = Array.isArray(a) ? a.slice() : a;
@@ -113,38 +112,37 @@ class audioProcessor extends AudioWorkletProcessor {
 		else c = [b[0], b[1]];
 		this.outValue = c;
 	}
-	process(_inputs, [chData], _parameters) {
-		this.sampleDivisor = Math.trunc(this.sampleDivisor);
-		const chDataLen = chData[0].length;
-		const isDiagram = this.DMode === 'Diagram' || this.DMode === 'Combined'
-		if (!chDataLen || !this.isPlaying) {
+	process(inputs, [outputData]) {
+		const chDataLen = outputData[0].length;
+		if(!chDataLen || !this.isPlaying) {
 			return true;
 		}
 		let time = this.sampleRatio * this.audioSample;
-		let divisor = this.sampleDivisor;
 		let { byteSample } = this;
 		const drawBuffer = [];
-		for (let i = 0; i < chDataLen; ++i) {
+		const isDiagram = this.drawMode === 'Combined' || this.drawMode === 'Diagram';
+		for(let i = 0; i < chDataLen; ++i) {
 			time += this.sampleRatio;
-			const currentTime = Math.floor(time / this.sampleDivisor) * this.sampleDivisor;
-			if (this.lastTime !== currentTime) {
+			const currentTime = Math.floor(time);
+			if(this.lastTime !== currentTime) {
 				let funcValue;
-				const currentSample = Math.floor(byteSample / this.sampleDivisor) * this.sampleDivisor;
+				const currentSample = Math.floor(byteSample);
 				try {
 					// long cascade of null handlers
-					const inputs0 = _inputs[0] ?? [ ];
+					const inputs0 = inputs[0] ?? [ ];
 					const inputs00 = inputs0[0] ?? [ ];
 					const inputs01 = inputs0[1] ?? inputs00;
 					const inputs00i = inputs00[i] ?? 0;
 					const inputs01i = inputs01[i] ?? 0;
 					const micSample = [inputs00i, inputs01i, inputs00i / 2 + inputs01i / 2];
 					if(this.isFuncbeat) {
-						funcValue = this.func(currentSample / this.sampleRate, this.sampleRate, currentSample, micSample);
+						funcValue = this.func(currentSample / this.sampleRate, this.sampleRate,
+							currentSample, micSample);
 					} else {
 						funcValue = this.func(currentSample, micSample);
 					}
-				} catch (err) {
-					if (this.errorDisplayed) {
+				} catch(err) {
+					if(this.errorDisplayed) {
 						this.errorDisplayed = false;
 						this.sendData({
 							error: {
@@ -162,92 +160,95 @@ class audioProcessor extends AudioWorkletProcessor {
 				byteSample += currentTime - this.lastTime;
 				this.lastTime = currentTime;
 			}
-			chData[0][i] = this.outValue[0];
-			chData[1][i] = this.outValue[1];
+			outputData[0][i] = this.outValue[0];
+			outputData[1][i] = this.outValue[1];
 		}
-		if (Math.abs(byteSample) > Number.MAX_SAFE_INTEGER) {
+		if(Math.abs(byteSample) > Number.MAX_SAFE_INTEGER) {
 			this.resetTime();
 			return true;
 		}
 		this.audioSample += chDataLen;
 		let isSend = false;
 		const data = {};
-		if (byteSample !== this.byteSample) {
+		if(byteSample !== this.byteSample) {
 			isSend = true;
 			data.byteSample = this.byteSample = byteSample;
 		}
-		if (drawBuffer.length) {
+		if(drawBuffer.length) {
 			isSend = true;
 			data.drawBuffer = drawBuffer;
 		}
-		if (isSend) {
+		if(isSend) {
 			this.sendData(data);
 		}
 		return true;
 	}
 	receiveData(data) {
-		if (data.byteSample !== undefined) {
+		if(data.byteSample !== undefined) {
 			this.byteSample = +data.byteSample || 0;
 			this.resetValues();
 		}
-		if (data.errorDisplayed === true) {
+		if(data.errorDisplayed === true) {
 			this.errorDisplayed = true;
 		}
-		if (data.isPlaying !== undefined) {
+		if(data.isPlaying !== undefined) {
 			this.isPlaying = data.isPlaying;
 		}
-		if (data.playbackSpeed !== undefined) {
+		if(data.playbackSpeed !== undefined) {
 			const sampleRatio = this.sampleRatio / this.playbackSpeed;
 			this.playbackSpeed = data.playbackSpeed;
 			this.setSampleRatio(sampleRatio);
 		}
-		if (data.mode !== undefined) {
+		if(data.mode !== undefined) {
 			this.isFuncbeat = data.mode === 'Funcbeat';
 			this.isRAW = data.mode === 'RAW';
 			this.isSignedRAW = data.mode === 'Signed RAW';
 			this.isFloatRAW = data.mode === 'FloatRAW';
 			switch (data.mode) {
-			case 'Bytebeat':
-			case 'RAW':
-				this.getValues = (funcValue) => (funcValue & 255) / 127.5 - 1;
-				this.getValuesVisualizer = (funcValue) => (funcValue & 255);
-				break;
-			case 'Signed Bytebeat':
-			case 'Signed RAW':
-				this.getValues = (funcValue) => (funcValue + 128 & 255) / 127.5 - 1;
-				this.getValuesVisualizer = (funcValue) => (funcValue + 128 & 255);
-				break;
-			case 'Floatbeat':
-			case 'Funcbeat':
-			case 'FloatRAW':
-				this.getValues = (funcValue) => {
-					const outValue = Math.max(Math.min(funcValue, 1), -1);
-					return outValue;
-				};
-				this.getValuesVisualizer = (funcValue) => (Math.max(Math.min(funcValue, 1), -1) * 127.5 + 128);
-				break;
-				
+				case 'Bytebeat':
+				case 'RAW':
+					this.getValues = (funcValue, ch) => (funcValue & 255) / 127.5 - 1;
+					this.getValuesVisualizer = (funcValue) => (funcValue & 255);
+					break;
+				case 'Signed Bytebeat':
+				case 'Signed RAW':
+					this.getValues = (funcValue, ch) =>
+						(this.lastByteValue[ch] = (funcValue + 128) & 255) / 127.5 - 1;
+					this.getValuesVisualizer = (funcValue) => (funcValue + 128 & 255);
+					break;
+				case 'Floatbeat':
+				case 'Funcbeat':
+				case 'FloatRAW':
+					this.getValues = (funcValue) => {
+						const outValue = Math.max(Math.min(funcValue, 1), -1);
+						return outValue;
+					};
+					this.getValuesVisualizer = (funcValue) => (Math.max(Math.min(funcValue, 1), -1) * 127.5 + 128);
+					break;
+
 				default: this.getValues = (_funcValue) => NaN;
-					this.getValues = (_funcValue) => 0;
 			}
 		}
-		if (data.setFunction !== undefined) {
+		if(data.setFunction !== undefined) {
 			this.setFunction(data.setFunction);
 		}
-		if (data.resetTime === true) {
+		if(data.resetTime === true) {
 			this.resetTime();
 		}
 		if(data.sampleRate !== undefined) {
 			this.sampleRate = data.sampleRate;
 		}
-		if (data.sampleRatio !== undefined) {
+		if(data.sampleRatio !== undefined) {
 			this.setSampleRatio(data.sampleRatio);
 		}
-		if (data.divisor !== undefined) {
+		if(data.divisor !== undefined) {
 			this.sampleDivisor/*PRO*/ = data.divisor;
 		}
-		if (data.DMode !== undefined) {
-			this.DMode = data.DMode;
+		if(data.DMode !== undefined) {
+			this.soundMode = data.DMode;
+		}
+		if(data.drawMode !== undefined) {
+			this.drawMode = data.drawMode;
 		}
 	}
 	sendData(data) {
@@ -307,12 +308,19 @@ class audioProcessor extends AudioWorkletProcessor {
 		params.push('int', 'window', ...gfjsNames);
 		values.push(Math.floor, globalThis, ...gfjsFuncs);
 		audioProcessor.deleteGlobals();
-		// Bytebeat code testing
+		// Code testing
 		let isCompiled = false;
 		const oldFunc = this.func;
 		try {
 			if(this.isFuncbeat) {
 				this.func = new Function(...params, codeText).bind(globalThis, ...values);
+			} else if(this.isRAW || this.isSignedRAW || this.isFloatRAW) {
+				// Optimize code like eval(unescape(escape`XXXX`.replace(/u(..)/g,"$1%")))
+				codeText = codeText.trim().replace(
+					/^eval\(unescape\(escape(?:`|\('|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(\/u\(\.\.\)\/g,["'`]\$1%["'`]\)\)\)$/,
+					(match, m1) => unescape(escape(m1).replace(/u(..)/g, '$1%')));
+				this.func = new Function(...params, '_micSample', `return function (t) {${ codeText || 0 }};`)
+					.bind(globalThis, ...values);
 			} else {
 				// Optimize code like eval(unescape(escape`XXXX`.replace(/u(..)/g,"$1%")))
 				codeText = codeText.trim().replace(
@@ -325,18 +333,19 @@ class audioProcessor extends AudioWorkletProcessor {
 			if(this.isFuncbeat) {
 				this.func = this.func();
 				this.func(0, this.sampleRate, 0, [0, 0, 0]);
+			} else if(this.isRAW || this.isSignedRAW || this.isFloatRAW) {
+				this.func = this.func();
+				this.func(0, [0, 0, 0]);
+			} else {
+				this.func(0, [0, 0, 0]);
 			}
-			this.func(0);
-		} catch (err) {
-			if (!isCompiled) {
+		} catch(err) {
+			if(!isCompiled) {
 				this.func = oldFunc;
 			}
 			this.errorDisplayed = false;
 			this.sendData({
-				error: {
-					message: audioProcessor.getErrorMessage(err, isCompiled ? 0 : null),
-					isCompiled
-				},
+				error: { message: audioProcessor.getErrorMessage(err, isCompiled ? 0 : null), isCompiled },
 				updateUrl: isCompiled
 			});
 			return;
