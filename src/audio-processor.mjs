@@ -116,7 +116,7 @@ class audioProcessor extends AudioWorkletProcessor {
 	process(_inputs, [chData], _parameters) {
 		this.sampleDivisor = Math.trunc(this.sampleDivisor);
 		const chDataLen = chData[0].length;
-		const isDiagram = this.DMode === 'Diagram' || this.DMode === 'Combined' || this.DMode === 'Spectrogram'
+		const isDiagram = this.DMode === 'Diagram' || this.DMode === 'Combined'
 		if (!chDataLen || !this.isPlaying) {
 			return true;
 		}
