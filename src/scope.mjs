@@ -62,9 +62,9 @@ export class Scope {
 				const drawEndBuffer = this.drawEndBuffer[y];
 				if(drawEndBuffer) {
 					let idx = (drawWidth * (255 - y) + x) << 2;
-					data[idx] = drawEndBuffer[0];
-					data[idx+1] = drawEndBuffer[1];
-					data[idx+2] = drawEndBuffer[2];
+					data[idx++] = drawEndBuffer[0];
+					data[idx++] = drawEndBuffer[1];
+					data[idx] = drawEndBuffer[2];
 				}
 			}
 		}
@@ -108,9 +108,9 @@ export class Scope {
 				}
 			}
 			for (let ch=0; ch<3; ch++) {
-		    	drawDiagramPoint = isCombined ? this.drawSoftPoint : this.drawPoint;
-            	drawPoint = this.drawPoint;
-            	drawWavePoint = isCombined ? this.drawPoint : this.drawSoftPoint;
+		    	drawDiagramPointFn = isCombined ? this.drawSoftPoint : this.drawPoint;
+            	drawPointFn = this.drawPoint;
+            	drawWavePointFn = isCombined ? this.drawPoint : this.drawSoftPoint;
 				const curYCh = curY[ch];
 				const colorCh = this.colorChannels;
 				// Diagram drawing
@@ -127,7 +127,7 @@ export class Scope {
 							if(isNaNCurYCh) {
 								data[idx] = 100; // Error: red color
 							} else {
-								drawDiagramPoint(data, idx, color, colorCh, ch);
+								drawDiagramPointFn(data, idx, color, colorCh, ch);
 							}
 						}
 					}
@@ -137,7 +137,7 @@ export class Scope {
 				}
 				// Points drawing
 				for(let x = curX; x !== nextX; x = mod(x + 1, width)) {
-					drawPoint(data, (drawWidth * (255 - curYCh) + x) << 2, colorPoints, colorCh, ch);
+					drawPointFn(data, (drawWidth * (255 - curYCh) + x) << 2, colorPoints, colorCh, ch);
 				}
 				// Waveform vertical lines drawing
 				if(isCombined || isWaveform) {
@@ -147,7 +147,7 @@ export class Scope {
 					}
 					const x = isReverse ? mod(Math.floor(this.getX(curTime)) - startX, width) : curX;
 					for(let dy = prevYCh < curYCh ? 1 : -1, y = prevYCh; y !== curYCh; y += dy) {
-						drawWavePoint(data, (drawWidth * (255 - y) + x) << 2, colorWaveform, colorCh, ch);
+						drawWavePointFn(data, (drawWidth * (255 - y) + x) << 2, colorWaveform, colorCh, ch);
 					}
 				}
 			}
