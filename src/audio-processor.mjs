@@ -9,8 +9,6 @@ class audioProcessor extends AudioWorkletProcessor {
 		this.getValues = (_s) => NaN;
 		this.getValuesVisualizer = (_s) => 0;
 		this.lastValues = [0,0,0];
-		this.lastByteValue = [0, 0, 0];
-		this.lastFuncValue = [null, null];
 		this.isFuncbeat = false;
 		this.isPlaying = false;
 		this.playbackSpeed = 1;
@@ -201,20 +199,19 @@ class audioProcessor extends AudioWorkletProcessor {
 			this.isFuncbeat = data.mode === 'Funcbeat';
 			switch (data.mode) {
 				case 'Bytebeat':
-					this.getValues = (funcValue, ch) => (this.lastByteValue[ch] = funcValue & 255) / 127.5 - 1;
+					this.getValues = (funcValue, ch) => (funcValue & 255) / 127.5 - 1;
 					this.getValuesVisualizer = (funcValue) => (funcValue & 255);
 					break;
 				case 'Signed Bytebeat':
 					this.getValues = (funcValue, ch) =>
-						(this.lastByteValue[ch] = (funcValue + 128) & 255) / 127.5 - 1;
+						((funcValue + 128) & 255) / 127.5 - 1;
 					this.getValuesVisualizer = (funcValue) => (funcValue + 128 & 255);
 					break;
 				case 'Floatbeat':
 				case 'Funcbeat':
 					this.getValues = (funcValue, ch) => {
 						const limited = Math.max(Math.min(funcValue, 1), -1);
-						this.lastByteValue[ch] = limited * 127.5 + 127.5 | 0
-						return limited;
+						return limited * 127.5 + 127.5;
 					};
 					this.getValuesVisualizer = (funcValue) => (Math.max(Math.min(funcValue, 1), -1) * 127.5 + 128);
 					break;
