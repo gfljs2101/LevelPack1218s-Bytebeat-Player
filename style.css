@@ -1,29 +1,11 @@
 /* ==[ Themes ] =========================================================================================== */
 
 :root {
-    /* Primary colors */
-    --primary-bright: #d9e3e8;
-    --primary-medium: #9ee0b2;
-    --primary-dark: #1b262c;
-
-    /* Secondary colors */
-    --secondary-bright: #eec015;
-    --secondary-medium: #f6b31a;
-    --secondary-dark: #dc8a1c;
-
-    /* Accent colors */
-    --accent-bright: #89c2ff;
-    --accent-medium: #43626f;
-    --accent-dark: #283a42;
-
-    /* Buttons & hover */
     --button-hover-color: #d9e3e8;
     --canvas-border: linear-gradient(#feec95, #feec95) 1;
     --canvas-button: linear-gradient(to bottom, #1e5f31, #1e5f31);
     --canvas-button-color: #eec015;
     --canvas-button-hover: linear-gradient(to bottom, #9ee0b2, #1b262c) !important;
-
-    /* Code editor */
     --code-author: #43626f;
     --code-button: linear-gradient(to bottom, #424242, #171b22);
     --code-button-border: #9ee0b2;
@@ -40,8 +22,6 @@
     --code-string2: #56b6c2;
     --code-variable: #c5c8c6;
     --code-tags: #eec015;
-
-    /* Controls */
     --control-button: linear-gradient(to bottom, #f6b31a, #dc8a1c);
     --control-button-active: linear-gradient(to bottom, #dc8a1c, #f6b31a);
     --control-button-border: #9ee0b2;
@@ -52,34 +32,22 @@
     --control-text-hover: linear-gradient(to top, #bedec9, #a9dbb7);
     --control-volume: linear-gradient(to bottom, #8e768c, #685667);
     --control-volume-hover: linear-gradient(to bottom, #d0c6cf, #9f8b9e);
-
-    /* Editor & Entry */
     --editor: #191c22;
     --entry: #191c22;
     --entry-star: #ffff00;
     --focus: #c26100;
-
-    /* Typography */
     --font-size: 10.5pt;
     --font: "Funnel Sans";
-
-    /* Library */
     --library-seperator: linear-gradient(to right, #9ee0b2, #1b262c);
     --library-header: linear-gradient(to bottom, #44606f, #283a42);
     --library-header-hover: linear-gradient(to bottom, #688fa3, #3c5663);
     --library-header-hover-color: #9CD4E7;
-
-    /* Links */
     --link: #89c2ff;
     --link-hover: #ed88fb !important;
-
-    /* Dialogs & Warnings */
     --dialog-background: linear-gradient(to bottom, #9ee0b2, #1b262c);
     --dialog-border: #d9e3e8;
     --warning-color: #ffc400;
     --error: #f5db00;
-
-    /* Splash */
     --splash-color: #89c2ff;
 }
 
