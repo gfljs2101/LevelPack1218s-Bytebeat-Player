@@ -117,6 +117,7 @@ html[data-theme="Chasyxx"] {
 	--dialog-background: linear-gradient(to bottom, var(--primary-medium), var(--primary-dark));
 	--dialog-border: var(--primary-bright);
 	--warning-color: #ffc400;
+	--error: #f92672;
 	--splash-color: var(--accent-bright);
 }
 
@@ -149,6 +150,7 @@ html[data-theme="Chasyxx Classic"] {
 	--dialog-background: linear-gradient(to bottom,#000,#050);
 	--dialog-border: #5dfd57;
 	--warning-color: #ffe600;
+	--error: #f92672;
 	--splash-color: #00aeff;
 }
 
@@ -178,6 +180,7 @@ html[data-theme="Dollchan"] {
 	--library-header: linear-gradient(to bottom, #202c46, #0b0d17);
 	--library-header-hover: linear-gradient(to bottom, #32426c, #151b2b);
 	--dialog-background: linear-gradient(to bottom,#313031,#505760);
+	--error: #f92672;
 	--dialog-border: #aeaeae;
 }
 
@@ -204,6 +207,7 @@ html[data-theme="Blue"] {
 	--library-header: linear-gradient(to bottom, #2c3e6a, #101420);
 	--library-header-hover: linear-gradient(to bottom, #405588, #192035);
 	--dialog-background: linear-gradient(to bottom, #181f33, #4567b0);
+	--error: #f92672;
 	--dialog-border: #5183ee;
 }
 
@@ -234,6 +238,7 @@ html[data-theme="Cake"] {
 	--library-header-hover: linear-gradient(to bottom, #ee58c9, #004950);
 	--library-header-hover-color: #94fbff;
 	--dialog-background: linear-gradient(to bottom, #b825a2, #259096);
+	--error: #f92672;
 	--dialog-border: #fb79ff;
 	--link: #88eafb;
 	--link-hover: #ff89ed !important;
@@ -264,6 +269,7 @@ html[data-theme="Dusk"] {
 	--library-header-hover: linear-gradient(to bottom, #303048, #606096);
 	--library-header-hover-color: #d0d0f0;
 	--dialog-background: linear-gradient(to bottom, #202030, #606095);
+	--error: #f92672;
 	--dialog-border: #8080c0;
 	--link: #8080c0;
 	--link-hover: #c0c0f0 !important;
@@ -295,6 +301,7 @@ html[data-theme="Green"] {
 	--library-header-hover: linear-gradient(to bottom, #326c42, #152b1b);
 	--library-header-hover-color: #94ffc7;
 	--dialog-background: linear-gradient(to bottom, #112211, #388036);
+	--error: #f92672;
 	--link: #89ffac;
 }
 
@@ -322,6 +329,7 @@ html[data-theme="Orange"] {
 	--library-header-hover: linear-gradient(to bottom, #f58004, #3b260d);
 	--library-header-hover-color: #ffffa5;
 	--dialog-background: linear-gradient(to bottom, #2b2016, #9c5416);
+	--error: #f92672;
 	--dialog-border: #ffa743;
 	--link: #ff998e;
 }
@@ -350,6 +358,7 @@ html[data-theme="Purple"] {
 	--library-header-hover: linear-gradient(to bottom, #65326c, #2b152a);
 	--dialog-background: linear-gradient(to bottom, #2b152a, #65326c);
 	--dialog-border: #c765bf;
+	--error: #f92672;
 	--link: #ca89ff;
 	--link-hover: #94c7ff !important;
 }
@@ -379,6 +388,7 @@ html[data-theme="Teal"] {
 	--library-header: linear-gradient(to bottom, #2b8082, #0e2828);
 	--library-header-hover: linear-gradient(to bottom, #3c9fa2, #214a4a);
 	--library-header-hover-color: #94fbff;
+	--error: #f92672;
 	--dialog-background: linear-gradient(to bottom, #214a4a, #3c9fa2);
 	--dialog-border: #60dfdf;
 	--link: #8efbff;
@@ -689,7 +699,10 @@ button[name="close"] {
 }
 
 #error {
-	color: #f92672;
+	margin: 0;
+	max-width: 100vw;
+	color: var(--error);
+	overflow-y: scroll;
 	font: 14px/14px monospace;
 	word-break: break-all;
 }
