@@ -9,7 +9,7 @@ class audioProcessor extends AudioWorkletProcessor {
 
 		// Playback / modes / UI state
 		this.drawMode = 'Points';
-		this.DMode = this.drawMode; // kept for compatibility with incoming messages that use DMode
+		this.DMode = this.soundMode; // kept for compatibility with incoming messages that use DMode
 		this.soundMode = 'Bytebeat';
 		this.errorDisplayed = true;
 		this.isFuncbeat = false;
