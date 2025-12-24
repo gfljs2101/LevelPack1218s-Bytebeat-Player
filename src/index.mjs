@@ -672,7 +672,7 @@ globalThis.bytebeat = new class {
 		}
 		document.documentElement.dataset.theme = this.settings.themeStyle = value;
 		let colorCursor, colorDiagram;
-		let colorStereo = 1; // Red=0, Green=1, Blue=2
+		let colorStereo = 0; // Red=0, Green=1, Blue=2
 		switch(value) {
 		case 'Cake':
 			colorCursor = '#40ffff';
