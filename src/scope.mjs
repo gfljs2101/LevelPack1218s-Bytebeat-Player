@@ -184,6 +184,37 @@ export class Scope {
         }
         data[i + colorCh[ch]] = color[colorCh[ch]];
     }
+	getColorTest(colorMode, newValue) {
+		if(newValue) {
+			this[colorMode] = [
+				parseInt(newValue.substr(1, 2), 16),
+				parseInt(newValue.substr(3, 2), 16),
+				parseInt(newValue.substr(5, 2), 16)];
+		}
+		let rgbTxt, leftColor, rightColor;
+		const value = this[colorMode];
+		const c = this.colorChannels;
+		switch(c[0]) {
+		case 0:
+			rgbTxt = ['R', 'G', 'B']; // [Left, Rigtht1, Right2]
+			leftColor = `${ value[c[0]] }, 0, 0`;
+			rightColor = `0, ${ value[c[1]] }, ${ value[c[2]] }`;
+			break;
+		case 2:
+			rgbTxt = ['B', 'R', 'G'];
+			leftColor = `0, 0, ${ value[c[0]] }`;
+			rightColor = `${ value[c[1]] }, ${ value[c[2]] }, 0`;
+			break;
+		default:
+			rgbTxt = ['G', 'R', 'B'];
+			leftColor = `0, ${ value[c[0]] }, 0`;
+			rightColor = `${ value[c[1]] }, 0, ${ value[c[2]] }`;
+		}
+		return `[ Left <span class="control-color-test" style="background: rgb(${ leftColor });"></span>
+			${ rgbTxt[0] }=${ value[c[0]] }, Right
+			<span class="control-color-test" style="background: rgb(${ rightColor });"></span>
+			${ rgbTxt[1] }=${ value[c[1]] } + ${ rgbTxt[2] }=${ value[c[2]] } ]`;
+	}
 	getX(t) {
 		return t / (1 << this.drawScale);
 	}
