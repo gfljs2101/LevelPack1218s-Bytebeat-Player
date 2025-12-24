@@ -150,11 +150,39 @@ class audioProcessor extends AudioWorkletProcessor {
 					}
 					funcValue = NaN;
 				}
+				funcValue = Array.isArray(funcValue) ? [funcValue[0], funcValue[1]] : [funcValue, funcValue];
 				let hasValue = false;
-				this.handleAudioSamples(funcValue, [hasValue]);
-				let visualizerValues = this.handleVisualizerPixels(funcValue);
-				drawBuffer.push({ t: currentSample, value: [...visualizerValues] });
+				let ch = 3;
+				while(ch--) {
+					try {
+						funcValue[ch] = +funcValue[ch];
+					} catch(err) {
+						funcValue[ch] = NaN;
+					}
+					if(isDiagram) {
+						if(!isNaN(funcValue[ch])) {
+							this.outValue[ch] = this.getValues(funcValue[ch], ch);
+						} else {
+							this.lastByteValue[ch] = NaN;
+						}
+						hasValue = true;
+						continue;
+					}
+					if(funcValue[ch] === this.lastFuncValue[ch]) {
+						continue;
+					} else if(!isNaN(funcValue[ch])) {
+						this.outValue[ch] = this.getValues(funcValue[ch], ch);
+						hasValue = true;
+					} else if(!isNaN(this.lastFuncValue[ch])) {
+						this.lastByteValue[ch] = NaN;
+						hasValue = true;
+					}
+				}
+				if(hasValue) {
+					drawBuffer.push({ t: currentSample, value: [...this.lastByteValue] });
+				}
 				byteSample += currentTime - this.lastTime;
+				this.lastFuncValue = funcValue;
 				this.lastTime = currentTime;
 			}
 			outputData[0][i] = this.outValue[0];
