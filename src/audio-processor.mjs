@@ -23,6 +23,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		this.lastTime = -1;
 		this.mode = 'Bytebeat';
 		this.outValue = [0, 0];
+		this.divisorStorage = 0;
 		this.sampleRate = 8000;
 		this.sampleRatio = 1;
 		this.sampleDivisor/*PRO*/ = 1;

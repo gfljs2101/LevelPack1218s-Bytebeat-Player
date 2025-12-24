@@ -62,9 +62,9 @@ export class Scope {
 				const drawEndBuffer = this.drawEndBuffer[y];
 				if(drawEndBuffer) {
 					let idx = (drawWidth * (255 - y) + x) << 2;
-					data[idx] = drawEndBuffer[0];
-					data[idx+1] = drawEndBuffer[1];
-					data[idx+2] = drawEndBuffer[2];
+					data[idx++] = drawEndBuffer[0];
+					data[idx++] = drawEndBuffer[1];
+					data[idx] = drawEndBuffer[2];
 				}
 			}
 		}
@@ -87,8 +87,8 @@ export class Scope {
 		let ch, drawDiagramPoint, drawPoint, drawWavePoint;
 		for(let i = 0; i < bufferLen; ++i) {
 			const curY = buffer[i].value;
-			const prevY = buffer[i - 1]?.value ?? [NaN, NaN, NaN];
-			const isNaNCurY = [isNaN(curY[0]), isNaN(curY[1]), isNaN(curY[2])];
+			const prevY = buffer[i - 1]?.value ?? [NaN, NaN];
+			const isNaNCurY = [isNaN(curY[0]), isNaN(curY[1])];
 			const curTime = buffer[i].t;
 			const nextTime = buffer[i + 1]?.t ?? endTime;
 			const curX = mod(Math.floor(this.getX(isReverse ? nextTime + 1 : curTime)) - startX, width);
@@ -97,7 +97,7 @@ export class Scope {
 			if(isCombined || isDiagram) {
 				diagramSize = Math.max(1, 256 >> scale);
 				diagramStart = diagramSize * mod(curTime, 1 << scale);
-			} else if(isNaNCurY[0] || isNaNCurY[1] || isNaNCurY[2]) {
+			} else if(isNaNCurY[0] || isNaNCurY[1]) {
 				// Error value - filling with red color
 				for(let x = curX; x !== nextX; x = mod(x + 1, width)) {
 					for(let y = 0; y < height; ++y) {
@@ -108,10 +108,19 @@ export class Scope {
 					}
 				}
 			}
-			for(ch=0;ch<3;ch++) {
+			// Select mono or stereo drawing
+			if((curY[0] === curY[1] || isNaNCurY[0] && isNaNCurY[1]) && prevY[0] === prevY[1]) {
+				ch = 1;
+				drawDiagramPoint = isCombined ? this.drawSoftPointMono : this.drawPointMono;
+				drawPoint = this.drawPointMono;
+				drawWavePoint = isCombined ? this.drawPointMono : this.drawSoftPointMono;
+			} else {
+				ch = 2;
 				drawDiagramPoint = isCombined ? this.drawSoftPointStereo : this.drawPointStereo;
 				drawPoint = this.drawPointStereo;
 				drawWavePoint = isCombined ? this.drawPointStereo : this.drawSoftPointStereo;
+			}
+			while(ch--) {
 				const curYCh = curY[ch];
 				const colorCh = this.colorChannels;
 				// Diagram drawing
@@ -158,7 +167,7 @@ export class Scope {
 			const x = isReverse ? 0 : drawWidth - 1;
 			for(let y = 0; y < height; ++y) {
 				let idx = (drawWidth * (255 - y) + x) << 2;
-				this.drawEndBuffer[y] = [data[idx], data[idx+1], data[idx+2]];
+				this.drawEndBuffer[y] = [data[idx++], data[idx++], data[idx]];
 			}
 		}
 		// Placing a segment on the canvas
@@ -175,15 +184,47 @@ export class Scope {
 		// Clear buffer
 		this.drawBuffer = [{ t: endTime, value: buffer[bufferLen - 1].value }];
 	}
-    drawPoint(data, i, color, colorCh, ch) {
-        data[i + colorCh[ch]] = color[colorCh[ch]];
-    }
-    drawSoftPoint(data, i, color, colorCh, ch) {
-        if (data[i + colorCh[ch]]) {
-            return;
-        }
-        data[i + colorCh[ch]] = color[colorCh[ch]];
-    }
+	drawPointMono(data, i, color) {
+		data[i++] = color[0];
+		data[i++] = color[1];
+		data[i] = color[2];
+	}
+	drawPointStereo(data, i, color, colorCh, isRight) {
+		if(isRight) {
+			const c1 = colorCh[1];
+			const c2 = colorCh[2];
+			data[i + c1] = color[c1];
+			data[i + c2] = color[c2];
+		} else {
+			const c0 = colorCh[0];
+			data[i + c0] = color[c0];
+		}
+	}
+	drawSoftPointMono(data, i, color) {
+		if(data[i] || data[i + 1] || data[i + 2]) {
+			return;
+		}
+		data[i++] = color[0];
+		data[i++] = color[1];
+		data[i] = color[2];
+	}
+	drawSoftPointStereo(data, i, color, colorCh, isRight) {
+		if(isRight) {
+			let i1, i2, c1, c2;
+			if(data[i1 = i + (c1 = colorCh[1])] || data[i2 = i + (c2 = colorCh[2])]) {
+				return;
+			}
+			data[i1] = color[c1];
+			data[i2] = color[c2];
+			return;
+		}
+		const c0 = colorCh[0];
+		const i0 = i + c0;
+		if(data[i0]) {
+			return;
+		}
+		data[i0] = color[c0];
+	}
 	getColorTest(colorMode, newValue) {
 		if(newValue) {
 			this[colorMode] = [
