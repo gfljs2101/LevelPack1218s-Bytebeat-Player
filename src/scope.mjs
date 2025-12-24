@@ -108,18 +108,10 @@ export class Scope {
 					}
 				}
 			}
-			// Select mono or stereo drawing
-			if((curY[0] === curY[1] || isNaNCurY[0] && isNaNCurY[1]) && prevY[0] === prevY[1]) {
-				ch = 1;
-				drawDiagramPoint = isCombined ? this.drawSoftPointMono : this.drawPointMono;
-				drawPoint = this.drawPointMono;
-				drawWavePoint = isCombined ? this.drawPointMono : this.drawSoftPointMono;
-			} else {
-				ch = 2;
-				drawDiagramPoint = isCombined ? this.drawSoftPointStereo : this.drawPointStereo;
-				drawPoint = this.drawPointStereo;
-				drawWavePoint = isCombined ? this.drawPointStereo : this.drawSoftPointStereo;
-			}
+			let ch = 3;
+			const drawDiagramPoint = isCombined ? this.drawSoftPoint : this.drawPoint;
+			const drawPoint = this.drawPoint;
+			const drawWavePoint = isCombined ? this.drawPoint : this.drawSoftPoint;
 			while(ch--) {
 				const curYCh = curY[ch];
 				const colorCh = this.colorChannels;
