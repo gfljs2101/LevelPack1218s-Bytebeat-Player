@@ -107,10 +107,11 @@ export class Scope {
 					}
 				}
 			}
-			for (let ch=0; ch<3; ch++) {
-		    	drawDiagramPointFn = isCombined ? this.drawSoftPoint : this.drawPoint;
-            	drawPointFn = this.drawPoint;
-            	drawWavePointFn = isCombined ? this.drawPoint : this.drawSoftPoint;
+			let ch = 3;
+			const drawDiagramPoint = isCombined ? this.drawSoftPoint : this.drawPoint;
+			const drawPoint = this.drawPoint;
+			const drawWavePoint = isCombined ? this.drawPoint : this.drawSoftPoint;
+			while(ch--) {
 				const curYCh = curY[ch];
 				const colorCh = this.colorChannels;
 				// Diagram drawing
