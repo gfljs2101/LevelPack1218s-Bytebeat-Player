@@ -9,7 +9,6 @@ class audioProcessor extends AudioWorkletProcessor {
 		this.getValues = (_s) => NaN;
 		this.getValuesVisualizer = (_s) => 0;
 		this.lastValues = [0,0,0];
-		this.lastValues = [0, 0, 0];
 		this.lastByteValue = [0, 0, 0];
 		this.lastFuncValue = [null, null];
 		this.isFuncbeat = false;
@@ -237,9 +236,6 @@ class audioProcessor extends AudioWorkletProcessor {
 		}
 		if(data.divisor !== undefined) {
 			this.sampleDivisor/*PRO*/ = data.divisor;
-		}
-		if(data.DMode !== undefined) {
-			this.soundMode = data.DMode;
 		}
 		if(data.drawMode !== undefined) {
 			this.drawMode = data.drawMode;
