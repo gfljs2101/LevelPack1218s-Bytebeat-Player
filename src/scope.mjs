@@ -175,47 +175,15 @@ export class Scope {
 		// Clear buffer
 		this.drawBuffer = [{ t: endTime, value: buffer[bufferLen - 1].value }];
 	}
-	drawPointMono(data, i, color) {
-		data[i++] = color[0];
-		data[i++] = color[1];
-		data[i] = color[2];
-	}
-	drawPointStereo(data, i, color, colorCh, isRight) {
-		if(isRight) {
-			const c1 = colorCh[1];
-			const c2 = colorCh[2];
-			data[i + c1] = color[c1];
-			data[i + c2] = color[c2];
-		} else {
-			const c0 = colorCh[0];
-			data[i + c0] = color[c0];
-		}
-	}
-	drawSoftPointMono(data, i, color) {
-		if(data[i] || data[i + 1] || data[i + 2]) {
-			return;
-		}
-		data[i++] = color[0];
-		data[i++] = color[1];
-		data[i] = color[2];
-	}
-	drawSoftPointStereo(data, i, color, colorCh, isRight) {
-		if(isRight) {
-			let i1, i2, c1, c2;
-			if(data[i1 = i + (c1 = colorCh[1])] || data[i2 = i + (c2 = colorCh[2])]) {
-				return;
-			}
-			data[i1] = color[c1];
-			data[i2] = color[c2];
-			return;
-		}
-		const c0 = colorCh[0];
-		const i0 = i + c0;
-		if(data[i0]) {
-			return;
-		}
-		data[i0] = color[c0];
-	}
+    drawPoint(data, i, color, colorCh, ch) {
+        data[i + colorCh[ch]] = color[colorCh[ch]];
+    }
+    drawSoftPoint(data, i, color, colorCh, ch) {
+        if (data[i + colorCh[ch]]) {
+            return;
+        }
+        data[i + colorCh[ch]] = color[colorCh[ch]];
+    }
 	getColorTest(colorMode, newValue) {
 		if(newValue) {
 			this[colorMode] = [
