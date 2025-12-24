@@ -60,7 +60,9 @@ export class Library {
 			return `<details class="songs-block"${
 				notAllLib || this.showAllSongs ? ' open' : ''
 			}><summary class="songs-header"> <b>${ author }</b>${
-				author === 'SthephanShi' ? '<small style="color: #ff0;">dollchan creator</small>' : '' }${
+				author === 'SthephanShi' ? '<small style="color: #ff0;">dollchan creator</small>' :
+				author === 'Chasyxx' ? '<small style="color: #0f0;">creator of EnBeat_NEW</small>' : 
+				author === 'Own_Elevator4214' ? '<small style="color: #9ee0b2;">creator of LevelPack1218</small>' : '' }${
 				len ? `<small> ${ len } song${ len > 1 ? 's' : '' }</small>` : ''
 			}</summary><div class="songs">${ songsStr }</div></details>`;
 		}
