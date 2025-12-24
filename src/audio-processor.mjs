@@ -265,41 +265,6 @@ class audioProcessor extends AudioWorkletProcessor {
 					};
 					this.getValuesVisualizer = (funcValue) => (Math.max(Math.min(funcValue, 1), -1) * 127.5 + 128);
 					break;
-				case 'Bitbeat':
-					this.getValues = (funcValue, ch) => {
-						this.lastByteValue[ch] = funcValue & 1 ? 255 : 0;
-						return (funcValue & 1) - 0.5;
-					};
-					this.getValuesVisualizer = (funcValue) => (funcValue & 1 ? 192 : 64);
-					break;
-				case '2048':
-					this.getValues = (funcValue, ch) => {
-						this.lastByteValue[ch] = Math.floor(funcValue / 8) & 255;
-						return (funcValue & 2047) / 1023.5 - 1;
-					};
-					this.getValuesVisualizer = (funcValue) => (Math.floor(funcValue / 8) & 255);
-					break;
-				case 'logmode':
-					this.getValues = (funcValue, ch) => (this.lastByteValue[ch] = (Math.log2(funcValue) * 32) & 255) / 127.5 - 1;
-					this.getValuesVisualizer = (funcValue) => ((Math.log2(funcValue) * 32) & 255);
-					break;
-				case 'logHack':
-					this.getValues = (funcValue, ch) => {
-						const neg = (funcValue < 0) ? -32 : 32;
-						return (this.lastByteValue[ch] = (Math.log2(Math.abs(funcValue)) * neg) & 255) / 127.5 - 1;
-					};
-					this.getValuesVisualizer = (funcValue) => (Math.log2(Math.abs(funcValue)) * ((funcValue < 0) ? -32 : 32)) & 255;
-					break;
-				case 'logHack2':
-					this.getValues = (funcValue, ch) => {
-						const neg = funcValue < 0;
-						return funcValue == 0 ? 0 : ((this.lastByteValue[ch] = ((Math.log2(Math.abs(funcValue)) * (neg ? -16 : 16)) + (neg ? -127 : 128)) & 255) / 127.5 - 1);
-					};
-					this.getValuesVisualizer = (funcValue) => {
-						const neg = funcValue < 0;
-						return funcValue == 0 ? 128 : (((Math.log2(Math.abs(funcValue)) * (neg ? -16 : 16)) + (neg ? -127 : 128)) & 255);
-					};
-					break;
 
 				default:
 					this.getValues = (_funcValue) => NaN;
