@@ -39,7 +39,7 @@ export class Scope {
 		}
 		const width = this.canvasWidth;
 		const height = this.canvasHeight;
-		const scale = this.settings.drawScale;
+		const scale = this.drawScale;
 		const isReverse = this.playbackSpeed < 0;
 		let startTime = buffer[0].t;
 		let startX = this.mod(this.getX(startTime), width);
