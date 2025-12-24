@@ -123,6 +123,7 @@ html[data-theme="Chasyxx"] {
 html[data-theme="Chasyxx Classic"] {
 	--canvas-border: linear-gradient(#5dfd57, #42af3e) 1;
 	--canvas-button: linear-gradient(to bottom, #3c9b40, #183319);
+	--canvas-button-color: #c5c8c6;
 	--canvas-button-hover: linear-gradient(to bottom, #65c775, #18331d) !important;
 	--code-author: #2b6933;
 	--code-button: linear-gradient(to bottom, #171b22, #21bb2e);
@@ -154,6 +155,7 @@ html[data-theme="Chasyxx Classic"] {
 html[data-theme="Dollchan"] {
 	--canvas-border: linear-gradient(#fda757, #fda757) 1;
 	--canvas-button: linear-gradient(to bottom, #67789d, #181f33);
+	--canvas-button-color: #c5c8c6;
 	--canvas-button-hover: linear-gradient(to bottom, #92aeec, #181f33) !important;
 	--code-author: #2b3d69;
 	--code-button: linear-gradient(to bottom, #424242, #171b22);
@@ -182,6 +184,7 @@ html[data-theme="Dollchan"] {
 html[data-theme="Blue"] {
 	--canvas-border: linear-gradient(#94beff, #94beff) 1;
 	--canvas-button: linear-gradient(to bottom, #4567b0, #121726);
+	--canvas-button-color: #c5c8c6;
 	--canvas-button-hover: linear-gradient(to bottom, #5082ee, #26335a) !important;
 	--code-author: #2b3d69;
 	--code-button: linear-gradient(to bottom, #34436f, #1f2331);
@@ -270,6 +273,7 @@ html[data-theme="Green"] {
 	--button-hover-color: #aaffc4;
 	--canvas-border: linear-gradient(#a4ffcc, #a4ffcc) 1;
 	--canvas-button: linear-gradient(to bottom, #429152, #0d2814);
+	--canvas-button-color: #c5c8c6;
 	--canvas-button-hover: linear-gradient(to bottom, #51be67, #18331f) !important;
 	--code-author: #265132;
 	--code-button: linear-gradient(to bottom, #345e3d, #17221b);
@@ -297,6 +301,7 @@ html[data-theme="Green"] {
 html[data-theme="Orange"] {
 	--button-hover-color: #ffffa5;
 	--canvas-button: linear-gradient(to bottom, #ff8f0f, #38240d);
+	--canvas-button-color: #c5c8c6;
 	--canvas-button-hover: linear-gradient(to bottom, #ffa743, #6d4313) !important;
 	--code-author: #4d4d4d;
 	--code-button: linear-gradient(to bottom, #c55c00, #221306);
@@ -324,6 +329,7 @@ html[data-theme="Orange"] {
 html[data-theme="Purple"] {
 	--canvas-border: linear-gradient(#c9b0ff, #c9b0ff) 1;
 	--canvas-button: linear-gradient(to bottom, #9b3c8b, #331833);
+	--canvas-button-color: #c5c8c6;
 	--canvas-button-hover: linear-gradient(to bottom, #c765bf, #331832) !important;
 	--code-author: #54366c;
 	--code-button: linear-gradient(to bottom, #5e345e, #221722);
@@ -352,6 +358,7 @@ html[data-theme="Teal"] {
 	--button-hover-color: #aaf9ff;
 	--canvas-border: linear-gradient(#88fbff, #88fbff) 1;
 	--canvas-button: linear-gradient(to bottom, #44aeb5, #0d2728);
+	--canvas-button-color: #c5c8c6;
 	--canvas-button-hover: linear-gradient(to bottom, #60dfdf, #1f4344) !important;
 	--code-author: #266f71;
 	--code-button: linear-gradient(to bottom, #3e938e, #172222);
@@ -737,6 +744,10 @@ button[name="close"] {
 
 /* ==[ Library ] ========================================================================================== */
 
+#favorites > p {
+	text-align: center;
+}
+
 .code-button {
 	margin: 2px 0;
 	padding: 2px 5px;
@@ -819,7 +830,7 @@ button[name="close"] {
 	color: var(--code-tags);
 }
 
-.code-text {
+.code-text, .favorite-text {
 	display: inline-block;
 	margin: 0;
 	padding: 3px;
@@ -836,7 +847,7 @@ button[name="close"] {
 	cursor: pointer;
 }
 
-.code-text:hover {
+.code-text:hover, .favorite-text:hover {
 	color: #ed88fb !important;
 }
 
@@ -916,7 +927,7 @@ button[name="close"] {
 
 .songs-block {
 	padding: 0 4px 4px 0;
-	border-image: var(--entry-border) 10%;
+	border-image: var(--library-seperator) 10%;
 	border-top: 2px solid;
 	background: none;
 }

@@ -22,6 +22,7 @@ export class UI {
 		this.controlSampleRateSelect = null;
 		this.controlScale = null;
 		this.controlScaleDown = null;
+		this.controlScaleUp = null;
 		this.controlTime = null;
 		this.controlTimeUnits = null;
 		this.controlThemeStyle = null;
@@ -76,6 +77,7 @@ export class UI {
 		this.controlSampleRateSelect = document.getElementById('control-samplerate-select');
 		this.controlScale = document.getElementById('control-scale');
 		this.controlScaleDown = document.getElementById('control-scaledown');
+		this.controlScaleUp = document.getElementById('control-scaleup');
 		this.controlTime = document.getElementById('control-counter');
 		this.controlTimeUnits = document.getElementById('control-counter-units');
 		this.controlThemeStyle = document.getElementById('control-theme-style');

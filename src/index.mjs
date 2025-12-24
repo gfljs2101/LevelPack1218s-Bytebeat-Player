@@ -376,8 +376,8 @@ globalThis.bytebeat = new class {
 			this.playbackToggle(true);
 			return;
 		}
-		const { value } = ui.controlTime;
-		const byteSample = this.settings.isSeconds ? Math.round(value * this.sampleRate) : value;
+		const byteSample = this.settings.isSeconds ? Math.round(ui.controlTime.value * this.sampleRate) :
+			ui.controlTime.value;
 		this.setByteSample(byteSample);
 		this.sendData({ byteSample });
 	}
@@ -631,23 +631,31 @@ globalThis.bytebeat = new class {
 		case 48000: ui.controlSampleRateSelect.value = sampleRate; break;
 		default: ui.controlSampleRateSelect.selectedIndex = -1;
 		}
+		const oldSampleRate = this.sampleRate;
 		ui.controlSampleRate.value = this.sampleRate = sampleRate;
 		ui.controlSampleRate.blur();
 		ui.controlSampleRateSelect.blur();
 		scope.toggleTimeCursor();
 		if(isSendData) {
-			this.updateUrl();
-			this.sendData({
+			const data = {
 				sampleRate: this.sampleRate,
 				sampleRatio: this.sampleRate / this.audioCtx.sampleRate
-			});
+			}
+			if(this.mode === 'Funcbeat') {
+				data.byteSample = this.settings.isSeconds ? Math.round(ui.controlTime.value * sampleRate) :
+					Math.round(ui.controlTime.value * sampleRate / oldSampleRate);
+				this.setCounterValue(data.byteSample);
+				this.setByteSample(data.byteSample);
+			}
+			this.updateUrl();
+			this.sendData(data);
 		}
 	}
 	setScale(amount, buttonElem) {
 		if(buttonElem?.getAttribute('disabled')) {
 			return;
 		}
-		const scale = Math.max(scope.drawScale + amount, 0);
+		const scale = Math.min(Math.max(scope.drawScale + amount, 0), 20);
 		scope.drawScale = scale;
 		ui.controlScale.innerHTML = !scale ? '1x' :
 			scale < 7 ? `1/${ 2 ** scale }${ scale < 4 ? 'x' : '' }` :
@@ -659,6 +667,11 @@ globalThis.bytebeat = new class {
 			ui.controlScaleDown.setAttribute('disabled', true);
 		} else {
 			ui.controlScaleDown.removeAttribute('disabled');
+		}
+		if(scope.drawScale >= 20) {
+			ui.controlScaleUp.setAttribute('disabled', true);
+		} else {
+			ui.controlScaleUp.removeAttribute('disabled');
 		}
 	}
 	setThemeStyle(value) {
