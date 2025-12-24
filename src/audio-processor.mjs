@@ -190,8 +190,9 @@ class audioProcessor extends AudioWorkletProcessor {
 					funcValue = NaN;
 				}
 
-				this.handleAudioSamples(funcValue);
-				const visualizerValues = this.handleVisualizerPixels(funcValue);
+				let hasValue = false;
+				this.handleAudioSamples(funcValue, [hasValue]);
+				let visualizerValues = this.handleVisualizerPixels(funcValue);
 				drawBuffer.push({ t: currentSample, value: [...visualizerValues] });
 
 				byteSample += currentTime - this.lastTime;
