@@ -29,7 +29,7 @@ export class Scope {
 	}
 	drawGraphics(endTime) {
 		if(!isFinite(endTime)) {
-			this.resetTime();
+			globalThis.bytebeat.resetTime();
 			return;
 		}
 		const buffer = this.drawBuffer;
@@ -40,16 +40,16 @@ export class Scope {
 		const width = this.canvasWidth;
 		const height = this.canvasHeight;
 		const scale = this.drawScale;
-		const isReverse = this.playbackSpeed < 0;
+		const isReverse = globalThis.bytebeat.playbackSpeed < 0;
 		let startTime = buffer[0].t;
-		let startX = this.mod(this.getX(startTime), width);
+		let startX = mod(this.getX(startTime), width);
 		let endX = Math.floor(startX + this.getX(endTime - startTime));
 		startX = Math.floor(startX);
 		let drawWidth = Math.abs(endX - startX) + 1;
 		// Truncate large segments (for high playback speed or 512px canvas)
 		if(drawWidth > width) {
 			startTime = (this.getX(endTime) - width) * (1 << scale);
-			startX = this.mod(this.getX(startTime), width);
+			startX = mod(this.getX(startTime), width);
 			endX = Math.floor(startX + this.getX(endTime - startTime));
 			startX = Math.floor(startX);
 			drawWidth = Math.abs(endX - startX) + 1;
@@ -86,21 +86,22 @@ export class Scope {
 			Math.floor(.6 * colorPoints[0] | 0),
 			Math.floor(.6 * colorPoints[1] | 0),
 			Math.floor(.6 * colorPoints[2] | 0)];
+		let ch, drawDiagramPoint, drawPoint, drawWavePoint;
 		for(let i = 0; i < bufferLen; ++i) {
 			const curY = buffer[i].value;
 			const prevY = buffer[i - 1]?.value ?? [NaN, NaN, NaN];
 			const isNaNCurY = [isNaN(curY[0]), isNaN(curY[1]), isNaN(curY[2])];
 			const curTime = buffer[i].t;
 			const nextTime = buffer[i + 1]?.t ?? endTime;
-			const curX = this.mod(Math.floor(this.getX(isReverse ? nextTime + 1 : curTime)) - startX, width);
-			const nextX = this.mod(Math.ceil(this.getX(isReverse ? curTime + 1 : nextTime)) - startX, width);
+			const curX = mod(Math.floor(this.getX(isReverse ? nextTime + 1 : curTime)) - startX, width);
+			const nextX = mod(Math.ceil(this.getX(isReverse ? curTime + 1 : nextTime)) - startX, width);
 			let diagramSize, diagramStart;
 			if(isCombined || isDiagram) {
 				diagramSize = Math.max(1, 256 >> scale);
-				diagramStart = diagramSize * this.mod(curTime, 1 << scale);
+				diagramStart = diagramSize * mod(curTime, 1 << scale);
 			} else if(isNaNCurY[0] || isNaNCurY[1] || isNaNCurY[2]) {
 				// Error value - filling with red color
-				for(let x = curX; x !== nextX; x = this.mod(x + 1, width)) {
+				for(let x = curX; x !== nextX; x = mod(x + 1, width)) {
 					for(let y = 0; y < height; ++y) {
 						const idx = (drawWidth * y + x) << 2;
 						if(!data[idx + 1] && !data[idx + 2]) {
@@ -124,7 +125,7 @@ export class Scope {
 						value * colorDiagram[0] | 0,
 						value * colorDiagram[1] | 0,
 						value * colorDiagram[2] | 0];
-					for(let x = curX; x !== nextX; x = this.mod(x + 1, width)) {
+					for(let x = curX; x !== nextX; x = mod(x + 1, width)) {
 						for(let y = 0; y < diagramSize; ++y) {
 							const idx = (drawWidth * (diagramStart + y) + x) << 2;
 							if(isNaNCurYCh) {
@@ -139,7 +140,7 @@ export class Scope {
 					continue;
 				}
 				// Points drawing
-				for(let x = curX; x !== nextX; x = this.mod(x + 1, width)) {
+				for(let x = curX; x !== nextX; x = mod(x + 1, width)) {
 					drawPointFn(data, (drawWidth * (255 - curYCh) + x) << 2, colorPoints, colorCh, ch);
 				}
 				// Waveform vertical lines drawing
@@ -148,7 +149,7 @@ export class Scope {
 					if(isNaN(prevYCh)) {
 						continue;
 					}
-					const x = isReverse ? this.mod(Math.floor(this.getX(curTime)) - startX, width) : curX;
+					const x = isReverse ? mod(Math.floor(this.getX(curTime)) - startX, width) : curX;
 					for(let dy = prevYCh < curYCh ? 1 : -1, y = prevYCh; y !== curYCh; y += dy) {
 						drawWavePointFn(data, (drawWidth * (255 - y) + x) << 2, colorWaveform, colorCh, ch);
 					}
@@ -160,7 +161,7 @@ export class Scope {
 			const x = isReverse ? 0 : drawWidth - 1;
 			for(let y = 0; y < height; ++y) {
 				let idx = (drawWidth * (255 - y) + x) << 2;
-				this.drawEndBuffer[y] = [data[idx], data[idx+1], data[idx+2]];
+				this.drawEndBuffer[y] = [data[idx++], data[idx++], data[idx]];
 			}
 		}
 		// Placing a segment on the canvas
