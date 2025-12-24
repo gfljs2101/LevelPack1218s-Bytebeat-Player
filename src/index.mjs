@@ -37,6 +37,7 @@ globalThis.bytebeat = new class {
 			showAllSongs: library.showAllSongs,
 			themeStyle: 'Default',
 			volume: .5,
+			divisor: 1,
 			audioSampleRate: 48000
 		};
 		this.isCompilationError = false;
@@ -613,7 +614,7 @@ globalThis.bytebeat = new class {
 	setPlaybackMode(mode) {
 		this.mode = mode;
 		this.updateUrl();
-		this.sendData({ mode });
+		this.sendData({ mode, setFunction: editor.value });
 	}
 	setSampleRate(sampleRate, isSendData = true) {
 		if(!sampleRate || !isFinite(sampleRate) ||
