@@ -108,7 +108,7 @@ export class Scope {
 					}
 				}
 			}
-			for(ch=0;ch<3;ch++) {
+			for(let ch = 0; ch < 3; ch++) {
 		    	drawDiagramPoint = isCombined ? this.drawSoftPoint : this.drawPoint;
             	drawPoint = this.drawPoint;
             	drawWavePoint = isCombined ? this.drawPoint : this.drawSoftPoint;
@@ -175,15 +175,15 @@ export class Scope {
 		// Clear buffer
 		this.drawBuffer = [{ t: endTime, value: buffer[bufferLen - 1].value }];
 	}
-    drawPoint(data, i, color, colorCh, ch) {
-        data[i + colorCh[ch]] = color[colorCh[ch]];
-    }
-    drawSoftPoint(data, i, color, colorCh, ch) {
-        if (data[i + colorCh[ch]]) {
-            return;
-        }
-        data[i + colorCh[ch]] = color[colorCh[ch]];
-    }
+	drawPoint(data, i, color, colorCh, ch) {
+		data[i+colorCh[ch]] = color[colorCh[ch]];
+	}
+	drawSoftPointMono(data, i, color, colorCh, ch) {
+		if(data[i+colorCh[ch]]) {
+			return;
+		}
+		data[i+colorCh[ch]] = color[colorCh[ch]];
+	}
 	getColorTest(value) {
 		let rgbTxt, leftColor, rightColor, triple0Color, triple1Color, triple2Color;
 		const c = this.colorChannels;
