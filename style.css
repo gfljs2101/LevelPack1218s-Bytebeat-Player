@@ -1,6 +1,15 @@
 /* ==[ Themes ] =========================================================================================== */
 
 :root {
+    --primary-bright: #d9e3e8;
+    --primary-medium: #9ee0b2;
+    --primary-dark: #1b262c;
+    --secondary-bright: #eec015;
+    --secondary-medium: #f6b31a;
+    --secondary-dark: #dc8a1c;
+    --accent-bright: #89c2ff;
+    --accent-medium: #43626f;
+    --accent-dark: #283a42;
     --button-hover-color: #d9e3e8;
     --canvas-border: linear-gradient(#feec95, #feec95) 1;
     --canvas-button: linear-gradient(to bottom, #1e5f31, #1e5f31);
