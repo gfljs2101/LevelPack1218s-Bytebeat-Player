@@ -687,10 +687,18 @@ globalThis.bytebeat = new class {
 		let colorCursor, colorDiagram;
 		let colorStereo = 0; // Red=0, Green=1, Blue=2
 		switch(value) {
+		case 'Blue':
+			colorCursor = '#80c0ff';
+			colorDiagram = '#0080ff';
+			break;
 		case 'Cake':
 			colorCursor = '#40ffff';
 			colorDiagram = '#ff00ff';
 			colorStereo = 0;
+			break;
+		case 'Green':
+			colorCursor = '#ff0000';
+			colorDiagram = '#00c080';
 			break;
 		case 'Orange':
 			colorCursor = '#ffff80';
