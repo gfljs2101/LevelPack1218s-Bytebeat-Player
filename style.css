@@ -737,10 +737,6 @@ button[name="close"] {
 
 /* ==[ Library ] ========================================================================================== */
 
-#favorites > p {
-	text-align: center;
-}
-
 .code-button {
 	margin: 2px 0;
 	padding: 2px 5px;
@@ -823,7 +819,7 @@ button[name="close"] {
 	color: var(--code-tags);
 }
 
-.code-text, .favorite-text {
+.code-text {
 	display: inline-block;
 	margin: 0;
 	padding: 3px;
@@ -840,7 +836,7 @@ button[name="close"] {
 	cursor: pointer;
 }
 
-.code-text:hover, .favorite-text:hover {
+.code-text:hover {
 	color: #ed88fb !important;
 }
 
@@ -920,7 +916,7 @@ button[name="close"] {
 
 .songs-block {
 	padding: 0 4px 4px 0;
-	border-image: var(--library-seperator) 10%;
+	border-image: var(--entry-border) 10%;
 	border-top: 2px solid;
 	background: none;
 }
@@ -935,6 +931,37 @@ button[name="close"] {
 
 .songs-header > small {
 	margin-left: 8px;
+}
+
+.code-tags > span {
+	padding: 0 3px;
+	border-radius: 4px;
+	color: #b7b8c6;
+	font-weight: bold;
+}
+
+.tag-c {
+	background-color: #0a529e;
+}
+
+.tag-console {
+	background-color: #48638e;
+}
+
+.tag-drawing {
+	background-color: #64209b;
+}
+
+.tag-sample {
+	background-color: #0d684f;
+}
+
+.tag-slow {
+	background-color: #b72222;
+}
+
+.tag-stereo {
+	background-image: linear-gradient(to right, #047700, #7b0074);
 }
 
 /* ==[ Controls ] ========================================================================================= */
@@ -1035,6 +1062,13 @@ button[name="close"] {
 
 .control-fast-multiplier {
 	position: absolute;
+}
+
+#control-lag {
+  width: auto;
+  border-radius: var(--control-corners);
+  text-align: center;
+  box-sizing: border-box;
 }
 
 #control-play-backward, #control-play-forward {

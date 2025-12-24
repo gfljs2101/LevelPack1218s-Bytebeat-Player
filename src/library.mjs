@@ -35,10 +35,9 @@ export class Library {
 	}
 	generateEntryHTML({
 		author, code, codeFormLen, codeLen, codeMin, codeMinLen, coverName, coverUrl, date, description,
-		drawing, fileForm, fileMin, fileOrig, hash, mode, name, rating, remix, sampleRate, songs, stereo,
-		tags, url
+		drawing, fileForm, fileMin, fileOrig, hash, mode, name, remix, sampleRate, songs, stereo, tags, url
 	}, libName) {
-		const notAllLib = libName !== 'all';
+		const notAllLib = libName !== 'all' && libName !== 'recent';
 		if(songs) {
 			let songsStr = '';
 			const len = songs.length;
@@ -61,8 +60,7 @@ export class Library {
 			return `<details class="songs-block"${
 				notAllLib || this.showAllSongs ? ' open' : ''
 			}><summary class="songs-header"> <b>${ author }</b>${
-				author === 'SthephanShi' ? '<small style="color: #ff0;">dollchan creator</small>' :
-				author === 'Chasyxx' ? '<small style="color: #0f0;">site creator</small>' : '' }${
+				author === 'SthephanShi' ? '<small style="color: #ff0;">dollchan creator</small>' : '' }${
 				len ? `<small> ${ len } song${ len > 1 ? 's' : '' }</small>` : ''
 			}</summary><div class="songs">${ songsStr }</div></details>`;
 		}
@@ -96,35 +94,44 @@ export class Library {
 		}
 		str += ` ${ sampleRate }Hz`;
 		const outTags = [];
-		let i = tags.length;
-		while(i--) {
-			switch(tags[i]) {
-			case 'c':
-				if(notAllLib) {
-					continue;
-				}
-				break;
-			case '1k':
-			case '256':
-			case 'big': continue;
-			}
-			outTags.push(tags[i]);
-
-		}
 		if(stereo) {
-			outTags.push('stereo');
+			outTags.push('<span class="tag-stereo">stereo</span>');
 		}
 		if(drawing) {
 			songObj.drawMode = drawing.mode;
 			songObj.scale = drawing.scale;
-			outTags.push('drawing');
+			outTags.push('<span class="tag-drawing">drawing</span>');
+		}
+		for(let i = 0, len = tags.length; i < len; ++i) {
+			switch(tags[i]) {
+			case '1k':
+			case '256':
+			case 'big': continue;
+			case 'c':
+				if(!notAllLib) {
+					outTags.push('<span class="tag-c">c</span>');
+				}
+				continue;
+			case 'console':
+				outTags.push('<span class="tag-console">console</span>');
+				continue;
+			case 'sample':
+				outTags.push('<span class="tag-sample">sample</span>');
+				continue;
+			case 'slow':
+				outTags.push('<span class="tag-slow">slow</span>');
+				continue;
+			}
+			outTags.push('#' + tags[i]);
+
 		}
 		if(outTags.length) {
-			str += ` <span class="code-tags">#${ outTags.join(' #') }</span>`;
+			str += ` <span class="code-tags">${ outTags.join(' ') }</span>`;
 		}
 		str += '</span>';
 		if(this.isAdmin) {
-			str += ` <a href="bytebeat.php?editsong_request&hash=${ hash }" target="_blank">Edit</a>`;
+			str += ` <a href="bytebeat.php?editsong_request&hash=${ hash }" target="_blank">Edit</a> / ` +
+				`<a class="song-hash" href="#" data-hash="${ hash }">Hash</a>`;
 		}
 		if(description) {
 			str += `<div class="code-description">${ description }</div>`;
@@ -135,7 +142,9 @@ export class Library {
 				str += '<div class="code-remix"><div class="code-remix-preview"> remix of ' +
 					`<button class="code-button code-remix-load" data-hash="${
 						rHash }" title="Show detailed source information">&gt;</button> <span>${
-						rUrl ? `<a href="${ rUrl }" target="_blank">${ rName || rAuthor }</a>` :
+						rUrl ? `<a href="${
+							rUrl.startsWith('[') ? rUrl.match(/"([^"]+)"/)[1] : rUrl }" target="_blank">${
+							rName || rAuthor }</a>` :
 						`"${ rName }"` }${ rName && rAuthor ? ' by ' + rAuthor : '' }</span></div></div>`;
 			}
 		}
@@ -165,7 +174,7 @@ export class Library {
 			str += `<button class="code-text code-text-orig${ codeMin ? ' hidden' : '' }"${
 				sData }>${ this.escapeHTML(code) }</button>`;
 		}
-		return `<div class="entry${ rating ? ' star-' + rating : '' }">${ str }</div>`;
+		return `<div class="entry">${ str }</div>`;
 	}
 	initElements() {
 		this.cacheParentElem = document.createElement('div');

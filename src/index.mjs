@@ -41,12 +41,15 @@ globalThis.bytebeat = new class {
 		};
 		this.isCompilationError = false;
 		this.isNeedClear = false;
+		this.isLagging = false;
 		this.isPlaying = false;
 		this.isRecording = false;
 		this.mode = 'Bytebeat';
 		this.playbackSpeed = 1;
 		this.sampleRate = 8000;
 		this.settings = this.defaultSettings;
+		this.lastUpdateTime = 0;
+		this.updateCounter = 0;
 		this.expectedDomain = 'gfljs2101';
 		this.startError = null;
 		this.init();
@@ -418,6 +421,11 @@ globalThis.bytebeat = new class {
 				scope.requestAnimationFrame(); // Main call for drawing in the scope
 			}
 		} else {
+			this.lastUpdateTime = 0;
+			this.updateCounter = 0;
+			this.isLagging = false;
+			ui.controlLag.innerText = '---';
+			ui.controlLag.classList.remove('control-lag-red');
 			if(this.isRecording) {
 				this.isRecording = false;
 				ui.controlRecord.classList.remove('control-recording');
@@ -557,6 +565,9 @@ globalThis.bytebeat = new class {
 	}
 	setAudioSampleRate(value) {
 		if(value !== undefined) {
+			if(value < 8000 || value > 384000) {
+				value = 48000;
+			}
 			this.settings.audioSampleRate = value;
 			this.saveSettings();
 			window.location.reload();
@@ -570,6 +581,26 @@ globalThis.bytebeat = new class {
 		this.setCounterValue(this.byteSample);
 	}
 	setCounterValue(value) {
+		this.updateCounter++;
+		if(this.updateCounter === Math.floor(this.settings.audioSampleRate / 120)) {
+			this.updateCounter = 0;
+			const time = Date.now();
+			if(this.lastUpdateTime) {
+				const lag =
+					Math.min(Math.max(Math.round((time - this.lastUpdateTime) * 37.5 / 400) - 100, 0), 999);
+				ui.controlLag.innerText = lag + '%';
+				if(lag > 3) {
+					if(!this.isLagging) {
+						this.isLagging = true;
+						ui.controlLag.classList.add('control-lag-red');
+					}
+				} else if(this.isLagging) {
+					this.isLagging = false;
+					ui.controlLag.classList.remove('control-lag-red');
+				}
+			}
+			this.lastUpdateTime = time;
+		}
 		ui.controlTime.value = this.settings.isSeconds ? (value / this.sampleRate).toFixed(2) : value;
 	}
 	setDrawMode(drawMode) {
@@ -589,6 +620,7 @@ globalThis.bytebeat = new class {
 		) {
 			sampleRate = 8000;
 		}
+		sampleRate = Math.max(0.1, sampleRate);
 		switch(sampleRate) {
 		case 8000:
 		case 11025:

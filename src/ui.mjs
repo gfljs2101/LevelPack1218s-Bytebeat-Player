@@ -13,6 +13,7 @@ export class UI {
 		this.controlColorWaveform = null;
 		this.controlColorWaveformInfo = null;
 		this.controlDrawMode = null;
+		this.controlLag = null;
 		this.controlPlaybackMode = null;
 		this.controlPlayBackward = null;
 		this.controlPlayForward = null;
@@ -66,6 +67,7 @@ export class UI {
 		this.controlColorWaveform = document.getElementById('control-color-waveform');
 		this.controlColorWaveformInfo = document.getElementById('control-color-waveform-info');
 		this.controlDrawMode = document.getElementById('control-drawmode');
+		this.controlLag = document.getElementById('control-lag');
 		this.controlPlaybackMode = document.getElementById('control-mode');
 		this.controlPlayBackward = document.getElementById('control-play-backward');
 		this.controlPlayForward = document.getElementById('control-play-forward');

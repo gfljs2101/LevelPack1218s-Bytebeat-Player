@@ -44,9 +44,10 @@
 				<select id="control-drawmode" class="control-select controls-grow" title="Drawing mode">
 					<option value="Points" selected>Points</option>
 					<option value="Waveform">Waveform</option>
-					<option value="PointsAndWaveform">Waveform Alt</option>
+					<option value="WaveformAlt">Waveform Alt</option>
 					<option value="Diagram">Diagram</option>
 					<option value="Combined">Combined</option>
+					<option value="CombinedOld">Combined Old</option>
 				</select>
 				<select id="control-mode" class="control-select controls-grow" title="Sound mode">
 					<option value="Bytebeat" title="Traditional wrapping 0 to 255 bytebeat." selected>Bytebeat</option>
@@ -68,6 +69,12 @@
 						<option value="44100">44100Hz</option>
 						<option value="48000">48000Hz</option>
 					</select>
+				</div>
+				<div class="controls-group controls-grow" width="128">
+					<input value="1" type="number" step="1" id="control-divisor" title="Set sample rate divisor then press Enter">
+				</div>
+				<div class="controls-group">
+					<span id="control-lag" class="control-text" title="Computing lag (freezes) factor">---</span>
 				</div>
 				<div class="controls-group">
 					<button id="control-rec" class="control-button" title="Record to the file">
