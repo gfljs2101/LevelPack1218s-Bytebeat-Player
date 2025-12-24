@@ -31,7 +31,7 @@ export const splashes = [
     "I dunno, man, I <i>might</i> have eighty televisions, but if I do, <i>they're all 1080p!</i>",
     "Reject all else, 8 bit computing is the way!",
     "Windows systems when you remove system32 -> :(",
-    "The creator of this website uses Arch Linux, and he'd like to let you anow of that fact.",
+    "The creator of this website uses Arch Linux, and he'd like to let you anow of that fact.<br> &mdash;Chasyxx",
     "Where's my pet eldrich horror now?",
     "galvanize that steel and squAre it",
     "Sorry, maximum call stack size exceeded!",
