@@ -47,7 +47,7 @@ globalThis.bytebeat = new class {
 		this.playbackSpeed = 1;
 		this.sampleRate = 8000;
 		this.settings = this.defaultSettings;
-		this.expectedDomain = 'chasyxx';
+		this.expectedDomain = 'gfljs2101';
 		this.startError = null;
 		this.init();
 	}

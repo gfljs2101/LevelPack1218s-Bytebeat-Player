@@ -61,6 +61,54 @@ class audioProcessor extends AudioWorkletProcessor {
 			` (at line ${ lineNumber - 3 }, character ${ +columnNumber })` : '' }:`
 			+ (typeof message === 'string' ? message : JSON.stringify(message));
 	}
+	handleVisualizerPixels(a) {
+		let b = Array.isArray(a) ? a.slice() : a;
+		if (Array.isArray(b)) {
+			if (b.length == 2) b = [b[0], b[1], b[1]];
+			else if (b.length == 1) b = [b[0], NaN, NaN];
+			else if (b.length == 0) b = [NaN, NaN, NaN];
+			else if (b.length > 2) b = [b[0], b[1], b[2]]
+		} else {
+			b = [b, b, b];
+		}
+		for (let ch = 0; ch < 3; ch++) {
+			try {
+				b[ch] = +b[ch];
+			} catch {
+				b[ch] = NaN;
+			}
+			if (!isNaN(b[ch]))
+				b[ch] = Math.floor(this.getValuesVisualizer(b[ch], ch))&255;
+		}
+		return b;
+	}
+	handleAudioSamples(a) {
+		let b = Array.isArray(a) ? a.slice() : a;
+		let triples = false;
+		let c = [];
+		if (Array.isArray(b)) {
+			if (b.length == 2) b = [b[0], b[1]];
+			if (b.length > 2) { b = [b[0], b[1], b[2]]; triples = true; }
+			else if (b.length == 1) b = [b[0], NaN];
+			else if (b.length == 0) b = [NaN, NaN];
+		} else {
+			b = [b, b];
+		}
+		for (let ch = 0; ch < (2 + +triples); ch++) {
+			try {
+				b[ch] = +b[ch];
+			} catch {
+				b[ch] = NaN;
+			}
+			if (!isNaN(b[ch]))
+				this.lastValues[ch] = b[ch] = this.getValues(b[ch], ch);
+			else b[ch] = this.lastValues[ch];
+		}
+		if (triples)
+			c = [b[0] * (2 / 3) + b[1] / 3, b[2] * (2 / 3) + b[1] / 3];
+		else c = [b[0], b[1]];
+		this.outValue = c;
+	}
 	process(inputs, [outputData]) {
 		const chDataLen = outputData[0].length;
 		if(!chDataLen || !this.isPlaying) {
@@ -102,39 +150,11 @@ class audioProcessor extends AudioWorkletProcessor {
 					}
 					funcValue = NaN;
 				}
-				funcValue = Array.isArray(funcValue) ? [funcValue[0], funcValue[1]] : [funcValue, funcValue];
 				let hasValue = false;
-				let ch = 2;
-				while(ch--) {
-					try {
-						funcValue[ch] = +funcValue[ch];
-					} catch(err) {
-						funcValue[ch] = NaN;
-					}
-					if(isDiagram) {
-						if(!isNaN(funcValue[ch])) {
-							this.outValue[ch] = this.getValues(funcValue[ch], ch);
-						} else {
-							this.lastByteValue[ch] = NaN;
-						}
-						hasValue = true;
-						continue;
-					}
-					if(funcValue[ch] === this.lastFuncValue[ch]) {
-						continue;
-					} else if(!isNaN(funcValue[ch])) {
-						this.outValue[ch] = this.getValues(funcValue[ch], ch);
-						hasValue = true;
-					} else if(!isNaN(this.lastFuncValue[ch])) {
-						this.lastByteValue[ch] = NaN;
-						hasValue = true;
-					}
-				}
-				if(hasValue) {
-					drawBuffer.push({ t: currentSample, value: [...this.lastByteValue] });
-				}
+				this.handleAudioSamples(funcValue, [hasValue]);
+				let visualizerValues = this.handleVisualizerPixels(funcValue);
+				drawBuffer.push({ t: currentSample, value: [...visualizerValues] });
 				byteSample += currentTime - this.lastTime;
-				this.lastFuncValue = funcValue;
 				this.lastTime = currentTime;
 			}
 			outputData[0][i] = this.outValue[0];
