@@ -6,14 +6,14 @@ export function getCodeFromUrl(hash) {
 		const dataArr = Uint8Array.from(atob(hash.substring(2)), el => el.charCodeAt());
 		try {
 			songData = {
-				mode: ['Bytebeat', 'Signed Bytebeat', 'Floatbeat', 'Funcbeat'][dataArr[0]],
+				mode: ['Bytebeat', 'Signed Bytebeat', 'Floatbeat', 'Funcbeat', 'RAW', 'Signed RAW', 'FloatRAW'][dataArr[0]],
 				sampleRate: new DataView(dataArr.buffer).getFloat32(1, 1),
-				code: inflateRaw(new Uint8Array(dataArr.buffer, 5), { to: 'string' })
+				code: inflateRaw(new Uint8Array(dataArr.buffer, 8), { to: 'string' })
 			};
 		} catch(err) {
 			console.error(`Couldn't load data from url: ${ err }`);
 		}
-	} else if(hash.startsWith('#v3b64') || hash.startsWith('#bytebeat2-')) {
+	} else if(hash.startsWith('#v3b64') || hash.startsWith('#bytebeat2-') || hash.startsWith('#GFLJBeat2-') || hash.startsWith('#GFLJBeat3-') || hash.startsWith('#LevelPack-') || hash.startsWith('#EnBeat2-')) {
 		try {
 			songData = inflateRaw(
 				Uint8Array.from(atob(hash.substring(hash.startsWith('#bytebeat2-') ? 9 : 6)), el => el.charCodeAt()), { to: 'string' });
@@ -38,8 +38,13 @@ export function getUrlFromCode(code, mode, sampleRate) {
 	const codeArr = deflateRaw(code);
 	// First byte is mode, next 4 bytes is sampleRate, then the code
 	const outputArr = new Uint8Array(5 + codeArr.length);
-	outputArr[0] = ['Bytebeat', 'Signed Bytebeat', 'Floatbeat', 'Funcbeat'].indexOf(mode);
+	outputArr[0] = ['Bytebeat', 'Signed Bytebeat', 'Floatbeat', 'Funcbeat', 'RAW', 'Signed RAW', 'FloatRAW'].indexOf(mode);
 	outputArr.set(new Uint8Array(new Float32Array([sampleRate]).buffer), 1);
-	outputArr.set(codeArr, 5);
-	window.location.hash = '4' + btoa(String.fromCharCode.apply(null, outputArr)).replaceAll('=', '');
+	outputArr.set(codeArr, 8);
+	// since we're dealing with Uint8Array I should use the non-map method I think - Chasyxx
+	let str = "";
+	for(let i = 0; i < outputArr.length; i++) {
+		str += String.fromCharCode(outputArr[i]);
+	}
+	window.location.hash = '4' + btoa(str).replaceAll('=', '');
 }
