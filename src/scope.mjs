@@ -19,11 +19,9 @@ export class Scope {
 		this.drawMode = 'Combined';
 		this.drawScale = 5;
 	}
-
 	get timeCursorEnabled() {
 		return globalThis.bytebeat.sampleRate >> this.drawScale < 2000;
 	}
-
 	clearCanvas() {
 		this.canvasCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 	}
@@ -130,7 +128,7 @@ export class Scope {
 							if(isNaNCurYCh) {
 								data[idx] = 100; // Error: red color
 							} else {
-								drawDiagramPointFn(data, idx, color, colorCh, ch);
+								drawDiagramPoint(data, idx, color, colorCh, ch);
 							}
 						}
 					}
@@ -140,7 +138,7 @@ export class Scope {
 				}
 				// Points drawing
 				for(let x = curX; x !== nextX; x = mod(x + 1, width)) {
-					drawPointFn(data, (drawWidth * (255 - curYCh) + x) << 2, colorPoints, colorCh, ch);
+					drawPoint(data, (drawWidth * (255 - curYCh) + x) << 2, colorPoints, colorCh, ch);
 				}
 				// Waveform vertical lines drawing
 				if(isCombined || isWaveform) {
@@ -150,7 +148,7 @@ export class Scope {
 					}
 					const x = isReverse ? mod(Math.floor(this.getX(curTime)) - startX, width) : curX;
 					for(let dy = prevYCh < curYCh ? 1 : -1, y = prevYCh; y !== curYCh; y += dy) {
-						drawWavePointFn(data, (drawWidth * (255 - y) + x) << 2, colorWaveform, colorCh, ch);
+						drawWavePoint(data, (drawWidth * (255 - y) + x) << 2, colorWaveform, colorCh, ch);
 					}
 				}
 			}
@@ -160,7 +158,7 @@ export class Scope {
 			const x = isReverse ? 0 : drawWidth - 1;
 			for(let y = 0; y < height; ++y) {
 				let idx = (drawWidth * (255 - y) + x) << 2;
-				this.drawEndBuffer[y] = [data[idx++], data[idx++], data[idx]];
+				this.drawEndBuffer[y] = [data[idx], data[idx+1], data[idx+2]];
 			}
 		}
 		// Placing a segment on the canvas
@@ -177,57 +175,15 @@ export class Scope {
 		// Clear buffer
 		this.drawBuffer = [{ t: endTime, value: buffer[bufferLen - 1].value }];
 	}
-	drawPoint(data, i, color, colorCh, ch) {
-		data[i + colorCh[ch]] = color[colorCh[ch]]
-	}
-	drawSoftPoint(data, i, color, colorCh, ch) {
-		if(data[i + colorCh[ch]]) {
-			return;
-		}
-		data[i + colorCh[ch]] = color[colorCh[ch]];
-	}
-	getColorTest(value) {
-		let rgbTxt, leftColor, rightColor, triple0Color, triple1Color, triple2Color;
-		const c = this.colorChannels;
-		switch(c[0]) {
-		case 0:
-		rgbTxt = ['R', 'G', 'B']; // [Left, Rigtht1, Right2]
-		triple0Color = `0, 0, ${ value[c[0]] }`;
-		triple1Color = `0, ${ value[c[1]] }, 0`;
-		triple2Color = `${ value[c[2]] }, 0, 0`;
-		
-		leftColor = `${ value[c[0]] }, 0, 0`;
-		rightColor = `0, ${ value[c[1]] }, ${ value[c[2]] }`;
-		break;
-		case 2:
-		rgbTxt = ['B', 'R', 'G'];
-		triple0Color = `0, ${ value[c[2]] }, 0`;
-		triple1Color = `${ value[c[1]] }, 0, 0`;
-		triple2Color = `0, 0, ${ value[c[0]] }`;
-		
-		leftColor = `0, 0, ${ value[c[0]] }`;
-		rightColor = `${ value[c[1]] }, ${ value[c[2]] }, 0`;
-		break;
-		default:
-		rgbTxt = ['G', 'R', 'B'];
-		triple0Color = `0, 0, ${ value[c[2]] }`;
-		triple1Color = `${ value[c[1]] }, 0, 0`;
-		triple2Color = `0, ${ value[c[0]] }, 0`;
-		
-		leftColor = `0, ${ value[c[0]] }, 0`;
-		rightColor = `${ value[c[1]] }, 0, ${ value[c[2]] }`;
-		}
-		return `[ Left <span class="control-color-test" style="background: rgb(${ leftColor });"></span>
-		${ rgbTxt[0] }=${ value[c[0]] }, Right
-		<span class="control-color-test" style="background: rgb(${ rightColor });"></span>
-	${ rgbTxt[1] }=${ value[c[1]] } + ${ rgbTxt[2] }=${ value[c[2]] }] <br>[ Triples
-			<span class="control-color-test" style="background: rgb(${ triple2Color });"></span> 
-			${ rgbTxt[0] }=${ value[c[0]] }
-			<span class="control-color-test" style="background: rgb(${ triple1Color });"></span>
-			${ rgbTxt[1] }=${ value[c[1]] }
-			<span class="control-color-test" style="background: rgb(${ triple0Color });"></span>
-			${ rgbTxt[2] }=${ value[c[2]] } ]`;
-	}
+    drawPoint(data, i, color, colorCh, ch) {
+        data[i + colorCh[ch]] = color[colorCh[ch]];
+    }
+    drawSoftPoint(data, i, color, colorCh, ch) {
+        if (data[i + colorCh[ch]]) {
+            return;
+        }
+        data[i + colorCh[ch]] = color[colorCh[ch]];
+    }
 	getX(t) {
 		return t / (1 << this.drawScale);
 	}
@@ -242,18 +198,18 @@ export class Scope {
 	}
 	onresizeWindow() {
 		const isSmallWindow = window.innerWidth <= 768 || window.innerHeight <= 768;
-		if (this.canvasWidth === 1024) {
-			if (isSmallWindow) {
+		if(this.canvasWidth === 1024) {
+			if(isSmallWindow) {
 				this.canvasWidth = this.canvasElem.width = 512;
 			}
-		} else if (!isSmallWindow) {
+		} else if(!isSmallWindow) {
 			this.canvasWidth = this.canvasElem.width = 1024;
 		}
 	}
 	requestAnimationFrame() {
 		window.requestAnimationFrame(() => {
 			this.drawGraphics(globalThis.bytebeat.byteSample);
-			if (globalThis.bytebeat.isPlaying) {
+			if(globalThis.bytebeat.isPlaying) {
 				this.requestAnimationFrame();
 			}
 		});
