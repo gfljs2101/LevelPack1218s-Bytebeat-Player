@@ -339,17 +339,13 @@ globalThis.bytebeat = new class {
 		}
 	}
 	setSplashtext() {
-		const searchString = "But you can call it ";
 		if(!window.location.hostname.includes(this.expectedDomain) &&
 		!window.location.hostname.startsWith('127.') &&
 		!window.location.hostname.startsWith('[::1]') &&
 		!window.location.hostname.includes('local'))
-			ui.splashElem.innerHTML = 'Featuring the Disturbance in the Force!'.removeAttribute('hidden');
+			ui.splashElem.innerHTML = 'Featuring the Disturbance in the Force!';
 		else ui.splashElem.innerHTML = splashes[Math.random()*splashes.length|0];
-		const matches = splashes.filter(item => item.includes(searchString));
-		if (matches.length > 0) {
-		    ui.splashElem.hidden = false;                   // Show the element
-		}
+
 	}
 	loadCode({ code, sampleRate, mode, drawMode, scale }, isPlay = true) {
 		this.mode = ui.controlPlaybackMode.value = mode = mode || 'Bytebeat';
