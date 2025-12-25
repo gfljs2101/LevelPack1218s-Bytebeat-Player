@@ -535,11 +535,9 @@ globalThis.bytebeat = new class {
 		default: scope.colorChannels = [1, 0, 2];
 		}
 	}
-	setSRDivisor(x) {
-		x = ui.controlSRDivisor.value
+	setSampleDivisor(x) {
 		if (x != 0) {
 			x = Math.abs(x)
-			this.settings.divisor = x;
 			this.sendData({ divisor: x })
 		}
 	}
