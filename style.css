@@ -1142,7 +1142,7 @@ button[name="close"] {
 	border-radius: var(--control-corners) 0 0 var(--control-corners);
 }
 
-#control-samplerate-select {
+#control-samplerate-select,  #control-srdivisor{
 	width: 20px;
 	border-radius: 0 var(--control-corners) var(--control-corners) 0;
 }
