@@ -19,6 +19,7 @@ export class UI {
 		this.controlPlayForward = null;
 		this.controlRecord = null;
 		this.controlSampleRate = null;
+		this.controlSampleDivisor = null;
 		this.controlSampleRateSelect = null;
 		this.controlScale = null;
 		this.controlScaleDown = null;
@@ -74,6 +75,7 @@ export class UI {
 		this.controlPlayForward = document.getElementById('control-play-forward');
 		this.controlRecord = document.getElementById('control-rec');
 		this.controlSampleRate = document.getElementById('control-samplerate');
+		this.controlSampleDivisor = document.getElementById('control-divisor');
 		this.controlSampleRateSelect = document.getElementById('control-samplerate-select');
 		this.controlScale = document.getElementById('control-scale');
 		this.controlScaleDown = document.getElementById('control-scaledown');
