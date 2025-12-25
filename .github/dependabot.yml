@@ -1,11 +1,146 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-
 version: 2
 updates:
-  - package-ecosystem: "npm, bundler, composer, devcontainers, dotnet-sdk, maven, mix, cargo, gradle, nuget, gomod, docker, docker-compose, elm, gitsubmodule, github-actions, pip, terraform, pub, rust-toolchain, swift, bun, uv, vcpkg, helm, conda, julia, bazel, opentofu" # See documentation for possible values
+  - package-ecosystem: "npm"
     directory: "/" # Location of package manifests
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "bundler"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "dotnet-sdk"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "mix"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "elm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "terraform"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "pub"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "rust-toolchain"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "swift"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "bun"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "vcpkg"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "helm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "conda"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "julia"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "bazel"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "opentofu"
+    directory: "/"
     schedule:
       interval: "daily"
