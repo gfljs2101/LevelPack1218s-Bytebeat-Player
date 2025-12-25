@@ -286,8 +286,6 @@ class audioProcessor extends AudioWorkletProcessor {
 			/*lehandsomeguy's functions*/
 			"fract": function (x) { return ((x%1)+1)%1 },
 			"mix": function (a,b,c) { return (a*(1-c))+(b*c) },
-			"mod": function (a,b) { return a%b },
-			"clamp": function (a,b,c) { return Math.max(Math.min(a,c),b) },
 			"tri": function (x) { return Math.asin(Math.sin(x))/(Math.PI/2.) },
 			"puls": function (x) { return (Math.floor(Math.sin(x))+0.5)*2. },
 			"saw": function (x) { return (gfjs.fract((x/2.)/Math.PI)-0.5)*2. },
@@ -301,33 +299,13 @@ class audioProcessor extends AudioWorkletProcessor {
 			"Bitbeat": function (x) { return x & 1 && 255 }
 		}
 		// Create shortened Math functions
-		let params = Object.getOwnPropertyNames(Math);
-		let values = params.map(k => Math[k]);
+		const params = Object.getOwnPropertyNames(Math);
+		const values = params.map(k => Math[k]);
 		const gfjsNames = Object.getOwnPropertyNames(gfjs);
 		const gfjsFuncs = gfjsNames.map(k => gfjs[k]);
 		params.push('int', 'window', ...gfjsNames);
 		values.push(Math.floor, globalThis, ...gfjsFuncs);
 		audioProcessor.deleteGlobals();
-
-		// Deduplicate parameter names to avoid "Cannot declare a let variable twice" errors
-		// when the environment provides overlapping names (e.g. 'mod' already present).
-		{
-			const seen = new Set();
-			const uniqueParams = [];
-			const uniqueValues = [];
-			for (let i = 0; i < params.length; ++i) {
-				const name = params[i];
-				if (!seen.has(name)) {
-					seen.add(name);
-					uniqueParams.push(name);
-					uniqueValues.push(values[i]);
-				}
-				// if name already seen, skip this duplicate entry (keep the first occurrence)
-			}
-			params = uniqueParams;
-			values = uniqueValues;
-		}
-
 		// Code testing
 		let isCompiled = false;
 		const oldFunc = this.func;
