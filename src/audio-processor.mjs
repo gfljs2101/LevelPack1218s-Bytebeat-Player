@@ -117,6 +117,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		if(!chDataLen || !this.isPlaying) {
 			return true;
 		}
+		this.srDivisor = Math.trunc(this.srDivisor);
 		let time = this.sampleRatio * this.audioSample;
 		let { byteSample } = this;
 		const drawBuffer = [];

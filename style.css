@@ -1070,7 +1070,7 @@ button[name="close"] {
 	border-radius: 0 var(--control-corners) var(--control-corners) 0;
 }
 
-#control-counter:hover, #control-samplerate:hover, #control-srdivisor:hover {
+#control-counter:hover, #control-samplerate:hover {
 	background-image: var(--control-text-hover);
 }
 
@@ -1137,7 +1137,7 @@ button[name="close"] {
 	animation: blink 1s step-start 0s infinite;
 }
 
-#control-samplerate, #control-srdivisor {
+#control-samplerate {
 	width: 56px;
 	border-radius: var(--control-corners) 0 0 var(--control-corners);
 }
