@@ -536,13 +536,13 @@ globalThis.bytebeat = new class {
 		}
 	}
 	setSRDivisor(increment) {
-		const value = (this.settings.divisor || 1) + increment;
-		if(value === 0) {
+		this.settings.divisor = increment;
+		if(increment === 0) {
 			return;
 		}
-		ui.controlSRDivisor.textContent = this.settings.divisor = value;
+		ui.controlSRDivisor.textContent = this.settings.divisor = increment;
 		this.saveSettings();
-		this.sendData({ divisor: value });
+		this.sendData({ divisor: this.settings.divisor });
 	}
 	setColorDiagram(value) {
 		if(value !== undefined) {
