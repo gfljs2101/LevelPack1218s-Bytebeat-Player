@@ -1137,14 +1137,14 @@ button[name="close"] {
 	animation: blink 1s step-start 0s infinite;
 }
 
-#control-samplerate {
+#control-samplerate, #control-srdivisor {
 	width: 56px;
 	border-radius: var(--control-corners) 0 0 var(--control-corners);
 }
 
-#control-samplerate-select,  #control-srdivisor{
-	width: 20px;
-	border-radius: 0 var(--control-corners) var(--control-corners) 0;
+#control-samplerate-select{
+	width: 18px;
+	border-radius: 0;
 }
 
 #control-scale {
