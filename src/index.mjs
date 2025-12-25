@@ -353,7 +353,8 @@ globalThis.bytebeat = new class {
 		this.mode = ui.controlPlaybackMode.value = mode = mode || 'Bytebeat';
 		editor.setValue(code);
 		this.setSampleRate(ui.controlSampleRate.value = +sampleRate || 8000, false);
-		this.setSRDivisor(this.controlSRDivisor.value ?? 0);
+		this.setSRDivisor(this.settings.srDivisor || 1);
+		ui.controlSRDivisor.value = this.settings.srDivisor || 1;
 		const data = {
 			mode,
 			sampleRate: this.sampleRate,
@@ -544,9 +545,13 @@ globalThis.bytebeat = new class {
 		}
 
 		this.settings.srDivisor = value;
+<<<<<<< HEAD
+=======
 		ui.controlSRDivisor.textContent = value;
 
+>>>>>>> f84c4ff768a5ba9a30f048f06d9910dd58b7c56e
 		this.saveSettings();
+		ui.controlSRDivisor.value = this.settings.srDivisor = value;
 		this.sendData({ srDivisor: value });
 	}
 	setColorDiagram(value) {
