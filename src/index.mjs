@@ -808,7 +808,6 @@ globalThis.bytebeat = new class {
         	}
 		} else {
 			ui.okAlert('Code is already minibaked.');
-			return;
 		}
 	}
 	debake() {
