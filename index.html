@@ -292,12 +292,8 @@
 					<label class="settings-block">
 						<select id="control-code-style" class="control-select" title="Code highlight style">
 							<option value="Atom Dark" selected>Atom Dark</option>
-							<option value="Github Dark">Github Dark</option>
-							<option value="Github v2 Dark">Github v2 Dark</option>
-							<option value="Monokai">Monokai</option>
 							<option value="One Dark">One Dark</option>
-							<option value="Retro Green">Retro Green</option>
-							<option value="VSCode Dark">VSCode Dark</option>
+							<option value="SArpnt">SArpnt</option>
 						</select>
 						Code style
 					</label>
@@ -413,5 +409,6 @@
 		</svg>
 	</div>
 	<a id="downloader" class="hidden"></a>
+	<script>if (navigator.serviceWorker && !navigator.serviceWorker.controller) { navigator.serviceWorker.register('./serviceworker.js'); }</script>
 </body>
 </html>
