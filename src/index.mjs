@@ -536,14 +536,12 @@ globalThis.bytebeat = new class {
 		}
 	}
 	setSRDivisor(increment) {
-		const saved = Number(this.settings.srDivisor);
-		ui.controlSRDivisor.value = Number.isFinite(saved) ? saved : 1;
 		value = Number(value);
 		if(value === 0) {
 			return;
 		}
 		this.settings.srDivisor = value;
-		ui.controlSRDivisor.textContent = this.settings.srDivisor = value;
+		ui.controlSRDivisor.value = this.settings.srDivisor = value;
 		this.saveSettings();
 		this.sendData({ srDivisor: value });
 	}
