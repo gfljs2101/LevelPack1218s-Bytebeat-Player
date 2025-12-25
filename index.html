@@ -41,6 +41,9 @@
 					<button id="control-counter-units" class="control-button" title="Time units">t</button>
 					<input type="text" id="control-counter" class="control-text" value="0" title="Set time to jump along the timeline then press Enter">
 				</div>
+				<div class="controls-group">
+					<span id="control-lag" class="control-text" title="Computing lag (freezes) factor">---</span>
+				</div>
 				<select id="control-drawmode" class="control-select controls-grow" title="Drawing mode">
 					<option value="Points" selected>Points</option>
 					<option value="Waveform">Waveform</option>
@@ -67,9 +70,6 @@
 						<option value="44100">44100Hz</option>
 						<option value="48000">48000Hz</option>
 					</select>
-				</div>
-				<div class="controls-group">
-					<span id="control-lag" class="control-text" title="Computing lag (freezes) factor">---</span>
 				</div>
 				<div class="controls-group">
 					<button id="control-rec" class="control-button" title="Record to the file">
