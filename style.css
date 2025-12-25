@@ -1147,6 +1147,11 @@ button[name="close"] {
 	border-radius: 0 var(--control-corners) var(--control-corners) 0;
 }
 
+#control-srdivisor {
+	width: 40px;
+	border-radius: var(--control-corners);
+}
+
 #control-scale {
 	min-width: 26px;
 	padding: 0 2px;
