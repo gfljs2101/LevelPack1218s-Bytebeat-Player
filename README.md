@@ -11,8 +11,8 @@ Live editing algorithmic music generator with a collection of many formulas from
 1. Install Node.js
 2. Run with npm:
 ```
-git clone https://github.com/SthephanShinkufag/bytebeat-composer.git
-cd bytebeat-composer
+git clone https://github.com/gfljs2101/LevelPack1218s-Bytebeat-Player.git
+cd LevelPack1218s-Bytebeat-Player
 npm install
 npm start
 ```
