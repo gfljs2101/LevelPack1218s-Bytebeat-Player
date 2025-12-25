@@ -538,7 +538,7 @@ globalThis.bytebeat = new class {
 	setSRDivisor(x) {
 		if (x != 0) {
 			x = Math.abs(x)
-			this.saveSettings();
+			localStorage.setItem("divisor", x);
 			this.sendData({ divisor: x })
 		}
 	}
