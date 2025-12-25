@@ -538,13 +538,15 @@ globalThis.bytebeat = new class {
 	}
 	setSRDivisor(value) {
 		value = Number(value);
-		if(value === 0) {
+
+		if (!Number.isFinite(value) || value === 0) {
 			return;
 		}
-		this.saveSettings();
+
 		this.settings.srDivisor = value;
-		ui.controlSRDivisor.value = this.settings.srDivisor = value;
-		ui.controlSRDivisor.value.blur();
+		ui.controlSRDivisor.textContent = value;
+
+		this.saveSettings();
 		this.sendData({ srDivisor: value });
 	}
 	setColorDiagram(value) {
