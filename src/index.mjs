@@ -37,7 +37,7 @@ globalThis.bytebeat = new class {
 			showAllSongs: library.showAllSongs,
 			themeStyle: 'Default',
 			volume: .5,
-			divisor: 1,
+			srDivisor: 1,
 			audioSampleRate: 48000
 		};
 		this.isCompilationError = false;
@@ -73,7 +73,7 @@ globalThis.bytebeat = new class {
 			case 'control-mode': this.setPlaybackMode(elem.value); break;
 			case 'control-samplerate':
 			case 'control-samplerate-select': this.setSampleRate(+elem.value); break;
-			case 'control-divisor': this.setSampleDivisor(++elem.value); break;
+			case 'control-srdivisor': this.setSRDivisor(elem.value); break;
 			case 'control-theme-style': this.setThemeStyle(elem.value); break;
 			case 'library-show-all':
 				library.toggleAll(elem, elem.checked);
@@ -353,6 +353,7 @@ globalThis.bytebeat = new class {
 		this.mode = ui.controlPlaybackMode.value = mode = mode || 'Bytebeat';
 		editor.setValue(code);
 		this.setSampleRate(ui.controlSampleRate.value = +sampleRate || 8000, false);
+		this.setSRDivisor(0);
 		const data = {
 			mode,
 			sampleRate: this.sampleRate,
@@ -534,8 +535,14 @@ globalThis.bytebeat = new class {
 		default: scope.colorChannels = [1, 0, 2];
 		}
 	}
-	setSampleDivisor(x) {
-		this.sendData({divisor: x})
+	setSRDivisor(increment) {
+		const value = (this.settings.srDivisor || 1) + increment;
+		if(value === 0) {
+			return;
+		}
+		ui.controlSRDivisor.textContent = this.settings.srDivisor = value;
+		this.saveSettings();
+		this.sendData({ srDivisor: value });
 	}
 	setColorDiagram(value) {
 		if(value !== undefined) {
