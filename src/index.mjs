@@ -37,7 +37,7 @@ globalThis.bytebeat = new class {
 			showAllSongs: library.showAllSongs,
 			themeStyle: 'Default',
 			volume: .5,
-			divisor: 1,
+			srDivisor: 1,
 			audioSampleRate: 48000
 		};
 		this.isCompilationError = false;
@@ -70,6 +70,7 @@ globalThis.bytebeat = new class {
 			case 'control-color-timecursor': this.setColorTimeCursor(elem.value); break;
 			case 'control-color-waveform': this.setColorWaveform(elem.value); break;
 			case 'control-drawmode': this.setDrawMode(elem.value); break;
+			case 'control-srdivisor': this.setSRDivisor(elem.value); break;
 			case 'control-mode': this.setPlaybackMode(elem.value); break;
 			case 'control-samplerate':
 			case 'control-samplerate-select': this.setSampleRate(+elem.value); break;
@@ -105,8 +106,6 @@ globalThis.bytebeat = new class {
 			case 'control-scale': this.setScale(-scope.drawScale); break;
 			case 'control-scaledown': this.setScale(-1, elem); break;
 			case 'control-scaleup': this.setScale(1); break;
-			case 'control-srdivisor-down': this.setSRDivisor(-1); break;
-			case 'control-srdivisor-up': this.setSRDivisor(1); break;
 			case 'control-stop': this.playbackStop(); break;
 			case 'control-counter-units': this.toggleCounterUnits(); break;
 			case 'actions-format': this.formatCode(); break;

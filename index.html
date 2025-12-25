@@ -71,10 +71,8 @@
 						<option value="48000">48000Hz</option>
 					</select>
 				</div>
-				<span id="control-srdivisor" class="control-text" title="Sample rate divisor">1</span>
-				<div id="control-srdivisor-buttons">
-					<button id="control-srdivisor-up" class="control-button" title="Increase the sample rate divisor">^</button>
-					<button id="control-srdivisor-down" class="control-button" title="Decrease the sample rate divisor">^</button>
+				<div class="controls-group controls-grow" width="128">
+					<input value="1" type="number" step="1" id="control-srdivisor" title="Set sample rate divisor then press Enter">
 				</div>
 				<div class="controls-group">
 					<button id="control-rec" class="control-button" title="Record to the file">
