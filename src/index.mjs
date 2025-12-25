@@ -797,20 +797,19 @@ globalThis.bytebeat = new class {
 		editor.setValue(data.code);
 	}
 	bake() {
-	    const originalCode = editor.value;
-		
-	    const deminibaked = actions.unminibakeCode(originalCode);
+		const toEncode = editor.value;
 
-	    if(deminibaked === originalCode) {
-	    	const minibaked = actions.minibakeCode(originalCode);
-	    	editor.setValue(minibaked);
+		if(actions.unminibakeCode(toEncode)==toEncode) {
+			const l = actions.minibakeCode(toEncode);
+        	editor.setValue(l);
 
         	if(actions.unminibakeCode(minibaked) === minibaked) {
-        		ui.okAlert('Minibaking reverted: the player will lag!');
+        	    ui.okAlert('Minibaking reverted: the player will lag!');
         	}
-	    } else {
-        	ui.okAlert('Code is already minibaked.');
-    	}
+		} else {
+			ui.okAlert('Code is already minibaked.');
+			return;
+		}
 	}
 	debake() {
 		editor.setValue(actions.unminibakeCode(editor.value));
