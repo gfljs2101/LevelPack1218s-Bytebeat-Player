@@ -37,7 +37,6 @@ globalThis.bytebeat = new class {
 			showAllSongs: library.showAllSongs,
 			themeStyle: 'Default',
 			volume: .5,
-			srDivisor: 1,
 			audioSampleRate: 48000
 		};
 		this.isCompilationError = false;
