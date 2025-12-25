@@ -536,6 +536,8 @@ globalThis.bytebeat = new class {
 		}
 	}
 	setSRDivisor(value) {
+		const saved = Number(this.settings.srDivisor);
+		ui.controlSRDivisor.value = Number.isFinite(saved) ? saved : 1;
 		value = Number(value);
 		if(value === 0) {
 			return;
