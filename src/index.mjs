@@ -73,7 +73,6 @@ globalThis.bytebeat = new class {
 			case 'control-mode': this.setPlaybackMode(elem.value); break;
 			case 'control-samplerate':
 			case 'control-samplerate-select': this.setSampleRate(+elem.value); break;
-			case 'control-divisor': this.setSampleDivisor(elem.value); break;
 			case 'control-theme-style': this.setThemeStyle(elem.value); break;
 			case 'library-show-all':
 				library.toggleAll(elem, elem.checked);
@@ -106,6 +105,8 @@ globalThis.bytebeat = new class {
 			case 'control-scale': this.setScale(-scope.drawScale); break;
 			case 'control-scaledown': this.setScale(-1, elem); break;
 			case 'control-scaleup': this.setScale(1); break;
+			case 'control-srdivisor-down': this.setSRDivisor(-1); break;
+			case 'control-srdivisor-up': this.setSRDivisor(1); break;
 			case 'control-stop': this.playbackStop(); break;
 			case 'control-counter-units': this.toggleCounterUnits(); break;
 			case 'actions-format': this.formatCode(); break;
@@ -535,18 +536,15 @@ globalThis.bytebeat = new class {
 		default: scope.colorChannels = [1, 0, 2];
 		}
 	}
-setSRDivisor(value) {
-
-	if (!Number.isFinite(value) || value === 0) {
-		return;
+	setSRDivisor(increment) {
+		const value = (this.settings.srDivisor || 1) + increment;
+		if(value === 0) {
+			return;
+		}
+		ui.controlSRDivisor.textContent = this.settings.srDivisor = value;
+		this.saveSettings();
+		this.sendData({ srDivisor: value });
 	}
-
-	this.settings.srDivisor = value;
-	ui.controlSRDivisor.textContent = value;
-
-	this.saveSettings();
-	this.sendData({ srDivisor: value });
-}
 	setColorDiagram(value) {
 		if(value !== undefined) {
 			this.settings.colorDiagram = value;
