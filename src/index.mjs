@@ -535,7 +535,7 @@ globalThis.bytebeat = new class {
 		default: scope.colorChannels = [1, 0, 2];
 		}
 	}
-	setSRDivisor(increment) {
+	setSRDivisor(value) {
 		value = Number(value);
 		if(value === 0) {
 			return;
