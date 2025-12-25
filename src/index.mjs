@@ -535,8 +535,8 @@ globalThis.bytebeat = new class {
 		default: scope.colorChannels = [1, 0, 2];
 		}
 	}
-	setSRDivisor(increment) {
-		const value = (this.settings.srDivisor || 1) + increment;
+	setSRDivisor(value) {
+		value = Number(value);
 		if(value === 0) {
 			return;
 		}
