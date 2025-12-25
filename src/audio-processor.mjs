@@ -314,21 +314,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		try {
 			if(this.isFuncbeat) {
 				this.func = new Function(...params, codeText).bind(globalThis, ...values);
-			} else if(this.isRAW) {
-				// Optimize code like eval(unescape(escape`XXXX`.replace(/u(..)/g,"$1%")))
-				codeText = codeText.trim().replace(
-					/^eval\(unescape\(escape(?:`|\('|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(\/u\(\.\.\)\/g,["'`]\$1%["'`]\)\)\)$/,
-					(match, m1) => unescape(escape(m1).replace(/u(..)/g, '$1%')));
-				this.func = new Function(...params, '_micSample', `return function (t) {${ codeText || 0 }};`)
-					.bind(globalThis, ...values);
-			} else if(this.isSignedRAW) {
-				// Optimize code like eval(unescape(escape`XXXX`.replace(/u(..)/g,"$1%")))
-				codeText = codeText.trim().replace(
-					/^eval\(unescape\(escape(?:`|\('|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(\/u\(\.\.\)\/g,["'`]\$1%["'`]\)\)\)$/,
-					(match, m1) => unescape(escape(m1).replace(/u(..)/g, '$1%')));
-				this.func = new Function(...params, '_micSample', `return function (t) {${ codeText || 0 }};`)
-					.bind(globalThis, ...values);
-			} else if(this.isFloatRAW) {
+			} else if(this.isRAW || this.isSignedRAW || this.isFloatRAW) {
 				// Optimize code like eval(unescape(escape`XXXX`.replace(/u(..)/g,"$1%")))
 				codeText = codeText.trim().replace(
 					/^eval\(unescape\(escape(?:`|\('|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(\/u\(\.\.\)\/g,["'`]\$1%["'`]\)\)\)$/,
@@ -347,11 +333,8 @@ class audioProcessor extends AudioWorkletProcessor {
 			if(this.isFuncbeat) {
 				this.func = this.func();
 				this.func(0, this.sampleRate, 0, [0, 0, 0]);
-			} else if(this.isRAW) {
-				this.func(0, [0, 0, 0]);
-			} else if(this.isSignedRAW) {
-				this.func(0, [0, 0, 0]);
-			} else if(this.isFloatRAW) {
+			} else if(this.isRAW || this.isSignedRAW || this.isFloatRAW) {
+				this.func = this.func();
 				this.func(0, [0, 0, 0]);
 			} else {
 				this.func(0, [0, 0, 0]);
