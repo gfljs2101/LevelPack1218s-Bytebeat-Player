@@ -1147,7 +1147,7 @@ button[name="close"] {
 	border-radius: 0 var(--control-corners) var(--control-corners) 0;
 }
 
-#control-divisor {
+#control-srdivisor {
 	width: 56px;
 	height: var(--control-size);
 	background: var(--control-text);
