@@ -1089,10 +1089,10 @@ button[name="close"] {
 }
 
 #control-lag {
-  width: auto;
-  border-radius: var(--control-corners);
-  text-align: center;
-  box-sizing: border-box;
+	width: 30px;
+	border-radius: var(--control-corners);
+	text-align: right;
+	cursor: default;
 }
 
 .control-lag-red {
