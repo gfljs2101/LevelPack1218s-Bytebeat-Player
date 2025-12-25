@@ -353,7 +353,7 @@ globalThis.bytebeat = new class {
 		this.mode = ui.controlPlaybackMode.value = mode = mode || 'Bytebeat';
 		editor.setValue(code);
 		this.setSampleRate(ui.controlSampleRate.value = +sampleRate || 8000, false);
-		this.setSRDivisor(0);
+		this.setSRDivisor(this.controlSRDivisor.value ?? 0);
 		const data = {
 			mode,
 			sampleRate: this.sampleRate,
