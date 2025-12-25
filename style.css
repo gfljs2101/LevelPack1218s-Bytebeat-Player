@@ -1095,6 +1095,10 @@ button[name="close"] {
   box-sizing: border-box;
 }
 
+.control-lag-red {
+	background: linear-gradient(to top, #aa0020, #300) !important;
+}
+
 #control-play-backward, #control-play-forward {
 	position: relative;
 }
