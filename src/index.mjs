@@ -536,6 +536,7 @@ globalThis.bytebeat = new class {
 		}
 	}
 	setSRDivisor(x) {
+		x = ui.controlSRDivisor.value
 		if (x != 0) {
 			x = Math.abs(x)
 			this.settings.divisor = x;
