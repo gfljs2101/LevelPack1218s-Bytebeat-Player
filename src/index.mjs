@@ -73,7 +73,7 @@ globalThis.bytebeat = new class {
 			case 'control-mode': this.setPlaybackMode(elem.value); break;
 			case 'control-samplerate':
 			case 'control-samplerate-select': this.setSampleRate(+elem.value); break;
-			case 'control-srdivisor': this.setSRDivisor(++elem.value); break;
+			case 'control-divisor': this.setSampleDivisor(elem.value); break;
 			case 'control-theme-style': this.setThemeStyle(elem.value); break;
 			case 'library-show-all':
 				library.toggleAll(elem, elem.checked);

@@ -75,7 +75,7 @@ export class UI {
 		this.controlPlayForward = document.getElementById('control-play-forward');
 		this.controlRecord = document.getElementById('control-rec');
 		this.controlSampleRate = document.getElementById('control-samplerate');
-		this.controlSRDivisor = document.getElementById('control-srdivisor');
+		this.controlSampleDivisor = document.getElementById('control-divisor');
 		this.controlSampleRateSelect = document.getElementById('control-samplerate-select');
 		this.controlScale = document.getElementById('control-scale');
 		this.controlScaleDown = document.getElementById('control-scaledown');

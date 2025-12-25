@@ -242,9 +242,9 @@ class audioProcessor extends AudioWorkletProcessor {
 			this.setSampleRatio(data.sampleRatio);
 		}
 		if (data.divisor !== undefined) {
-			this.sampleDivisor/*PRO*/ = data.divisor;
+			this.sampleDivisor/*PRO*/ = data.divisor-1;
 		}
-		if(data.DMode !== undefined) {
+		if(data.DMode !== undefined) {			
 			this.soundMode = data.DMode;
 		}
 		if(data.drawMode !== undefined) {
