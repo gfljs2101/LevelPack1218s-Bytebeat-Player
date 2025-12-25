@@ -544,14 +544,8 @@ globalThis.bytebeat = new class {
 			return;
 		}
 
-		this.settings.srDivisor = value;
-<<<<<<< HEAD
-=======
-		ui.controlSRDivisor.textContent = value;
-
->>>>>>> f84c4ff768a5ba9a30f048f06d9910dd58b7c56e
-		this.saveSettings();
 		ui.controlSRDivisor.value = this.settings.srDivisor = value;
+		this.saveSettings();
 		this.sendData({ srDivisor: value });
 	}
 	setColorDiagram(value) {
