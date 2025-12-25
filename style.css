@@ -1089,9 +1089,9 @@ button[name="close"] {
 }
 
 #control-lag {
-	width: 30px;
+	width: auto;
 	border-radius: var(--control-corners);
-	text-align: right;
+	text-align: center;
 	cursor: default;
 }
 
