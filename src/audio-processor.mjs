@@ -301,13 +301,33 @@ class audioProcessor extends AudioWorkletProcessor {
 			"Bitbeat": function (x) { return x & 1 && 255 }
 		}
 		// Create shortened Math functions
-		const params = Object.getOwnPropertyNames(Math);
-		const values = params.map(k => Math[k]);
+		let params = Object.getOwnPropertyNames(Math);
+		let values = params.map(k => Math[k]);
 		const gfjsNames = Object.getOwnPropertyNames(gfjs);
 		const gfjsFuncs = gfjsNames.map(k => gfjs[k]);
 		params.push('int', 'window', ...gfjsNames);
 		values.push(Math.floor, globalThis, ...gfjsFuncs);
 		audioProcessor.deleteGlobals();
+
+		// Deduplicate parameter names to avoid "Cannot declare a let variable twice" errors
+		// when the environment provides overlapping names (e.g. 'mod' already present).
+		{
+			const seen = new Set();
+			const uniqueParams = [];
+			const uniqueValues = [];
+			for (let i = 0; i < params.length; ++i) {
+				const name = params[i];
+				if (!seen.has(name)) {
+					seen.add(name);
+					uniqueParams.push(name);
+					uniqueValues.push(values[i]);
+				}
+				// if name already seen, skip this duplicate entry (keep the first occurrence)
+			}
+			params = uniqueParams;
+			values = uniqueValues;
+		}
+
 		// Code testing
 		let isCompiled = false;
 		const oldFunc = this.func;
