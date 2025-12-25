@@ -70,7 +70,7 @@ globalThis.bytebeat = new class {
 			case 'control-color-timecursor': this.setColorTimeCursor(elem.value); break;
 			case 'control-color-waveform': this.setColorWaveform(elem.value); break;
 			case 'control-drawmode': this.setDrawMode(elem.value); break;
-			case 'control-srdivisor': this.setSRDivisor(elem.value); break;
+			case 'control-srdivisor': this.setSRDivisor(+elem.value); break;
 			case 'control-mode': this.setPlaybackMode(elem.value); break;
 			case 'control-samplerate':
 			case 'control-samplerate-select': this.setSampleRate(+elem.value); break;
@@ -489,6 +489,7 @@ globalThis.bytebeat = new class {
 		this.settings.drawMode = scope.drawMode;
 		this.settings.drawScale = scope.drawScale;
 		this.settings.showAllSongs = library.showAllSongs;
+		this.settings.srDivisor = this.settings.srDivisor || 1;
 		localStorage.settings = JSON.stringify(this.settings);
 	}
 	sendData(data) {
@@ -540,9 +541,10 @@ globalThis.bytebeat = new class {
 		if(value === 0) {
 			return;
 		}
+		this.saveSettings();
 		this.settings.srDivisor = value;
 		ui.controlSRDivisor.value = this.settings.srDivisor = value;
-		this.saveSettings();
+		ui.controlSRDivisor.value.blur();
 		this.sendData({ srDivisor: value });
 	}
 	setColorDiagram(value) {
