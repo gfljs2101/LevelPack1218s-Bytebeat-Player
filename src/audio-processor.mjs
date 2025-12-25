@@ -20,7 +20,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		this.outValue = [0, 0];
 		this.sampleRate = 8000;
 		this.sampleRatio = 1;
-		this.sampleDivisor/*PRO*/ = 1;
+		this.srDivisor/*PRO*/ = 1;
 		this.soundMode = 'Bytebeat';
 		Object.seal(this);
 		audioProcessor.deleteGlobals();
@@ -123,10 +123,10 @@ class audioProcessor extends AudioWorkletProcessor {
 		const isDiagram = this.drawMode === 'Combined' || this.drawMode === 'Diagram';
 		for(let i = 0; i < chDataLen; ++i) {
 			time += this.sampleRatio;
-			const currentTime = Math.floor(time / this.sampleDivisor) * this.sampleDivisor;
+			const currentTime = Math.floor(time / this.srDivisor) * this.srDivisor;
 			if(this.lastTime !== currentTime) {
 				let funcValue;
-				const currentSample = Math.floor(byteSample / this.sampleDivisor) * this.sampleDivisor;
+				const currentSample = Math.floor(byteSample / this.srDivisor) * this.srDivisor;
 				try {
 					// long cascade of null handlers
 					const inputs0 = inputs[0] ?? [ ];
@@ -242,7 +242,7 @@ class audioProcessor extends AudioWorkletProcessor {
 			this.setSampleRatio(data.sampleRatio);
 		}
 		if (data.srDivisor !== undefined) {
-			this.sampleDivisor/*PRO*/ = data.srDivisor;
+			this.srDivisor/*PRO*/ = data.srDivisor;
 		}
 		if(data.DMode !== undefined) {			
 			this.soundMode = data.DMode;
