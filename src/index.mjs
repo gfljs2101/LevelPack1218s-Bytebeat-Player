@@ -799,7 +799,7 @@ globalThis.bytebeat = new class {
 	bake() {
 		const toEncode = editor.value;
 
-		if(actions.unminibakeCode(toEncode)!==toEncode) {
+		if(/^eval\(unescape\(escape(?:`|\('|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(\/u\(\.\.\)\/g,["'`]\$1%["'`]\)\)\)$/.test(toEncode)) {
 			ui.okAlert('Code is already minibaked.');
 			return;
 		}
