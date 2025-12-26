@@ -110,6 +110,9 @@ function addSongForm() {
 								<option value="Signed Bytebeat">Signed Bytebeat</option>
 								<option value="Floatbeat">Floatbeat</option>
 								<option value="Funcbeat">Funcbeat</option>
+								<option value="RAW">RAW</option>
+								<option value="Signed RAW">Signed RAW</option>
+								<option value="FloatRAW">FloatRAW</option>
 							</select>
 							<input type="text" name="samplerate" placeholder="Sample rate (Hz)">
 							<label style="white-space: nowrap;"><input type="checkbox" name="stereo"> Stereo</label>
