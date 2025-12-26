@@ -796,22 +796,28 @@ globalThis.bytebeat = new class {
 		}
 		editor.setValue(data.code);
 	}
-	bake() {
-	    const originalCode = editor.value;
-		
-	    const deminibaked = actions.unminibakeCode(originalCode);
+bake() {
+    const originalCode = editor.value;
 
-	    if(deminibaked === originalCode) {
-	    	const minibaked = actions.minibakeCode(originalCode);
-	    	editor.setValue(minibaked);
+    // Check if already minibaked
+    const deminibaked = actions.unminibakeCode(originalCode);
+    if (deminibaked !== originalCode) {
+        ui.okAlert('Code is already minibaked.');
+        return;
+    }
 
-        	if(actions.unminibakeCode(minibaked) === minibaked) {
-        		ui.okAlert('Minibaking reverted: the player will lag!');
-        	}
-	    } else {
-        	ui.okAlert('Code is already minibaked.');
-    	}
-	}
+    // Try minibaking
+    const minibaked = actions.minibakeCode(originalCode);
+    editor.setValue(minibaked);
+
+    // Verify minibake result
+    const test = actions.unminibakeCode(minibaked);
+    if (test === minibaked) {
+        // Minibake failed → revert for real
+        editor.setValue(originalCode);
+        ui.okAlert('Minibaking failed and was reverted to prevent lag.');
+    }
+}
 	debake() {
 		editor.setValue(actions.unminibakeCode(editor.value));
 	}
