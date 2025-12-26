@@ -354,7 +354,7 @@ globalThis.bytebeat = new class {
 		editor.setValue(code);
 		this.setSampleRate(ui.controlSampleRate.value = +sampleRate || 8000, false);
 		this.setSRDivisor(this.settings.srDivisor || 1);
-		ui.controlSRDivisor.value = this.settings.srDivisor || 1;
+		ui.controlSRDivisor.value = Math.trunc(this.settings.srDivisor || 1);
 		const data = {
 			mode,
 			sampleRate: this.sampleRate,
