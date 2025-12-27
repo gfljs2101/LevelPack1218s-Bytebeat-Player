@@ -968,7 +968,7 @@ button[name="close"] {
 }
 
 .songs-header {
-	/*display: inline list-item;*/
+	display: inline list-item;
 	padding: 1px 6px 2px 8px;
 	border-radius: 0 0 8px 0;
 	background-color: var(--code-author);
