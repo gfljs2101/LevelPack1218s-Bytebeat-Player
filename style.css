@@ -1107,7 +1107,7 @@ button[name="close"] {
 }
 
 #control-lag {
-	width: 40px;
+	width: 24px;
 	border-radius: var(--control-corners);
 	text-align: center;
 	cursor: default;
