@@ -323,6 +323,13 @@
 						Colors for stereo channels&nbsp;
 					</label>
 					<label class="settings-block">
+						<label>
+						  <input type="checkbox" id="use-service-worker">
+						  Use Service Workers
+						</label>
+						<button id="apply-settings" class="control-button control-text-button">Apply</button>
+					</label>
+					<label class="settings-block">
 						Audio sample rate:&nbsp;&nbsp;
 						<div class="controls-group controls-grow">
 							<input value="48000" type="number" id="settings-audiorate" class="control-text" title="Set audio sample rate and click &quot;Apply&quot;">
@@ -412,6 +419,24 @@
 		</svg>
 	</div>
 	<a id="downloader" class="hidden"></a>
-	<script>if (navigator.serviceWorker && !navigator.serviceWorker.controller) { navigator.serviceWorker.register('./serviceworker.js'); }</script>
+<script>
+document.getElementById("apply-settings").addEventListener("click", () => {
+    const useSW = document.getElementById("use-service-worker").checked;
+
+    if (useSW) {
+        if ("serviceWorker" in navigator && !navigator.serviceWorker.controller) {
+            navigator.serviceWorker.register("./serviceworker.js")
+                .then(() => {
+                    console.log("Service Worker registered");
+                })
+                .catch(err => {
+                    console.error("Service Worker registration failed:", err);
+                });
+        }
+    } else {
+        console.log("Service Workers disabled (not registering)");
+    }
+});
+</script>
 </body>
 </html>
