@@ -695,6 +695,7 @@ button[name="close"] {
 	border: 1px solid gray;
 	border-radius: 3px;
 	background-color: #66aafe30 !important;
+	font-weight: bold;
 }
 
 .cm-nonmatchingBracket {
@@ -723,14 +724,17 @@ button[name="close"] {
 
 .tok-comment {
 	color: var(--code-comment);
+	font-style: italic;
 }
 
 .tok-definition {
 	color: var(--code-definition) !important;
+	font-style: italic;
 }
 
 .tok-keyword {
 	color: var(--code-keyword);
+	font-weight: bold;
 }
 
 .tok-number {
