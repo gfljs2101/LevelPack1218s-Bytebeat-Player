@@ -420,20 +420,21 @@
 	</div>
 	<a id="downloader" class="hidden"></a>
 <script>
-// Load saved setting on page load
-window.addEventListener("DOMContentLoaded", async () => {
-    const useSW = localStorage.getItem("useServiceWorker") === "true";
-    const checkbox = document.getElementById("use-service-worker");
-    checkbox.checked = useSW;
+// Initialize localStorage only if it doesn't exist
+if (localStorage.getItem("useServiceWorker") === null) {
+    localStorage.setItem("useServiceWorker", "false");
+}
 
-    // If saved setting is true, make sure SW is registered
-    if (useSW && "serviceWorker" in navigator && !navigator.serviceWorker.controller) {
+// Set checkbox state on page load
+window.addEventListener("DOMContentLoaded", async () => {
+    const checkbox = document.getElementById("use-service-worker");
+    checkbox.checked = localStorage.getItem("useServiceWorker") === "true";
+
+    // Register SW if setting is true and not already registered
+    if (checkbox.checked && "serviceWorker" in navigator && !navigator.serviceWorker.controller) {
         try {
             await navigator.serviceWorker.register("./serviceworker.js");
-            console.log("Service Worker registered on load");
-        } catch (err) {
-            console.error("Failed to register Service Worker on load:", err);
-        }
+        } catch {}
     }
 });
 
@@ -442,27 +443,19 @@ document.getElementById("apply-settings").addEventListener("click", async () => 
     const checkbox = document.getElementById("use-service-worker");
     const useSW = checkbox.checked;
 
-    // Save setting
-    localStorage.setItem("useServiceWorker", useSW);
+    // Save current setting
+    localStorage.setItem("useServiceWorker", useSW ? "true" : "false");
 
-    if (useSW) {
-        // Register SW if not already registered
-        if ("serviceWorker" in navigator && !navigator.serviceWorker.controller) {
+    if ("serviceWorker" in navigator) {
+        if (useSW && !navigator.serviceWorker.controller) {
             try {
                 await navigator.serviceWorker.register("./serviceworker.js");
-                console.log("Service Worker registered");
-            } catch (err) {
-                console.error("Service Worker registration failed:", err);
-            }
-        }
-    } else {
-        // Unregister all service workers
-        if ("serviceWorker" in navigator) {
+            } catch {}
+        } else if (!useSW) {
             const registrations = await navigator.serviceWorker.getRegistrations();
             for (const reg of registrations) {
                 await reg.unregister();
             }
-            console.log("All Service Workers unregistered");
         }
     }
 });
