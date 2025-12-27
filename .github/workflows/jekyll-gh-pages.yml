@@ -41,7 +41,8 @@ jobs:
           cp index.html artifactRoot/
           cp style.css artifactRoot/
           cp favicon.png artifactRoot/
-
+          cp serviceworker.js artifactRoot/
+          
       - name: Install NPM dependencies
         id: install-npm
         run: npm install
