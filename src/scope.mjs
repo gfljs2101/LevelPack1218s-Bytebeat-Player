@@ -101,6 +101,7 @@ export class Scope {
 			let ch = isStereo ? 2 : 1;
 			while(ch--) {
 				ctx.beginPath();
+				this.setStereoColors();
 				ctx.strokeStyle = isStereo ? this.colorStereoRGB[ch] :
 					`rgb(${ this.colorWaveform.join(',') })`;
 				this.analyser[ch].getByteFrequencyData(this.analyserData[ch]);
