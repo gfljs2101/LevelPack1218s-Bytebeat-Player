@@ -1107,7 +1107,7 @@ button[name="close"] {
 }
 
 #control-lag {
-  width: 40px;
+  width: 34px;
   border-radius: var(--control-corners);
   text-align: center;
   box-sizing: border-box;
@@ -1162,7 +1162,7 @@ button[name="close"] {
 
 #control-samplerate-select {
 	width: 22px;
-	border-radius: 0;
+	border-radius: 0 var(--control-corners) var(--control-corners) 0;
 }
 
 #control-srdivisor {
