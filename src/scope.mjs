@@ -13,17 +13,23 @@ export class Scope {
 		this.canvasWidth = 1024;
 		this.colorChannels = null;
 		this.colorDiagram = null;
+		this.colorStereoRGB = [null, null];
 		this.colorWaveform = null;
 		this.drawBuffer = [];
 		this.drawEndBuffer = [];
 		this.drawMode = 'Combined';
 		this.drawScale = 5;
+		this.fftGridData = null;
+		this.fftSize = 10;
+		this.maxDecibels = -10;
+		this.minDecibels = -120;
 	}
 	get timeCursorEnabled() {
 		return globalThis.bytebeat.sampleRate >> this.drawScale < 2000;
 	}
 	clearCanvas() {
 		this.canvasCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+		this.canvasCtx.globalCompositeOperation = this.drawMode === 'FFT' ? 'lighter' : 'source-over';
 	}
 	drawGraphics(endTime) {
 		if(!isFinite(endTime)) {
@@ -35,8 +41,84 @@ export class Scope {
 		if(!bufferLen) {
 			return;
 		}
+		const ctx = this.canvasCtx;
 		const width = this.canvasWidth;
 		const height = this.canvasHeight;
+		// FFT graph drawing
+		if(this.drawMode === 'FFT') {
+			this.clearCanvas();
+			const minFreq = Math.max(48000 / 2 ** this.fftSize, 10);
+			const maxFreq = 24000; // audioCtx.sampleRate / 2 = 48000 / 2
+			// Grid and labels
+			if(this.fftGridData) {
+				ctx.putImageData(this.fftGridData, 0, 0);
+			} else {
+				// Vertical grid and Hz labels
+				ctx.beginPath();
+				ctx.strokeStyle = '#444';
+				ctx.fillStyle = '#faca63';
+				ctx.font = '11px monospace';
+				let freq = 10; // Start building from 10Hz
+				while(freq <= maxFreq) {
+					for(let i = 1; i < 10; ++i) {
+						const curFreq = freq * i;
+						const x = width * Math.log(curFreq / minFreq) / Math.log(maxFreq / minFreq);
+						ctx.moveTo(x, 0);
+						ctx.lineTo(x, height);
+						if(i < 4 || i === 5) {
+							ctx.fillText(freq < 1000 ? curFreq + 'Hz' : curFreq / 1000 + 'kHz', x + 1, 10);
+						}
+					}
+					freq *= 10;
+				}
+				// Horizontal grid and  dB labels
+				const dbRange = this.maxDecibels - this.minDecibels;
+				for(let i = 10; i <= dbRange; i += 10) {
+					const y = i * height / dbRange;
+					if(i < dbRange) {
+						ctx.moveTo(0, y);
+						ctx.lineTo(width, y);
+					}
+					ctx.fillText(this.maxDecibels - i + 'dB', 1, i * height / dbRange - 2);
+				}
+				ctx.stroke();
+				// Save to the buffer
+				this.fftGridData = ctx.getImageData(0, 0, width, height);
+			}
+			// Detect stereo signal
+			let isStereo = false;
+			let i = Math.min(bufferLen, 200);
+			while(i--) {
+				if(isNaN(buffer[i].value[0]) && isNaN(buffer[i].value[1])) {
+					continue;
+				}
+				if(buffer[i].value[0] !== buffer[i].value[1]) {
+					isStereo = true;
+					break;
+				}
+			}
+			// Build the chart
+			let ch = isStereo ? 2 : 1;
+			while(ch--) {
+				ctx.beginPath();
+				ctx.strokeStyle = isStereo ? this.colorStereoRGB[ch] :
+					`rgb(${ this.colorWaveform.join(',') })`;
+				this.analyser[ch].getByteFrequencyData(this.analyserData[ch]);
+				for(let i = 0, len = this.analyserData[ch].length; i < len; ++i) {
+					const y = height * (1 - this.analyserData[ch][i] / 256);
+					if(i) {
+						const ratio = maxFreq / minFreq;
+						ctx.lineTo(width * Math.log(i / len * ratio) / Math.log(ratio), y);
+						continue;
+					}
+					ctx.moveTo(0, y);
+				}
+				ctx.stroke();
+			}
+			// Truncate buffer
+			this.drawBuffer = this.drawBuffer.slice(-200);
+			return;
+		}
 		const scale = this.drawScale;
 		const isReverse = globalThis.bytebeat.playbackSpeed < 0;
 		let startTime = buffer[0].t;
@@ -263,7 +345,26 @@ export class Scope {
 			}
 		});
 	}
+	setFFTAnalyzer() {
+		this.analyser[0].fftSize = this.analyser[1].fftSize = 2 ** this.fftSize;
+		this.analyserData = [
+			new Uint8Array(this.analyser[0].frequencyBinCount),
+			new Uint8Array(this.analyser[1].frequencyBinCount)];
+		this.fftGridData = null;
+	}
+	setFFTSize(value) {
+		this.fftSize = Math.min(Math.max(value, 6), 15);
+	}
+	setStereoColors() {
+		const ch = this.colorChannels;
+		const colorLeft = [0, 0, 0];
+		const colorRight = [0, 0, 0];
+		colorLeft[ch[0]] = this.colorWaveform[ch[0]];
+		colorRight[ch[1]] = this.colorWaveform[ch[1]];
+		colorRight[ch[2]] = this.colorWaveform[ch[2]];
+		this.colorStereoRGB = [`rgb(${ colorLeft.join(',') })`, `rgb(${ colorRight.join(',') })`];
+	}
 	toggleTimeCursor() {
-		this.canvasTimeCursor.classList.toggle('hidden', !this.timeCursorEnabled);
+		this.canvasTimeCursor.classList.toggle('hidden', this.drawMode === 'FFT' || !this.timeCursorEnabled);
 	}
 }
