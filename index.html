@@ -420,8 +420,19 @@
 	</div>
 	<a id="downloader" class="hidden"></a>
 <script>
+// Load saved setting on page load
+window.addEventListener("DOMContentLoaded", () => {
+    const useSW = localStorage.getItem("useServiceWorker") === "true";
+    document.getElementById("use-service-worker").checked = useSW;
+});
+
+// Apply button click
 document.getElementById("apply-settings").addEventListener("click", () => {
-    const useSW = document.getElementById("use-service-worker").checked;
+    const checkbox = document.getElementById("use-service-worker");
+    const useSW = checkbox.checked;
+
+    // Save setting to localStorage
+    localStorage.setItem("useServiceWorker", useSW);
 
     if (useSW) {
         if ("serviceWorker" in navigator && !navigator.serviceWorker.controller) {

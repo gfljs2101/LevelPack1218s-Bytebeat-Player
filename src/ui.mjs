@@ -105,8 +105,6 @@ export class UI {
 		this.downloader = document.getElementById('downloader');
 		this.splashElem = document.getElementById('splash');
 		this.mainElem = document.getElementById('content');
-		this.useSWCheckbox = document.getElementById('use-service-worker');
-		this.applyBtn = document.getElementById('apply-service-worker');
 	}
 	setCodeSize(value) {
 		this.controlCodeSize.textContent =
