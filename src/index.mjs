@@ -838,8 +838,7 @@ globalThis.bytebeat = new class {
 					samplerate: this.sampleRate,
 					size: new Blob([editor.value]).size
 				},
-				url: window.location.hash,
-				dateadded: new Date().toISOString()
+				url: window.location.hash
 			});
 			localStorage.favorites = JSON.stringify(favorites);
 		} catch(e) {
@@ -927,17 +926,7 @@ globalThis.bytebeat = new class {
 						},
 						() => {}
 					);
-				});
-    			// Create a span to show the date
-    			const dateSpan = document.createElement('span');
-    			dateSpan.className = 'date';
-    			if (favorite.dateAdded) {
-    			    dateSpan.textContent = formatDate(favourite.dateAdded); // display nicely
-    			} else {
-    			    dateSpan.textContent = 'No date';
-    			}
-    			li.appendChild(dateSpan); // add the date to the list item
-				
+				});	
 				ui.favoritesList.appendChild(li);
 				ui.favoritesList.appendChild(document.createElement('hr'));
 			}
