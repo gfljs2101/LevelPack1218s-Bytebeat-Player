@@ -151,6 +151,7 @@ html[data-theme="Chasyxx Classic"] {
 	--library-seperator: linear-gradient(to right, #439157, #16202b);
 	--library-header: linear-gradient(to bottom, #204620, #0b170c);
 	--library-header-hover: linear-gradient(to bottom, #326c35, #192b15);
+	--library-header-hover-color: #94c7ff;
 	--dialog-background: linear-gradient(to bottom,#000,#050);
 	--dialog-border: #5dfd57;
 	--warning-color: #ffe600;
@@ -184,6 +185,7 @@ html[data-theme="Dollchan"] {
 	--library-seperator: linear-gradient(to right, #435a91, #16202b);
 	--library-header: linear-gradient(to bottom, #202c46, #0b0d17);
 	--library-header-hover: linear-gradient(to bottom, #32426c, #151b2b);
+	--library-header-hover-color: #94c7ff;
 	--dialog-background: linear-gradient(to bottom,#313031,#505760);
 	--error: #f92672;
 	--dialog-border: #aeaeae;
@@ -212,6 +214,7 @@ html[data-theme="Blue"] {
 	--library-seperator: linear-gradient(to right, #435a91, #16202b);
 	--library-header: linear-gradient(to bottom, #2c3e6a, #101420);
 	--library-header-hover: linear-gradient(to bottom, #405588, #192035);
+	--library-header-hover-color: #94c7ff;
 	--dialog-background: linear-gradient(to bottom, #181f33, #4567b0);
 	--error: #f92672;
 	--dialog-border: #5183ee;
@@ -367,6 +370,7 @@ html[data-theme="Purple"] {
 	--font: sans-serif;
 	--library-header: linear-gradient(to bottom, #432046, #170b16);
 	--library-header-hover: linear-gradient(to bottom, #65326c, #2b152a);
+	--library-header-hover-color: #94c7ff;
 	--dialog-background: linear-gradient(to bottom, #2b152a, #65326c);
 	--dialog-border: #c765bf;
 	--error: #f92672;
@@ -964,7 +968,7 @@ button[name="close"] {
 }
 
 .songs-header {
-	display: inline list-item;
+	/*display: inline list-item;*/
 	padding: 1px 6px 2px 8px;
 	border-radius: 0 0 8px 0;
 	background-color: var(--code-author);
