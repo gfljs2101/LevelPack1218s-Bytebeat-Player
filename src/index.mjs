@@ -165,6 +165,7 @@ globalThis.bytebeat = new class {
 			this.settings = JSON.parse(localStorage.settings);
 			scope.drawMode = this.settings.drawMode;
 			scope.drawScale = this.settings.drawScale;
+			scope.fftSize = Math.max(5, Math.min(15, +this.settings.fftSize||10));
 			library.showAllSongs = this.settings.showAllSongs;
 		} catch(err) {
 			this.saveSettings();
@@ -267,6 +268,7 @@ globalThis.bytebeat = new class {
 		scope.analyser = [this.audioCtx.createAnalyser(), this.audioCtx.createAnalyser()];
 		scope.analyser[0].minDecibels = scope.analyser[1].minDecibels = scope.minDecibels;
 		scope.analyser[0].maxDecibels = scope.analyser[1].maxDecibels = scope.maxDecibels;
+		scope.analyser[0].fftSize = scope.analyser[1].fftSize = 2 ** scope.fftSize;
 		scope.setFFTAnalyzer();
 		const splitter = this.audioCtx.createChannelSplitter(2);
 		splitter.connect(scope.analyser[0], 0);
@@ -281,7 +283,6 @@ globalThis.bytebeat = new class {
 		this.audioWorkletNode.port.start();
 		this.audioWorkletNode.connect(this.audioGain);
 		this.audioWorkletNode.connect(analyserGain);
-		// Recorder for recording audio files
 		const mediaDest = this.audioCtx.createMediaStreamDestination();
 		const audioRecorder = this.audioRecorder = new MediaRecorder(mediaDest.stream);
 		audioRecorder.addEventListener('dataavailable', e => this.audioRecordChunks.push(e.data));
@@ -504,8 +505,8 @@ globalThis.bytebeat = new class {
 		this.settings.drawMode = scope.drawMode;
 		this.settings.drawScale = scope.drawScale;
 		this.settings.showAllSongs = library.showAllSongs;
-		this.settings.srDivisor = this.settings.srDivisor || 1;
 		this.settings.fftSize = scope.fftSize;
+		this.settings.srDivisor = this.settings.srDivisor || 1;
 		localStorage.settings = JSON.stringify(this.settings);
 	}
 	sendData(data) {
@@ -685,19 +686,6 @@ globalThis.bytebeat = new class {
 			this.sendData(data);
 		}
 	}
-	adjustScope(amount, buttonElem) {
-		if(scope.drawMode === 'FFT') {
-			ui.controlScaleDown.title = 'Use less FFT bins';
-			ui.controlScaleUp.title = 'Use more FFT bins';
-			ui.controlScale.title = 'FFT bins. Click to reset to 1024';
-			this.setFFTBins(amount, buttonElem);
-		} else {
-			ui.controlScaleDown.title = 'Zoom in the scope';
-			ui.controlScaleUp.title = 'Zoom out the scope';
-			ui.controlScale.title = 'Scope zoom factor. Click to reset to 1.';
-			this.setScale(amount, buttonElem);
-		}
-	}
 	setFFTBins(amount, buttonElem) {
 		if(buttonElem?.getAttribute('disabled')) {
 			return;
@@ -714,14 +702,14 @@ globalThis.bytebeat = new class {
 		scope.clearCanvas();
 		this.saveSettings();
 		if(scope.fftSize <= 5) {
-			ui.controlScaleDown.setAttribute('disabled', true);
-		} else {
-			ui.controlScaleDown.removeAttribute('disabled');
-		}
-		if(scope.fftSize >= 15) {
 			ui.controlScaleUp.setAttribute('disabled', true);
 		} else {
 			ui.controlScaleUp.removeAttribute('disabled');
+		}
+		if(scope.fftSize >= 15) {
+			ui.controlScaleDown.setAttribute('disabled', true);
+		} else {
+			ui.controlScaleDown.removeAttribute('disabled');
 		}
 	}
 	setScale(amount, buttonElem) {
@@ -746,6 +734,19 @@ globalThis.bytebeat = new class {
 			ui.controlScaleUp.setAttribute('disabled', true);
 		} else {
 			ui.controlScaleUp.removeAttribute('disabled');
+		}
+	}
+	adjustScope(amount, buttonElem) {
+		if(scope.drawMode === 'FFT') {
+			ui.controlScaleDown.title = 'Use more FFT bins';
+			ui.controlScaleUp.title = 'Use less FFT bins';
+			ui.controlScale.title = 'FFT bins. Click to reset to 1024';
+			this.setFFTBins(-amount, buttonElem);
+		} else {
+			ui.controlScaleDown.title = 'Zoom in the scope';
+			ui.controlScaleUp.title = 'Zoom out the scope';
+			ui.controlScale.title = 'Scope zoom factor. Click to reset to 1.';
+			this.setScale(amount, buttonElem);
 		}
 	}
 	resetScopeAdjustment() {
