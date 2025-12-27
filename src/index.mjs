@@ -384,6 +384,8 @@ globalThis.bytebeat = new class {
 		data.setFunction = code;
 		if(drawMode) {
 			ui.controlDrawMode.value = scope.drawMode = drawMode;
+			scope.toggleTimeCursor();
+			scope.clearCanvas();
 			this.saveSettings();
 		}
 		if(scale !== undefined) {
@@ -552,6 +554,9 @@ globalThis.bytebeat = new class {
 		case 2: scope.colorChannels = [2, 0, 1]; break;
 		default: scope.colorChannels = [1, 0, 2];
 		}
+		if(scope.colorWaveform) {
+			scope.setStereoColors();
+		}
 	}
 	setSRDivisor(value) {
 		value = Number(value);
@@ -596,6 +601,7 @@ globalThis.bytebeat = new class {
 		}
 		ui.controlColorWaveform.value = value;
 		ui.controlColorWaveformInfo.innerHTML = scope.getColorTest('colorWaveform', value);
+		scope.setStereoColors();
 	}
 	setAudioSampleRate(value) {
 		if(value !== undefined) {
@@ -639,6 +645,8 @@ globalThis.bytebeat = new class {
 	}
 	setDrawMode(drawMode) {
 		scope.drawMode = drawMode;
+		scope.toggleTimeCursor();
+		scope.clearCanvas();
 		this.adjustScope(0);
 		this.saveSettings();
 		this.sendData({ drawMode });
