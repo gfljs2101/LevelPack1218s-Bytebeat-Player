@@ -38,7 +38,8 @@ globalThis.bytebeat = new class {
 			themeStyle: 'Default',
 			volume: .5,
 			srDivisor: 1,
-			audioSampleRate: 48000
+			audioSampleRate: 48000,
+			useSW: 0
 		};
 		this.isCompilationError = false;
 		this.isNeedClear = false;
@@ -58,6 +59,13 @@ globalThis.bytebeat = new class {
 	handleEvent(e) {
 		let elem = e.target;
 		switch(e.type) {
+    	case 'use-service-worker':
+    	    this.settings.useSW = ui.useSWCheckbox.checked ? 1 : 0;
+    	    break;
+
+    	case 'apply-service-worker':
+    	    handleServiceWorker.call(this);
+    	    break;
 		case 'change':
 			switch(elem.id) {
 			case 'control-code-style': this.setCodeStyle(elem.value); break;
@@ -847,6 +855,22 @@ globalThis.bytebeat = new class {
 			this.loadFavoriteList();
 		}
 	}
+applyServiceWorkerSettings() {
+    const useSW = ui.useSWCheckbox.checked;
+
+    // Update the settings
+    this.settings.useSW = useSW ? 1 : 0;
+
+    if (useSW) {
+        if ("serviceWorker" in navigator && !navigator.serviceWorker.controller) {
+            navigator.serviceWorker.register("./serviceworker.js")
+                .then(() => console.log("Service Worker registered"))
+                .catch(err => console.error("Service Worker registration failed:", err));
+        }
+    } else {
+        console.log("Service Workers disabled (not registering)");
+    }
+}
 	loadFavoriteList() {
 		try {
 			const favorites = JSON.parse(localStorage.favorites??'[]');
