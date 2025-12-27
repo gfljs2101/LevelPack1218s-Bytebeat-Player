@@ -551,9 +551,6 @@ globalThis.bytebeat = new class {
 		case 2: scope.colorChannels = [2, 0, 1]; break;
 		default: scope.colorChannels = [1, 0, 2];
 		}
-		if(scope.colorWaveform) {
-			scope.setStereoColors();
-		}
 	}
 	setSRDivisor(value) {
 		value = Number(value);
@@ -598,7 +595,6 @@ globalThis.bytebeat = new class {
 		}
 		ui.controlColorWaveform.value = value;
 		ui.controlColorWaveformInfo.innerHTML = scope.getColorTest('colorWaveform', value);
-		scope.setStereoColors();
 	}
 	setAudioSampleRate(value) {
 		if(value !== undefined) {
