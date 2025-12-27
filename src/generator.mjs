@@ -41,11 +41,14 @@ export class FavoriteGenerator {
 				`${ favorite.info.mode }${ favorite.info.samplerate }Hz`+
 				` @ ${ formatBytes(favorite.info.size) }`;
 		}
-		if (favorite.dateAdded) {
-		    ig_infoSpan.textContent += ` | Added: ${favorite.dateAdded}`; // show YYYY-MM-DD
-		} else {
-		    ig_infoSpan.textContent += ' | Added: No date';
+
+		let dateSpan = li.querySelector('.favorite-date');
+		if (!dateSpan) {
+		    dateSpan = document.createElement('span');
+		    dateSpan.className = 'favorite-date';
+		    li.appendChild(dateSpan);
 		}
+		dateSpan.textContent = favorite.dateAdded ?? 'No date';
 
 		const li_codeSpan = li.querySelector('.favorite-code');
 		li_codeSpan.addEventListener('click', () => {
