@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
 /* ==[ Themes ] =========================================================================================== */
 
 :root {
@@ -107,6 +109,7 @@ html[data-theme="Chasyxx"] {
 	--editor: #111511;
 	--entry: #111511;
 	--focus: var(--accent-bright);
+	--font: sans-serif;
 	--font-size: 10.5pt;
 	--library-seperator: linear-gradient(to right, var(--primary-medium), var(--primary-dark));
 	--library-header: linear-gradient(to bottom, var(--primary-medium), var(--primary-dark));
@@ -144,6 +147,7 @@ html[data-theme="Chasyxx Classic"] {
 	--focus: #614fdb;
 	--link: #89c2ff;
 	--link-hover: #3fe2e2 !important;
+	--font: sans-serif;
 	--library-seperator: linear-gradient(to right, #439157, #16202b);
 	--library-header: linear-gradient(to bottom, #204620, #0b170c);
 	--library-header-hover: linear-gradient(to bottom, #326c35, #192b15);
@@ -176,6 +180,7 @@ html[data-theme="Dollchan"] {
 	--focus: #614fdb;
 	--link: #89c2ff;
 	--link-hover: #3fe2e2 !important;
+	--font: sans-serif;
 	--library-seperator: linear-gradient(to right, #435a91, #16202b);
 	--library-header: linear-gradient(to bottom, #202c46, #0b0d17);
 	--library-header-hover: linear-gradient(to bottom, #32426c, #151b2b);
@@ -203,6 +208,7 @@ html[data-theme="Blue"] {
 	--control-volume-hover: linear-gradient(to bottom, #5183ee, #23315c);
 	--editor: #12151c;
 	--focus: #9782ff;
+	--font: sans-serif;
 	--library-seperator: linear-gradient(to right, #435a91, #16202b);
 	--library-header: linear-gradient(to bottom, #2c3e6a, #101420);
 	--library-header-hover: linear-gradient(to bottom, #405588, #192035);
@@ -234,6 +240,7 @@ html[data-theme="Cake"] {
 	--entry: #331831;
 	--library-seperator: linear-gradient(to right, #94449b, #24162b);
 	--focus: #56e6ff;
+	--font: sans-serif;
 	--library-header: linear-gradient(to bottom, #c0359d, #00353a);
 	--library-header-hover: linear-gradient(to bottom, #ee58c9, #004950);
 	--library-header-hover-color: #94fbff;
@@ -265,6 +272,7 @@ html[data-theme="Dusk"] {
 	--entry: #1d1d2b;
 	--library-seperator: linear-gradient(to right, #606095, #141426);
 	--focus: #8080c0;
+	--font: sans-serif;
 	--library-header: linear-gradient(to bottom, #202030, #404060);
 	--library-header-hover: linear-gradient(to bottom, #303048, #606096);
 	--library-header-hover-color: #d0d0f0;
@@ -297,6 +305,7 @@ html[data-theme="Green"] {
 	--entry: #19221a;
 	--library-seperator: linear-gradient(to right, #388036, #112211);
 	--focus: #aaffc4;
+	--font: sans-serif;
 	--library-header: linear-gradient(to bottom, #20462c, #0b170d);
 	--library-header-hover: linear-gradient(to bottom, #326c42, #152b1b);
 	--library-header-hover-color: #94ffc7;
@@ -325,6 +334,7 @@ html[data-theme="Orange"] {
 	--entry: #221e19;
 	--library-seperator: linear-gradient(to right, #dc781e, #2b2016);
 	--focus: #fff2aa;
+	--font: sans-serif;
 	--library-header: linear-gradient(to bottom, #c56600, #1d1206);
 	--library-header-hover: linear-gradient(to bottom, #f58004, #3b260d);
 	--library-header-hover-color: #ffffa5;
@@ -354,6 +364,7 @@ html[data-theme="Purple"] {
 	--entry: #1e1922;
 	--library-seperator: linear-gradient(to right, #684386, #281a33);
 	--focus: #8289ff;
+	--font: sans-serif;
 	--library-header: linear-gradient(to bottom, #432046, #170b16);
 	--library-header-hover: linear-gradient(to bottom, #65326c, #2b152a);
 	--dialog-background: linear-gradient(to bottom, #2b152a, #65326c);
@@ -385,6 +396,7 @@ html[data-theme="Teal"] {
 	--entry: #1f2b2b;
 	--library-seperator: linear-gradient(to right, #2a7e80, #162b2b);
 	--focus: #aafcff;
+	--font: sans-serif;
 	--library-header: linear-gradient(to bottom, #2b8082, #0e2828);
 	--library-header-hover: linear-gradient(to bottom, #3c9fa2, #214a4a);
 	--library-header-hover-color: #94fbff;
@@ -449,11 +461,13 @@ html {
 	color-scheme: dark;
 	background-color: #000;
 	color: #c5c8c6;
-	font: var(--font-size) sans-serif;
+	font: var(--font-size) var(--font);
 }
 
 body {
 	margin: 0;
+	padding: 0;
+	font-family: "Funnel Sans", sans-serif;
 }
 
 a, a:visited {
