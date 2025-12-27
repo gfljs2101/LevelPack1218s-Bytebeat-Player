@@ -89,7 +89,31 @@ export class Library {
 		}
 		str += ' <span class="code-info">';
 		if(date) {
-			str += date;
+			function formatDate(input) {
+				  const monthNames = [
+				    'January', 'February', 'March', 'April', 'May', 'June',
+				    'July', 'August', 'September', 'October', 'November', 'December'
+				  ];
+
+				  if (/^\d+-\d{2}-\d{2}$/.test(input)) {
+				    const date_ = new Date(input);
+				    return `${monthNames[date_.getMonth()]} ${date_.getDate()}, ${date_.getFullYear()}`;
+				  }
+				  if (/^\d+-\d{2}$/.test(input)) {
+				    const [year, month] = input.split('-');
+				    return `${monthNames[Number(month) - 1]} ${year}`;
+				  }
+				  if (/^[A-Za-z]+ \d+$/.test(input)) {
+				    return input;
+				  }
+				  if (/^\d+$/.test(input)) {
+				    return input;
+				  }
+
+				  return 'Invalid date format';
+			}
+
+			str += formatDate(date);
 		}
 		if(mode) {
 			str += ' ' + mode;
