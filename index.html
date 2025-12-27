@@ -421,31 +421,49 @@
 	<a id="downloader" class="hidden"></a>
 <script>
 // Load saved setting on page load
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
     const useSW = localStorage.getItem("useServiceWorker") === "true";
-    document.getElementById("use-service-worker").checked = useSW;
+    const checkbox = document.getElementById("use-service-worker");
+    checkbox.checked = useSW;
+
+    // If saved setting is true, make sure SW is registered
+    if (useSW && "serviceWorker" in navigator && !navigator.serviceWorker.controller) {
+        try {
+            await navigator.serviceWorker.register("./serviceworker.js");
+            console.log("Service Worker registered on load");
+        } catch (err) {
+            console.error("Failed to register Service Worker on load:", err);
+        }
+    }
 });
 
 // Apply button click
-document.getElementById("apply-settings").addEventListener("click", () => {
+document.getElementById("apply-settings").addEventListener("click", async () => {
     const checkbox = document.getElementById("use-service-worker");
     const useSW = checkbox.checked;
 
-    // Save setting to localStorage
+    // Save setting
     localStorage.setItem("useServiceWorker", useSW);
 
     if (useSW) {
+        // Register SW if not already registered
         if ("serviceWorker" in navigator && !navigator.serviceWorker.controller) {
-            navigator.serviceWorker.register("./serviceworker.js")
-                .then(() => {
-                    console.log("Service Worker registered");
-                })
-                .catch(err => {
-                    console.error("Service Worker registration failed:", err);
-                });
+            try {
+                await navigator.serviceWorker.register("./serviceworker.js");
+                console.log("Service Worker registered");
+            } catch (err) {
+                console.error("Service Worker registration failed:", err);
+            }
         }
     } else {
-        console.log("Service Workers disabled (not registering)");
+        // Unregister all service workers
+        if ("serviceWorker" in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const reg of registrations) {
+                await reg.unregister();
+            }
+            console.log("All Service Workers unregistered");
+        }
     }
 });
 </script>
