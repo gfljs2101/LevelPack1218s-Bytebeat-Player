@@ -838,7 +838,8 @@ globalThis.bytebeat = new class {
 					samplerate: this.sampleRate,
 					size: new Blob([editor.value]).size
 				},
-				url: window.location.hash
+				url: window.location.hash,
+				dateAdded: new Date().toISOString().split('T')[0]
 			});
 			localStorage.favorites = JSON.stringify(favorites);
 		} catch(e) {
@@ -857,6 +858,7 @@ globalThis.bytebeat = new class {
 					newFavorite.name = decodeURIComponent(i).split(': ').slice(1).join(': ');
 					newFavorite.info = decodeURIComponent(i).split(': ')[0];
 					newFavorite.url = decodeURIComponent(favorites[i]);
+					newFavourite.dateAdded = new Date().toISOString().split('T')[0];
 					newFavorites.push(newFavorite);
 				}
 				localStorage.favorites = JSON.stringify(newFavorites);
@@ -898,7 +900,8 @@ globalThis.bytebeat = new class {
 										samplerate: this.sampleRate,
 										size: new Blob([editor.value]).size
 									},
-									url: window.location.hash
+									url: window.location.hash,
+									dateAdded: favorites[i].dateAdded
 								};
 								localStorage.favorites = JSON.stringify(favorites);
 							} catch(e) {

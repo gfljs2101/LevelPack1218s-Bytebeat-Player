@@ -11,6 +11,9 @@ export class FavoriteGenerator {
 	<span class="control-label favorite-info"> <!-- ig_infoSpan -->
 		ModeHz @ Size
 	</span>
+	<span class="control-label favorite-date"> <!-- ig_infoSpan -->
+		No Date
+	</span>
 </div>
 
 <span class="favorite-text favorite-code"> <!-- li_codeSpan -->
@@ -37,6 +40,11 @@ export class FavoriteGenerator {
 			ig_infoSpan.textContent =
 				`${ favorite.info.mode }${ favorite.info.samplerate }Hz`+
 				` @ ${ formatBytes(favorite.info.size) }`;
+		}
+		if (favorite.dateAdded) {
+		    ig_infoSpan.textContent += ` | Added: ${favorite.dateAdded}`; // show YYYY-MM-DD
+		} else {
+		    ig_infoSpan.textContent += ' | Added: No date';
 		}
 
 		const li_codeSpan = li.querySelector('.favorite-code');
