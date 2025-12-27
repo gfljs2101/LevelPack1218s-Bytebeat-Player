@@ -419,26 +419,25 @@
 		</svg>
 	</div>
 	<a id="downloader" class="hidden"></a>
-<script>
+	<script>
 // Initialize localStorage only if it doesn't exist
 if (localStorage.getItem("useServiceWorker") === null) {
     localStorage.setItem("useServiceWorker", "false");
 }
 
-// Set checkbox state on page load
 window.addEventListener("DOMContentLoaded", async () => {
     const checkbox = document.getElementById("use-service-worker");
-    checkbox.checked = localStorage.getItem("useServiceWorker") === "true";
+    const useSW = localStorage.getItem("useServiceWorker") === "true";
+    checkbox.checked = useSW;
 
-    // Register SW if setting is true and not already registered
-    if (checkbox.checked && "serviceWorker" in navigator && !navigator.serviceWorker.controller) {
+    // Only register if the checkbox is checked
+    if (useSW && "serviceWorker" in navigator) {
         try {
             await navigator.serviceWorker.register("./serviceworker.js");
         } catch {}
     }
 });
 
-// Apply button click
 document.getElementById("apply-settings").addEventListener("click", async () => {
     const checkbox = document.getElementById("use-service-worker");
     const useSW = checkbox.checked;
@@ -447,11 +446,11 @@ document.getElementById("apply-settings").addEventListener("click", async () => 
     localStorage.setItem("useServiceWorker", useSW ? "true" : "false");
 
     if ("serviceWorker" in navigator) {
-        if (useSW && !navigator.serviceWorker.controller) {
+        if (useSW) {
             try {
                 await navigator.serviceWorker.register("./serviceworker.js");
             } catch {}
-        } else if (!useSW) {
+        } else {
             const registrations = await navigator.serviceWorker.getRegistrations();
             for (const reg of registrations) {
                 await reg.unregister();
