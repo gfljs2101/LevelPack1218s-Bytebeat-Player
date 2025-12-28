@@ -1,6 +1,5 @@
 import { ungzip } from 'pako';
-import { formatBytes } from './utils.mjs';
-import { formatDate } from './formatdate.mjs';
+import { formatBytes, formatDate } from './utils.mjs';
 
 export class Library {
 	constructor() {

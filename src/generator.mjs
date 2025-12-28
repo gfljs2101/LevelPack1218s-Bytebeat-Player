@@ -1,5 +1,4 @@
-import { formatBytes } from './utils.mjs';
-import { formatDate } from './formatdate.mjs';
+import { formatBytes, formatDate } from './utils.mjs';
 
 export class FavoriteGenerator {
 	static buildFavoriteEntry(i, favorite, length, deleteCallback, overwriteCallback, renameCallback) {
