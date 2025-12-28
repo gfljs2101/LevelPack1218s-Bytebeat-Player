@@ -40,6 +40,12 @@ export class Library {
 	}, libName) {
 		const notAllLib = libName !== 'all' && libName !== 'recent';
 		if(songs) {
+			songs.sort((a, b) => {
+				const da = new Date(a.date);
+				const db = new Date(b.date);
+				return da - db;
+			});
+
 			let songsStr = '';
 			const len = songs.length;
 			const maxVisible = 10;
