@@ -7,7 +7,7 @@ export function formatBytes(bytes, mode=0) {
 	const power1000s = (power1000i ? (bytes / (1000 ** power1000i)).toFixed(2) : bytes) + ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'][power1000i];
 	const power1024i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10);
 	const power1024s = (power1024i ? (bytes / (1024 ** power1024i)).toFixed(2) : bytes) + ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'][power1024i]
-	return [`${power1024s} (${[power1000s]})`,`${power1024s}/${[power1000s]} (${bytes}c)`,`${power1024s}/${[power1000s]}`]
+	return [`${power1024s} (${[power1000s]})`,`${power1024s}/${[power1000s]} (${bytes}c)`,`${power1024s}/${[power1000s]}`][mode]
 }
 
 export function formatDate(input) {
