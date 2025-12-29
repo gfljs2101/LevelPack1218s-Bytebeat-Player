@@ -1171,7 +1171,7 @@ button[name="close"] {
 
 #control-srdivisor {
 	flex-grow: 0;
-	width: 24px;
+	width: 32px;
 	border-radius: var(--control-corners);
 	cursor: default;
 }
