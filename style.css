@@ -1010,6 +1010,10 @@ button[name="close"] {
 	background-image: linear-gradient(to right, #047700, #7b0074);
 }
 
+.tag-triplet {
+	background-image: linear-gradient(to right, #fe4c4c 0%, #4cfe4c 33.33333333333%, #4c4cfe 66.6666666667%, #fe4c4c 100%);
+}
+
 /* ==[ Controls ] ========================================================================================= */
 
 .control-button, .control-select, .control-label {

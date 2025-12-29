@@ -35,7 +35,7 @@ export class Library {
 	}
 	generateEntryHTML({
 		author, code, codeFormLen, codeLen, codeMin, codeMinLen, coverName, coverUrl, date, description,
-		drawing, fileForm, fileMin, fileOrig, hash, mode, name, remix, sampleRate, songs, stereo, tags, url
+		drawing, fileForm, fileMin, fileOrig, hash, mode, name, remix, sampleRate, songs, stereo, triplet, tags, url
 	}, libName) {
 		const notAllLib = libName !== 'all' && libName !== 'recent';
 		if(songs) {
@@ -104,6 +104,9 @@ export class Library {
 		const outTags = [];
 		if(stereo) {
 			outTags.push('<span class="tag-stereo">stereo</span>');
+		}
+		if(triplet) {
+			outTags.push('<span class="tag-triplet">triplet</span>');
 		}
 		if(drawing) {
 			songObj.drawMode = drawing.mode;
