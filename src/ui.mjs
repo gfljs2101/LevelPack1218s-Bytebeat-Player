@@ -108,7 +108,7 @@ export class UI {
 	}
 	setCodeSize(value) {
 		this.controlCodeSize.textContent =
-			`${ formatBytes(new Blob([value]).size, 1) } (${ new Blob([value]).size }B) (${ formatBytes(window.location.href.length, 1) })`;
+			`${ formatBytes(new Blob([value]).size, 1) } ${new Blob([value]).size > 999 ? `(${ new Blob([value]).size }B)` : ``} (${ formatBytes(window.location.href.length, 1) })`;
 	}
 	okAlert(message, callback){
 		this.okDialogText.innerText = message;
