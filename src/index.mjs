@@ -8,7 +8,7 @@ import { splashes } from './splashes.mjs';
 
 import { FavoriteGenerator } from './generator.mjs';
 import { Prec } from '@codemirror/state';
-import * as lame from '@breezystack/lamejs';
+import { lamejs } from '@breezystack/lamejs';
 
 const editor = new Editor();
 const library = new Library();
