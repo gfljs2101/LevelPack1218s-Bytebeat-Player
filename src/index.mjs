@@ -308,13 +308,12 @@ globalThis.bytebeat = new class {
 						mp3Data.push(new Int8Array(mp3buf));
 					}
 				});
+				const url = URL.createObjectURL(new Blob(mp3Data, { type: 'audio/mpeg' }));
+				ui.downloader.href = url;
+				ui.downloader.download = 'track.mp3';
+				ui.downloader.click();
+				setTimeout(() => window.URL.revokeObjectURL(url));
 			};
-
-			const url = URL.createObjectURL(new Blob(this.mp3Data, { type: 'audio/mp3' }));
-			ui.downloader.href = url;
-			ui.downloader.download = 'track.mp3';
-			ui.downloader.click();
-			setTimeout(() => window.URL.revokeObjectURL(url));
 		});
 		this.audioGain.connect(mediaDest);
 	}
