@@ -133,7 +133,7 @@ export class Library {
 				outTags.push('<span class="tag-slow">slow</span>');
 				continue;
 			}
-			outTags.push('#' + tags[i]);
+			outTags.push(`<span class="tag-custom">${ tags[i] }</span>`);
 
 		}
 		if(outTags.length) {
@@ -228,7 +228,7 @@ export class Library {
 			waitElem.classList.add('hidden');
 			return;
 		}
-		containerElem.innerHTML = libName !== 'all' ? '' :
+		containerElem.innerHTML = libName !== 'all' && libName !== 'recent' ? '' :
 			`<label><input type="checkbox" id="library-show-all"${
 				this.showAllSongs ? ' checked' : '' }> Show all songs</label>`;
 		let libHTML = '';
