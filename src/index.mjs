@@ -291,7 +291,7 @@ globalThis.bytebeat = new class {
 			var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 640);
 			var mp3Data = [];
 			
-			const recordedBlob = new Blob(this.mp3Data, { type: 'audio/mp3' });
+			const recordedBlob = new Blob(this.audioRecordChunks, { type: 'audio/webm' });
 			const arrayBuffer = await recordedBlob.arrayBuffer();
     		const audioCtx2 = new AudioContext();
         	const decoded = await audioCtx2.decodeAudioData(arrayBuffer);
