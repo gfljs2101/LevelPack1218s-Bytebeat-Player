@@ -302,8 +302,8 @@ globalThis.bytebeat = new class {
 			const leftInt = new Int16Array(leftChannel.length);
 			const rightInt = new Int16Array(rightChannel.length);
 			for (let i = 0; i < leftChannel.length; i++) {
-				leftInt[i] = Math.max(-2147483648, Math.min(2147483647, leftChannel[i] * 2147483647));
-				rightInt[i] = Math.max(-2147483648, Math.min(2147483647, rightChannel[i] * 2147483647));
+				leftInt[i] = Math.max(-32768, Math.min(32767, leftChannel[i] * 32767));
+				rightInt[i] = Math.max(-32768, Math.min(32767, rightChannel[i] * 32767));
 			}
 			var sampleBlockSize = 1152;
 			for (var i = 0; i < leftInt.length; i += sampleBlockSize) {
