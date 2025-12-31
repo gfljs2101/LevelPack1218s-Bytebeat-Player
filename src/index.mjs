@@ -314,8 +314,6 @@ globalThis.bytebeat = new class {
 					setTimeout(() => window.URL.revokeObjectURL(blob));
 				});
 			};
-			const recordedBlob = URL.createObjectURL(new Blob(this.audioRecordChunks, { type: 'audio/webm' }));
-			reader.readAsArrayBuffer(recordedBlob);
 		});
 		this.audioGain.connect(mediaDest);
 	}
