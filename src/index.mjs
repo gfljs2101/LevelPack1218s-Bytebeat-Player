@@ -56,6 +56,19 @@ globalThis.bytebeat = new class {
 		this.startError = null;
 		this.init();
 	}
+	get saveData() {
+		const a = document.body.appendChild(document.createElement('a'));
+		a.style.display = 'none';
+		const saveData = (blob, fileName) => {
+			const url = URL.createObjectURL(blob);
+			a.href = url;
+			a.download = fileName;
+			a.click();
+			setTimeout(() => window.URL.revokeObjectURL(url));
+		};
+		Object.defineProperty(this, 'saveData', { value: saveData });
+		return saveData;
+	}
 	handleEvent(e) {
 		let elem = e.target;
 		switch(e.type) {
@@ -308,10 +321,7 @@ globalThis.bytebeat = new class {
 						mp3Data.push(new Int8Array(mp3buf));
 					}
 					const blob = URL.createObjectURL(new Blob(mp3Data, { type: 'audio/mpeg' }));
-					ui.downloader.href = blob;
-					ui.downloader.download = 'track.mp3';
-					ui.downloader.click();
-					setTimeout(() => window.URL.revokeObjectURL(blob));
+					this.saveData(blob, 'track.mp3');
 				});
 			};
 		});
