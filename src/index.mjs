@@ -320,10 +320,10 @@ globalThis.bytebeat = new class {
 					if (mp3buf.length > 0) {
 						mp3Data.push(new Int8Array(mp3buf));
 					}
-					const blob = URL.createObjectURL(new Blob(mp3Data, { type: 'audio/mpeg' }));
-					this.saveData(blob, 'track.mp3');
 				});
 			};
+			const blob = new Blob(mp3Data, { type: 'audio/mp3' });
+			this.saveData(blob, 'track.mp3');
 		});
 		this.audioGain.connect(mediaDest);
 	}
