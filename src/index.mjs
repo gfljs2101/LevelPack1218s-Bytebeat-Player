@@ -289,7 +289,7 @@ globalThis.bytebeat = new class {
 		audioRecorder.addEventListener('dataavailable', e => this.audioRecordChunks.push(e.data));
 		audioRecorder.addEventListener('stop', async () => {
 			// === LAME MP3 snippet ===
-			var mp3encoder = new lamejs.Mp3Encoder(2, 44100, 128); // stereo
+			var mp3encoder = new lame.Mp3Encoder(2, 44100, 320); // stereo
 			var mp3Data = [];
 
 			// Combine all recorded chunks into one Blob
