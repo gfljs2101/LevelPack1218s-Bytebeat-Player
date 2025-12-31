@@ -308,18 +308,12 @@ globalThis.bytebeat = new class {
 					if (mp3buf.length > 0) {
 						mp3Data.push(new Int8Array(mp3buf));
 					}
-
-					const blob = URL.createObjectURL(new Blob(mp3Data, { type: 'audio/mp3' }));
-					ui.downloader.href = blob;
-					ui.downloader.download = 'track.mp3';
-					ui.downloader.click();
-					setTimeout(() => window.URL.revokeObjectURL(blob));
 				});
 			};
 
-			const url = URL.createObjectURL(new Blob(this.audioRecordChunks, { type: 'audio/webm' }));
+			const url = URL.createObjectURL(new Blob(this.mp3Data, { type: 'audio/mp3' }));
 			ui.downloader.href = url;
-			ui.downloader.download = 'track.webm';
+			ui.downloader.download = 'track.mp3';
 			ui.downloader.click();
 			setTimeout(() => window.URL.revokeObjectURL(url));
 		});
