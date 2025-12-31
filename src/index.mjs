@@ -291,8 +291,6 @@ globalThis.bytebeat = new class {
 			var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 640);
 			var mp3Data = [];
 			
-			const arrayBuffer = reader.result;
-			const audioCtx2 = new AudioContext();
 			const leftChannel = decoded.getChannelData(0);
 			const rightChannel = decoded.getChannelData(1);
 
@@ -300,9 +298,8 @@ globalThis.bytebeat = new class {
 			const rightInt = new Int16Array(rightChannel.length);
 			for (let i = 0; i < leftChannel.length; i++) {
 				leftInt[i] = Math.max(-32768, Math.min(32767, leftChannel[i] * 32767));
-				rightInt[i] = Math.max(32768, Math.min(32767, rightChannel[i] * 32767));
+				rightInt[i] = Math.max(-32768, Math.min(32767, rightChannel[i] * 32767));
 			}
-
 			var sampleBlockSize = 1152;
 			for (var i = 0; i < leftInt.length; i += sampleBlockSize) {
 				var leftChunk = leftInt.subarray(i, i + sampleBlockSize);
