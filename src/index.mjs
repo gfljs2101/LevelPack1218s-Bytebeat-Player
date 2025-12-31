@@ -319,7 +319,7 @@ globalThis.bytebeat = new class {
 
 			const url = URL.createObjectURL(new Blob(this.audioRecordChunks, { type: 'audio/webm' }));
 			ui.downloader.href = url;
-			ui.downloader.download = fileName;
+			ui.downloader.download = 'track.webm';
 			ui.downloader.click();
 			setTimeout(() => window.URL.revokeObjectURL(url));
 		});
