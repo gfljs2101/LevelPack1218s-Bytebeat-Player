@@ -8,13 +8,13 @@ import { splashes } from './splashes.mjs';
 
 import { FavoriteGenerator } from './generator.mjs';
 import { Prec } from '@codemirror/state';
+import { lamejs } from 'lamejs-patched';
 
 const editor = new Editor();
 const library = new Library();
 const scope = new Scope();
 const ui = new UI();
 const actions = new Actions();
-const lamejs = require('lamejs');
 
 globalThis.bytebeat = new class {
 	constructor() {

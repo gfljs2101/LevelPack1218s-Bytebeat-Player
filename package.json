@@ -32,7 +32,7 @@
 		"@codemirror/state": "^6.4.1",
 		"@codemirror/view": "^6.34.3",
 		"@lezer/highlight": "^1.2.1",
-		"lamejs": "^1.2.1",
+		"lamejs-patched": "^0.1.7",
 		"pako": "^2.1.0"
 	}
 }
