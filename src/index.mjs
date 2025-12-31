@@ -8,7 +8,7 @@ import { splashes } from './splashes.mjs';
 
 import { FavoriteGenerator } from './generator.mjs';
 import { Prec } from '@codemirror/state';
-import { lamejs } from '@breezystack/lamejs';
+import * as lame from '@breezystack/lamejs';
 
 const editor = new Editor();
 const library = new Library();
@@ -275,7 +275,7 @@ globalThis.bytebeat = new class {
 
 		audioRecorder.addEventListener('dataavailable', e => this.audioRecordChunks.push(e.data));
 		audioRecorder.addEventListener('stop', () => {
-			var mp3encoder = new lamejs.Mp3Encoder(2, this.audioCtx.sampleRate, 640);
+			var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 640);
 			var mp3Data = [];
 
 			const reader = new FileReader();
@@ -307,13 +307,15 @@ globalThis.bytebeat = new class {
 					if (mp3buf.length > 0) {
 						mp3Data.push(new Int8Array(mp3buf));
 					}
+					const blob = URL.createObjectURL(new Blob(mp3Data, { type: 'audio/mpeg' }));
+					ui.downloader.href = blob;
+					ui.downloader.download = 'track.mp3';
+					ui.downloader.click();
+					setTimeout(() => window.URL.revokeObjectURL(blob));
 				});
-				const url = URL.createObjectURL(new Blob(mp3Data, { type: 'audio/mpeg' }));
-				ui.downloader.href = url;
-				ui.downloader.download = 'track.mp3';
-				ui.downloader.click();
-				setTimeout(() => window.URL.revokeObjectURL(url));
 			};
+			const recordedBlob = URL.createObjectURL(new Blob(this.audioRecordChunks, { type: 'audio/webm' }));
+			reader.readAsArrayBuffer(recordedBlob);
 		});
 		this.audioGain.connect(mediaDest);
 	}
