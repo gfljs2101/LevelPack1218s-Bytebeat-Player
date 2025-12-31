@@ -275,7 +275,7 @@ globalThis.bytebeat = new class {
 
 		audioRecorder.addEventListener('dataavailable', e => this.audioRecordChunks.push(e.data));
 		audioRecorder.addEventListener('stop', () => {
-			var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 640);
+			var mp3encoder = new lamejs.Mp3Encoder(2, this.audioCtx.sampleRate, 640);
 			var mp3Data = [];
 
 			const reader = new FileReader();
