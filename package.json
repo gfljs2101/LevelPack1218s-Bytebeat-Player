@@ -24,6 +24,7 @@
 		"rollup": "^4.27.3"
 	},
 	"dependencies": {
+		"@breezystack/lamejs": "^1.2.7",
 		"@codemirror/autocomplete": "^6.18.3",
 		"@codemirror/commands": "^6.7.1",
 		"@codemirror/lang-javascript": "^6.2.2",
@@ -32,7 +33,6 @@
 		"@codemirror/state": "^6.4.1",
 		"@codemirror/view": "^6.34.3",
 		"@lezer/highlight": "^1.2.1",
-		"lamejs-patched": "^0.1.7",
 		"pako": "^2.1.0"
 	}
 }

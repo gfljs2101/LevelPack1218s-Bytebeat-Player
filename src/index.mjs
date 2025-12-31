@@ -8,7 +8,7 @@ import { splashes } from './splashes.mjs';
 
 import { FavoriteGenerator } from './generator.mjs';
 import { Prec } from '@codemirror/state';
-import { lamejs } from 'lamejs-patched';
+import * as lame from '@breezystack/lamejs';
 
 const editor = new Editor();
 const library = new Library();
@@ -275,7 +275,7 @@ globalThis.bytebeat = new class {
 
 		audioRecorder.addEventListener('dataavailable', e => this.audioRecordChunks.push(e.data));
 		audioRecorder.addEventListener('stop', () => {
-			var mp3encoder = new lamejs.Mp3Encoder(2, this.audioCtx.sampleRate, 640);
+			var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 640);
 			var mp3Data = [];
 
 			const reader = new FileReader();
