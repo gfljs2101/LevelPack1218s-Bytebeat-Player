@@ -291,8 +291,8 @@ globalThis.bytebeat = new class {
 			var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 640);
 			var mp3Data = [];
 			
+			const arrayBuffer = reader.result;
 			const audioCtx2 = new AudioContext();
-			const decoded = await audioCtx2.decodeAudioData(arrayBuffer);
 			
 			const leftChannel = decoded.getChannelData(0);
 			const rightChannel = decoded.getChannelData(1);
