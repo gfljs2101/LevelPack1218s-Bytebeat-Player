@@ -288,22 +288,18 @@ globalThis.bytebeat = new class {
 
 		audioRecorder.addEventListener('dataavailable', e => this.audioRecordChunks.push(e.data));
 		audioRecorder.addEventListener('stop', async () => {
-			// === LAME MP3 snippet ===
-			var mp3encoder = new lame.Mp3Encoder(2, 44100, 320); // stereo
+			var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 320); // stereo
 			var mp3Data = [];
 
-			// Combine all recorded chunks into one Blob
 			const recordedBlob = new Blob(this.audioRecordChunks, { type: 'audio/webm' });
 			const arrayBuffer = await recordedBlob.arrayBuffer();
 
 			const audioCtx2 = new AudioContext();
 			const decoded = await audioCtx2.decodeAudioData(arrayBuffer);
 
-			// Get stereo channels
 			const leftChannel = decoded.getChannelData(0);
 			const rightChannel = decoded.getChannelData(1);
 
-			// Convert Float32 [-1,1] -> Int16
 			const samplesLeft = new Int16Array(leftChannel.length);
 			const samplesRight = new Int16Array(rightChannel.length);
 			for (let i = 0; i < leftChannel.length; i++) {
@@ -311,8 +307,7 @@ globalThis.bytebeat = new class {
 				samplesRight[i] = Math.max(-32768, Math.min(32767, rightChannel[i] * 32767));
 			}
 
-			// === Use your snippet without splitting into multiple chunks ===
-			var sampleBlockSize = samplesLeft.length; // the whole recording at once
+			var sampleBlockSize = samplesLeft.length;
 			var leftChunk = samplesLeft.subarray(0, sampleBlockSize);
 			var rightChunk = samplesRight.subarray(0, sampleBlockSize);
 			var mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
@@ -322,7 +317,7 @@ globalThis.bytebeat = new class {
 			if (mp3buf.length > 0) mp3Data.push(new Int8Array(mp3buf));
 
 			const blob = new Blob(mp3Data, { type: 'audio/mp3' });
-			this.saveData(blob, 'track.mp3'); // original name kept
+			this.saveData(blob, 'track.mp3');
 		});
 		this.audioGain.connect(mediaDest);
 	}
