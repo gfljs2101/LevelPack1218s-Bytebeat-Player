@@ -288,7 +288,7 @@ globalThis.bytebeat = new class {
 
 		audioRecorder.addEventListener('dataavailable', e => this.audioRecordChunks.push(e.data));
 		audioRecorder.addEventListener('stop', async () => {
-			var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 640);
+			var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 320);
 			var mp3Data = [];
 			
 			const recordedBlob = new Blob(this.audioRecordChunks, { type: 'audio/webm' });
