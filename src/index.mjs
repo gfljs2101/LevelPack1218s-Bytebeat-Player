@@ -294,11 +294,11 @@ globalThis.bytebeat = new class {
 			const leftChannel = decoded.getChannelData(0);
 			const rightChannel = decoded.getChannelData(1);
 
-			const leftInt = new Int16Array(leftChannel.length);
-			const rightInt = new Int16Array(rightChannel.length);
+			const leftInt = new Int32Array(leftChannel.length);
+			const rightInt = new Int32Array(rightChannel.length);
 			for (let i = 0; i < leftChannel.length; i++) {
-				leftInt[i] = Math.max(-32768, Math.min(32767, leftChannel[i] * 32767));
-				rightInt[i] = Math.max(-32768, Math.min(32767, rightChannel[i] * 32767));
+				leftInt[i] = Math.max(-2147483648, Math.min(2147483647, leftChannel[i] * 2147483647));
+				rightInt[i] = Math.max(-2147483648, Math.min(21474836487, rightChannel[i] * 2147483647));
 			}
 			var sampleBlockSize = 1152;
 			for (var i = 0; i < leftInt.length; i += sampleBlockSize) {
