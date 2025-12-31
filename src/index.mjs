@@ -8,6 +8,7 @@ import { splashes } from './splashes.mjs';
 
 import { FavoriteGenerator } from './generator.mjs';
 import { Prec } from '@codemirror/state';
+import * as lame from 'lamejs';
 
 const editor = new Editor();
 const library = new Library();
@@ -270,18 +271,53 @@ globalThis.bytebeat = new class {
 		this.audioWorkletNode.connect(this.audioGain);
 		const mediaDest = this.audioCtx.createMediaStreamDestination();
 		const audioRecorder = this.audioRecorder = new MediaRecorder(mediaDest.stream);
+		this.audioRecordChunks = [];
+
 		audioRecorder.addEventListener('dataavailable', e => this.audioRecordChunks.push(e.data));
 		audioRecorder.addEventListener('stop', () => {
-			let fileName, type;
-			const types = ['audio/webm', 'audio/ogg'];
-			const files = ['track.webm', 'track.ogg'];
-			while((fileName = files.pop()) && !MediaRecorder.isTypeSupported(type = types.pop())) {
-				if(types.length === 0) {
-					console.error('Recording is not supported in this browser!');
-					break;
-				}
-			}
-			const url = URL.createObjectURL(new Blob(this.audioRecordChunks, { type }));
+			var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 640);
+			var mp3Data = [];
+
+			const reader = new FileReader();
+			reader.onload = () => {
+				const arrayBuffer = reader.result;
+				const audioCtx2 = new AudioContext();
+				audioCtx2.decodeAudioData(arrayBuffer, decoded => {
+					const leftChannel = decoded.getChannelData(0);
+					const rightChannel = decoded.getChannelData(1);
+
+					// convert Float32 [-1,1] -> Int16
+					const leftInt = new Int16Array(leftChannel.length);
+					const rightInt = new Int16Array(rightChannel.length);
+					for (let i = 0; i < leftChannel.length; i++) {
+						leftInt[i] = Math.max(-2147483648, Math.min(2147483647, leftChannel[i] * 2147483647));
+						rightInt[i] = Math.max(2147483648, Math.min(2147483647, rightChannel[i] * 2147483647));
+					}
+
+					var sampleBlockSize = 1152;
+					for (var i = 0; i < leftInt.length; i += sampleBlockSize) {
+						var leftChunk = leftInt.subarray(i, i + sampleBlockSize);
+						var rightChunk = rightInt.subarray(i, i + sampleBlockSize);
+						// LAME stereo encoding expects 2 separate arrays
+						var mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
+						if (mp3buf.length > 0) {
+							mp3Data.push(mp3buf);
+						}
+					}
+					var mp3buf = mp3encoder.flush();
+					if (mp3buf.length > 0) {
+						mp3Data.push(new Int8Array(mp3buf));
+					}
+
+					const blob = URL.createObjectURL(new Blob(mp3Data, { type: 'audio/mp3' }));
+					ui.downloader.href = blob;
+					ui.downloader.download = 'track.mp3';
+					ui.downloader.click();
+					setTimeout(() => window.URL.revokeObjectURL(blob));
+				});
+			};
+
+			const url = URL.createObjectURL(new Blob(this.audioRecordChunks, { type: 'audio/webm' }));
 			ui.downloader.href = url;
 			ui.downloader.download = fileName;
 			ui.downloader.click();
