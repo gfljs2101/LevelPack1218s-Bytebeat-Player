@@ -290,42 +290,35 @@ globalThis.bytebeat = new class {
 		audioRecorder.addEventListener('stop', () => {
 			var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 640);
 			var mp3Data = [];
+			
+			const arrayBuffer = reader.result;
+			const audioCtx2 = new AudioContext();
+			const leftChannel = decoded.getChannelData(0);
+			const rightChannel = decoded.getChannelData(1);
 
-			const reader = new FileReader();
-			reader.onload = () => {
-				const arrayBuffer = reader.result;
-				const audioCtx2 = new AudioContext();
-				audioCtx2.decodeAudioData(arrayBuffer, decoded => {
-					const leftChannel = decoded.getChannelData(0);
-					const rightChannel = decoded.getChannelData(1);
+			const leftInt = new Int16Array(leftChannel.length);
+			const rightInt = new Int16Array(rightChannel.length);
+			for (let i = 0; i < leftChannel.length; i++) {
+				leftInt[i] = Math.max(-32768, Math.min(32767, leftChannel[i] * 32767));
+				rightInt[i] = Math.max(32768, Math.min(32767, rightChannel[i] * 32767));
+			}
 
-					const leftInt = new Int16Array(leftChannel.length);
-					const rightInt = new Int16Array(rightChannel.length);
-					for (let i = 0; i < leftChannel.length; i++) {
-						leftInt[i] = Math.max(-32768, Math.min(32767, leftChannel[i] * 32767));
-						rightInt[i] = Math.max(32768, Math.min(32767, rightChannel[i] * 32767));
-					}
-
-					var sampleBlockSize = 1152;
-					for (var i = 0; i < leftInt.length; i += sampleBlockSize) {
-						var leftChunk = leftInt.subarray(i, i + sampleBlockSize);
-						var rightChunk = rightInt.subarray(i, i + sampleBlockSize);
-						// LAME stereo encoding expects 2 separate arrays
-						var mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
-						if (mp3buf.length > 0) {
-							mp3Data.push(mp3buf);
-						}
-					}
-					var mp3buf = mp3encoder.flush();
-					if (mp3buf.length > 0) {
-						mp3Data.push(new Int8Array(mp3buf));
-					}
-					const blob = new Blob(mp3Data, { type: 'audio/mp3' });
-					this.saveData(blob, 'track.mp3'); // keeps original name
-				});
-			};
-			const recordedBlob = new Blob(this.audioRecordChunks, { type: 'audio/webm' });
-			reader.readAsArrayBuffer(recordedBlob);
+			var sampleBlockSize = 1152;
+			for (var i = 0; i < leftInt.length; i += sampleBlockSize) {
+				var leftChunk = leftInt.subarray(i, i + sampleBlockSize);
+				var rightChunk = rightInt.subarray(i, i + sampleBlockSize);
+				// LAME stereo encoding expects 2 separate arrays
+				var mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
+				if (mp3buf.length > 0) {
+					mp3Data.push(mp3buf);
+				}
+			}
+			var mp3buf = mp3encoder.flush();
+			if (mp3buf.length > 0) {
+				mp3Data.push(new Int8Array(mp3buf));
+			}
+			const blob = new Blob(mp3Data, { type: 'audio/mp3' });
+			this.saveData(blob, 'track.mp3')
 		});
 		this.audioGain.connect(mediaDest);
 	}
