@@ -287,38 +287,36 @@ globalThis.bytebeat = new class {
 		this.audioRecordChunks = [];
 
 		audioRecorder.addEventListener('dataavailable', e => this.audioRecordChunks.push(e.data));
-		audioRecorder.addEventListener('stop', async () => {
-			var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 320);
-			var mp3Data = [];
+audioRecorder.addEventListener('stop', async () => {
+    var mp3encoder = new lamejs.Mp3Encoder(2, 44100, 128);
+    var mp3Data = [];
 
-			const recordedBlob = new Blob(this.audioRecordChunks, { type: 'audio/webm' });
-			const arrayBuffer = await recordedBlob.arrayBuffer();
+    const recordedBlob = new Blob(this.audioRecordChunks, { type: 'audio/webm' });
+    const arrayBuffer = await recordedBlob.arrayBuffer();
 
-			const audioCtx2 = new AudioContext();
-			const decoded = await audioCtx2.decodeAudioData(arrayBuffer);
+    this.decodeCtx ||= new AudioContext({ sampleRate: 44100 });
+    const decoded = await this.decodeCtx.decodeAudioData(arrayBuffer);
 
-			const leftChannel = decoded.getChannelData(0);
-			const rightChannel = decoded.getChannelData(1);
+    const left = decoded.getChannelData(0);
+    const right = decoded.getChannelData(1);
 
-			const samplesLeft = new Int16Array(leftChannel.length);
-			const samplesRight = new Int16Array(rightChannel.length);
-			for (let i = 0; i < leftChannel.length; i++) {
-				samplesLeft[i] = Math.max(-32768, Math.min(32767, leftChannel[i] * 32767));
-				samplesRight[i] = Math.max(-32768, Math.min(32767, rightChannel[i] * 32767));
-			}
+    const left16 = new Int16Array(left.length);
+    const right16 = new Int16Array(right.length);
 
-			var sampleBlockSize = samplesLeft.length;
-			var leftChunk = samplesLeft.subarray(0, sampleBlockSize);
-			var rightChunk = samplesRight.subarray(0, sampleBlockSize);
-			var mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
-			if (mp3buf.length > 0) mp3Data.push(mp3buf);
+    for (let i = 0; i < left.length; i++) {
+        left16[i]  = Math.max(-32768, Math.min(32767, left[i]  * 32767));
+        right16[i] = Math.max(-32768, Math.min(32767, right[i] * 32767));
+    }
 
-			mp3buf = mp3encoder.flush();
-			if (mp3buf.length > 0) mp3Data.push(new Int8Array(mp3buf));
+    var mp3buf = mp3encoder.encodeBuffer(left16, right16);
+    if (mp3buf.length > 0) mp3Data.push(mp3buf);
 
-			const blob = new Blob(mp3Data, { type: 'audio/mp3' });
-			this.saveData(blob, 'track.mp3');
-		});
+    mp3buf = mp3encoder.flush();
+    if (mp3buf.length > 0) mp3Data.push(new Int8Array(mp3buf));
+
+    const blob = new Blob(mp3Data, { type: 'audio/mp3' });
+    this.saveData(blob, 'track.mp3');
+});
 		this.audioGain.connect(mediaDest);
 	}
 	async micTest() {
