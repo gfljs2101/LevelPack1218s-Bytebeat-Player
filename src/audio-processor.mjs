@@ -81,7 +81,7 @@ class audioProcessor extends AudioWorkletProcessor {
 				b[ch] = NaN;
 			}
 			if (!isNaN(b[ch]))
-				b[ch] = Math.floor(this.getValuesVisualizer(b[ch], ch))&255;
+				b[ch] = Math.floor((Math.floor(this.getValuesVisualizer(b[ch], ch))&255) / this.srDivisor) * this.srDivisor;
 		}
 		return b;
 	}
@@ -123,7 +123,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		const isDiagram = this.drawMode === 'Combined' || this.drawMode === 'Diagram';
 		for(let i = 0; i < chDataLen; ++i) {
 			time += this.sampleRatio;
-			const currentTime = Math.floor(time / this.srDivisor) * this.srDivisor;
+			const currentTime = Math.floor(time);
 			if(this.lastTime !== currentTime) {
 				let funcValue;
 				const currentSample = Math.floor(byteSample / this.srDivisor) * this.srDivisor;
