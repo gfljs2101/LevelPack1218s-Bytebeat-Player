@@ -123,10 +123,10 @@ class audioProcessor extends AudioWorkletProcessor {
 		const isDiagram = this.drawMode === 'Combined' || this.drawMode === 'Diagram';
 		for(let i = 0; i < chDataLen; ++i) {
 			time += this.sampleRatio;
-			const currentTime = Math.floor(time);
+			const currentTime = Math.floor(time / this.srDivisor) * this.srDivisor;
 			if(this.lastTime !== currentTime) {
 				let funcValue;
-				const currentSample = Math.floor(byteSample / this.srDivisor) * this.srDivisor;
+				const currentSample = Math.floor(byteSample);
 				try {
 					// long cascade of null handlers
 					const inputs0 = inputs[0] ?? [ ];
