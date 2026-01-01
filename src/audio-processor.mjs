@@ -83,7 +83,7 @@ class audioProcessor extends AudioWorkletProcessor {
 			if (!isNaN(b[ch]))
 				b[ch] = Math.floor(this.getValuesVisualizer(b[ch], ch))&255;
 		}
-		return Math.floor(b / this.srDivisor) * this.srDivisor;
+		return b;
 	}
 	handleAudioSamples(a) {
 		let b = Array.isArray(a) ? a.slice() : a;
