@@ -32,7 +32,7 @@
 		"@codemirror/search": "^6.5.7",
 		"@codemirror/state": "^6.4.1",
 		"@codemirror/view": "^6.34.3",
-		"@lezer/highlight": "^1.2.1",
+		"@lezer/highlight": "^1.2.3",
 		"pako": "^2.1.0"
 	}
 }
