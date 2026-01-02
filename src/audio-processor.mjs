@@ -296,21 +296,7 @@ class audioProcessor extends AudioWorkletProcessor {
 			"LogHack2": function (x) { const neg = x < 0; return x == 0 ? 0 : ((Math.log2(Math.abs(x)) * (neg ? -16 : 16)) + (neg ? -127 : 128)) },
 			"LogHack": function (x) { return Math.log2(Math.abs(x)) * ((x < 0) ? -32 : 32) },
 			"Logmode": function (x) { return Math.log2(x) * 32 },
-			"Bitbeat": function (x) { return x & 1 && 255 },
-
-			"saw": t => t % 256,
-			"tri": t => Math.abs((t % 512) - 256),
-			"sq": t => t % 256 < 128 ? 255 : 0,
-			"audioIN": (index, channel = 0, file = 0) => {
-				const audioFile = this.audioFiles.get(file);
-				if (!audioFile || !audioFile.data) return 0;
-				const sampleIndex = Math.floor(index) * audioFile.channels + (channel % audioFile.channels);
-				return audioFile.data[sampleIndex] || 0;
-			},
-			"audioLength": (file = 0) => {
-				const audioFile = this.audioFiles.get(file);
-				return audioFile ? audioFile.data.length/audioFile.channels : 0;
-			}
+			"Bitbeat": function (x) { return x & 1 && 255 }
 		}
 		// Create shortened Math functions
 		const params = Object.getOwnPropertyNames(Math);
