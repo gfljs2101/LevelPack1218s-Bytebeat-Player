@@ -239,6 +239,36 @@
 				</article>
 			</details>
 			<details class="library-content">
+				<summary class="ui-section-header">
+					<h1>Audio Files</h1> - Loaded audio files for audioIN function
+				</summary>
+
+					<label class="settings-block">
+						<input type="file" id="file-input" accept="audio/*" multiple style="display:none">
+						<button id="add-file" class="control-button">Add Files</button>
+						Load audio files
+					</label>
+					<label class="settings-block">
+						<button id="clear-files" class="control-button">Clear All</button>
+						Remove all loaded files
+					</label>
+					<div id="file-list"></div>
+
+					<summary class="ui-section-header">
+						<h1>TB3 Projects</h1> &ndash; Load complete projects
+					</summary>
+					<div id="tb3-list"></div>
+						<input type="file" id="tb3-input" accept=".tb3,.tb2" style="display:none">
+						<button id="load-tb3" class="control-button">Load TB3/TB2</button>
+						Load TB3/TB2 project file
+						<br>
+						<button id="save-tb3" class="control-button">Save TB3</button>
+						Save current project as TB3 file
+						<br>
+						<input type="checkbox" id="DONOTCHANGESCOPEPREFERENCES" checked>Do not change scope preference when loading TB3</input>
+					</div>
+			</details>
+			<details class="library-content">
 				<summary class="library-header">
 					<h1>Classic</h1> &ndash; C-compatible Bytebeat, one variable (t)
 					<svg class="loading-wait hidden"><use xlink:href="#symbol-wait"></svg>
@@ -279,6 +309,22 @@
 					<svg class="loading-wait hidden"><use xlink:href="#symbol-wait"></svg>
 				</summary>
 				<div id="library-floatbeat-big" class="library-container"></div>
+			</details>
+			<details class="library-content">
+				<summary class="library-header">
+					<h1>Exotic Projects</h1> &ndash; Special projects with extended features
+				</summary>
+				<article class="library-container entry loaded">
+					<p><strong>Note:</strong> These projects use extended features and custom functions that are not compatible with standard bytebeat players like Dollchan or EnBeat_NEW. They require this specific player to work correctly.</p>
+					<p>Features that may cause incompatibility:</p>
+					<ul>
+						<li>Custom functions (bitC, br, sinf, cosf, tanf, regG) (avalible on EnBeat_NEW)</li>
+						<li>Audio input functions (audioIN, audioLength)</li>
+						<li>Extended waveform generators (saw, tri, sq)</li>
+						<li>TB2/TB3 project format with embedded audio</li>
+					</ul>
+					<div id="exotic-projects"></div>
+				</article>
 			</details>
 			<details class="library-content">
 				<summary class="library-header">
