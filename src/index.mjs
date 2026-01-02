@@ -9,6 +9,7 @@ import { splashes } from './splashes.mjs';
 import { FavoriteGenerator } from './generator.mjs';
 import { Prec } from '@codemirror/state';
 import * as lame from '@breezystack/lamejs';
+import { JSZip } from 'jszip';
 
 const editor = new Editor();
 const library = new Library();
@@ -54,6 +55,7 @@ globalThis.bytebeat = new class {
 		this.updateCounter = 0;
 		this.expectedDomain = 'gfljs2101';
 		this.startError = null;
+		this.audioFiles = new Map();
 		this.init();
 	}
 	get saveData() {
@@ -145,9 +147,17 @@ globalThis.bytebeat = new class {
 				} else if(elem.classList.contains('code-remix-load')) {
 					library.onclickRemixLoadButton(elem);
 				} else if(elem.classList.contains('library-header')) {
-					library.onclickLibraryHeader(elem);
+					if(elem.closest('#exotic-projects')) {
+						this.toggleExoticSection(elem);
+					} else {
+						library.onclickLibraryHeader(elem);
+					}
 				} else if(elem.parentNode.classList.contains('library-header')) {
-					library.onclickLibraryHeader(elem.parentNode);
+					if(elem.parentNode.closest('#exotic-projects')) {
+						this.toggleExoticSection(elem.parentNode);
+					} else {
+						library.onclickLibraryHeader(elem.parentNode);
+					}
 				}
 			}
 			return;
@@ -255,6 +265,8 @@ globalThis.bytebeat = new class {
 		ui.containerScroll.addEventListener('mouseover', this);
 		this.loadFavoriteList();
 		this.setSplashtext();
+		this.initFileManager();
+		this.loadExoticProjects();
 		if(!window.location.hostname.includes(this.expectedDomain) &&
 		!window.location.hostname.startsWith('127.') &&
 		!window.location.hostname.startsWith('::1') &&
@@ -320,6 +332,296 @@ globalThis.bytebeat = new class {
 			this.saveData(blob, 'track.mp3');
 		});
 		this.audioGain.connect(mediaDest);
+	}
+	initFileManager() {
+		const addFileBtn = document.getElementById('add-file');
+		const clearFilesBtn = document.getElementById('clear-files');
+		const fileInput = document.getElementById('file-input');
+		const loadTB3Btn = document.getElementById('load-tb3');
+		const tb3Input = document.getElementById('tb3-input');
+		
+		addFileBtn.addEventListener('click', () => fileInput.click());
+		clearFilesBtn.addEventListener('click', () => this.clearAllFiles());
+		fileInput.addEventListener('change', e => this.handleFileSelect(e));
+		loadTB3Btn.addEventListener('click', () => tb3Input.click());
+		tb3Input.addEventListener('change', e => this.handleTB3Select(e));
+		document.getElementById('save-tb3').addEventListener('click', () => this.saveTB3());
+	}
+	async handleFileSelect(e) {
+		const files = Array.from(e.target.files);
+		for(const file of files) {
+			if(file.type.startsWith('audio/')) {
+				await this.handleAudioFile(file);
+			}
+		}
+		this.updateFileList();
+		this.sendAudioFilesToProcessor();
+	}
+	async handleTB3Select(e) {
+		const file = e.target.files[0];
+		if(file) {
+			editor.showLoading();
+			try {
+				await this.handleTB3File(file);
+				this.updateFileList();
+				this.sendAudioFilesToProcessor();
+			} finally {
+				// Don't hide loading here since handleTB3File -> loadCode will handle it
+			}
+		}
+	}
+	async handleTB3File(file) {
+		const zip = new JSZip();
+		const zipData = await zip.loadAsync(file);
+		this.audioFiles.clear();
+		
+		// Detect format
+		let format = 'Unknown';
+		const hasAudioFolder = Object.keys(zipData.files).some(f => f.startsWith('audio/'));
+		const hasAudioJson = zipData.files['audio.json'];
+		
+		if(hasAudioFolder) format = 'TB3';
+		else if(hasAudioJson) format = 'TB2';
+		else format = 'TB3';
+		
+		// TB2/TB3 format
+		if(zipData.files['code.txt'] && zipData.files['settings.json']) {
+			const code = await zipData.files['code.txt'].async('string');
+			const settings = JSON.parse(await zipData.files['settings.json'].async('string'));
+			
+			// Don't show loading again since loadCode will handle it
+			this.loadCode({ code, ...settings, format }, true);
+			
+			// TB3: Load from audio folder
+			for(const [filename, zipEntry] of Object.entries(zipData.files)) {
+				if(filename.startsWith('audio/') && filename.endsWith('.json')) {
+					const index = +filename.match(/\/(\d+)\.json$/)[1];
+					const audioData = JSON.parse(await zipEntry.async('text'));
+					this.audioFiles.set(index, {
+						name: audioData.name,
+						data: new Float32Array(audioData.data),
+						channels: audioData.channels,
+						sampleRate: audioData.sampleRate
+					});
+				}
+			}
+			
+			// TB2: Load from audio.json
+			if(zipData.files['audio.json']) {
+				const audioData = JSON.parse(await zipData.files['audio.json'].async('string'));
+				// TB2 format: data is [sample][channel], interleave channels
+				const numChannels = audioData.channels;
+				const length = audioData.data.length;
+				const interleaved = new Float32Array(length * numChannels);
+				for (let i = 0; i < length; i++) {
+					for (let ch = 0; ch < numChannels; ch++) {
+						interleaved[i * numChannels + ch] = audioData.data[i][ch] || 0;
+					}
+				}
+				this.audioFiles.set(0, {
+					name: 'audio.json',
+					data: interleaved,
+					channels: numChannels,
+					sampleRate: audioData.sampleRate
+				});
+			}
+		}
+	}
+	async handleAudioFile(file) {
+		const arrayBuffer = await file.arrayBuffer();
+		const audioBuffer = await this.audioCtx.decodeAudioData(arrayBuffer);
+		const numChannels = audioBuffer.numberOfChannels;
+		const length = audioBuffer.length;
+		const interleaved = new Float32Array(length * numChannels);
+		for (let i = 0; i < length; i++) {
+			for (let ch = 0; ch < numChannels; ch++) {
+				interleaved[i * numChannels + ch] = audioBuffer.getChannelData(ch)[i];
+			}
+		}
+		const audioData = {
+			name: file.name,
+			data: interleaved,
+			channels: numChannels,
+			sampleRate: audioBuffer.sampleRate,
+			duration: audioBuffer.duration
+		};
+		this.audioFiles.set(this.audioFiles.size, audioData);
+	}
+	updateFileList() {
+		const fileList = document.getElementById('file-list') || document.getElementById('audio-list');
+		if(!fileList) return;
+		fileList.innerHTML = '';
+		this.audioFiles.forEach((file, index) => {
+			const fileItem = document.createElement('div');
+			fileItem.className = 'file-item';
+			fileItem.innerHTML = `
+				<span>${ index }: ${ file.name }</span>
+				<button class="remove-file" data-index="${ index }">×</button>
+			`;
+			fileItem.querySelector('.remove-file').addEventListener('click', () => {
+				this.removeFile(index);
+			});
+			fileList.appendChild(fileItem);
+		});
+	}
+	removeFile(index) {
+		this.audioFiles.delete(index);
+		this.updateFileList();
+		this.sendAudioFilesToProcessor();
+	}
+	clearAllFiles() {
+		this.audioFiles.clear();
+		this.updateFileList();
+		this.sendAudioFilesToProcessor();
+	}
+	sendAudioFilesToProcessor() {
+		this.sendData({ audioFiles: Array.from(this.audioFiles.entries()) });
+	}
+	async loadTB3FromUrl(url) {
+		editor.showLoading();
+		try {
+			const response = await fetch(url);
+			const blob = await response.blob();
+			const file = new File([blob], url.split('/').pop());
+			await this.handleTB3File(file);
+			this.updateFileList();
+			this.sendAudioFilesToProcessor();
+		} finally {
+			setTimeout(() => editor.hideLoading(), 100);
+		}
+	}
+	async loadExoticProjects() {
+		try {
+			const response = await fetch('./data/exotic-projects.json');
+			const data = await response.json();
+			const container = document.getElementById('exotic-projects');
+			container.innerHTML = '';
+			
+			for(const section of data.sections) {
+				// Create section header
+				const sectionHeader = document.createElement('div');
+				sectionHeader.className = 'library-header';
+				sectionHeader.innerHTML = `<span class="library-arrow">${
+					section.expanded ? '▼' : '▶'
+				}</span> ${ section.name } <span class="library-count">${
+					section.count
+				} songs</span>`;
+				container.appendChild(sectionHeader);
+				
+				// Create projects container
+				const projectsContainer = document.createElement('div');
+				projectsContainer.className = 'library-songs';
+				projectsContainer.style.display = section.expanded ? 'block' : 'none';
+				
+				for(const project of section.projects) {
+					const projectDiv = document.createElement('div');
+					projectDiv.className = 'song';
+					
+					if(project.codeFile.endsWith('.tb2') || project.codeFile.endsWith('.tb3')) {
+						// TB2/TB3 project file
+						const formatLabel = project.codeFile.endsWith('.tb2') ? '[TB2] ' : '[TB3] ';
+						projectDiv.innerHTML = `
+							<div class="song-title">${ formatLabel }${
+								project.name
+							}</div>
+							<div class="song-author">${ section.name } (${
+								project.date
+							})</div>
+							${
+								project.description
+									? `<div class="song-description">${
+										project.description
+									}</div>`
+									: ''
+							}
+							${
+								project.features
+									? `<div class="song-features">Features: ${
+										project.features.join(', ')
+									}</div>`
+									: ''
+							}
+							<button class="code-load" data-file="./data/songs/exotic/${
+								project.codeFile
+							}">Load ${ project.codeFile }</button>
+						`;
+					} else {
+						// Regular JS file
+						const codeResponse = await fetch(`./data/songs/exotic/${ project.codeFile }`);
+						const code = await codeResponse.text();
+						const formatLabel = project.mode ? `[${ project.mode }] ` : '';
+						projectDiv.innerHTML = `
+							<div class="song-title">${ formatLabel }${
+								project.name
+							}</div>
+							<div class="song-author">${ section.name } (${
+								project.date
+							})</div>
+							${
+								project.description
+									? `<div class="song-description">${
+										project.description
+									}</div>`
+									: ''
+							}
+							${
+								project.features
+									? `<div class="song-features">Features: ${
+										project.features.join(', ')
+									}</div>`
+									: ''
+							}
+							<div class="code-text" data-songdata='${
+								JSON.stringify({ ...project, code })
+							}'>${ code }</div>
+						`;
+					}
+					projectsContainer.appendChild(projectDiv);
+				}
+				container.appendChild(projectsContainer);
+			}
+		} catch(error) {
+			console.log('No exotic projects file found');
+		}
+	}
+	async saveTB3() {
+		const zip = new JSZip();
+		const audioFolder = zip.folder('audio');
+		
+		// Save code
+		zip.file('code.txt', editor.value);
+		
+		// Save settings
+		zip.file('settings.json', JSON.stringify({
+			mode: this.mode,
+			sampleRate: this.sampleRate,
+			drawMode: scope.drawMode,
+			scale: scope.drawScale
+		}));
+		
+		// Save audio files in audio folder
+		for(const [index, audioData] of this.audioFiles.entries()) {
+			audioFolder.file(`${ index }.json`, JSON.stringify({
+				name: audioData.name,
+				data: Array.from(audioData.data),
+				channels: audioData.channels,
+				sampleRate: audioData.sampleRate
+			}));
+		}
+		
+		const blob = await zip.generateAsync({ type: 'blob' });
+		const url = URL.createObjectURL(blob);
+		ui.downloader.href = url;
+		ui.downloader.download = 'project.tb3';
+		ui.downloader.click();
+		setTimeout(() => URL.revokeObjectURL(url));
+	}
+	toggleExoticSection(header) {
+		const arrow = header.querySelector('.library-arrow');
+		const songsContainer = header.nextElementSibling;
+		const isExpanded = songsContainer.style.display !== 'none';
+		arrow.textContent = isExpanded ? '▶' : '▼';
+		songsContainer.style.display = isExpanded ? 'none' : 'block';
 	}
 	async micTest() {
 		const testContext = new AudioContext({
@@ -974,3 +1276,36 @@ globalThis.bytebeat = new class {
 		}
 	}
 }();
+
+// Add CSS for file management
+const style = document.createElement('style');
+style.textContent = `
+.file-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 8px;
+	margin: 4px 0;
+	background: var(--color-bg-secondary);
+	border: 1px solid var(--color-border);
+	border-radius: 4px;
+}
+.file-item span {
+	flex: 1;
+	color: var(--color-text);
+}
+.remove-file {
+	background: #ff4444;
+	color: white;
+	border: none;
+	padding: 4px 8px;
+	cursor: pointer;
+	border-radius: 3px;
+	font-size: 12px;
+	margin-left: 8px;
+}
+.remove-file:hover {
+	background: #ff6666;
+}
+`;
+document.head.appendChild(style);
