@@ -865,6 +865,12 @@ button[name="close"] {
 	color: var(--code-tags);
 }
 
+.code-tags > span {
+	margin: 0 1px;
+	padding: 0 4px;
+	border-radius: 8px;
+}
+
 .code-text, .favorite-text {
 	display: inline-block;
 	margin: 0;
