@@ -866,9 +866,10 @@ button[name="close"] {
 }
 
 .code-tags > span {
-	margin: 0 1px;
-	padding: 0 4px;
-	border-radius: 8px;
+	padding: 0 3px;
+	border-radius: 4px;
+	color: #b7b8c6;
+	font-weight: bold;
 }
 
 .code-text, .favorite-text {
@@ -983,13 +984,6 @@ button[name="close"] {
 
 .songs-header > small {
 	margin-left: 8px;
-}
-
-.code-tags > span {
-	padding: 0 3px;
-	border-radius: 4px;
-	color: #b7b8c6;
-	font-weight: bold;
 }
 
 .tag-c {
