@@ -16,6 +16,9 @@
 		"start": "rollup -c"
 	},
 	"devDependencies": {
+		"@eslint/js": "^9.15.0",
+		"@rollup/plugin-node-resolve": "^16.0.3",
+		"@rollup/plugin-terser": "^0.4.4",
 		"@eslint/js": "^10.0.1",
 		"@rollup/plugin-node-resolve": "^15.3.0",
 		"@rollup/plugin-terser": "^1.0.0",
