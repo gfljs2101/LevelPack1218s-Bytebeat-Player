@@ -65,7 +65,7 @@ const editorView = initValue => new EditorView({
 export class Editor {
 	constructor() {
 		this.container = null;
-		this.defaultValue = 't/=4,k=x=>127*sin(800*cbrt(t%x)*PI/128)/2+127,s=[t*((t&4096?t%65536<59392?6:t&7:16)+(1&t>>14))>>(3&-t>>(t&2048?4:10))|t>>(t&16384?t&8192?4:2:3),k(4096)|k(2048),t&4096?random()*128|t>>4:127],3*(s[0]%256+s[1]%256+s[2]%256)/1275-1.2';
+		this.defaultValue = 't/=4,k=x=>127*sin(800*cbrt(t%x)*PI/128)/2+127,s=[t*((t&4096?t%65536<59392?6:t&7:16)+(1&t>>14))>>(3&-t>>(t&2048?4:10))|t>>(t&16384?t&8192?4:2:3),k(4096)|k(2048),t&4096?random()*128|t>>4:127],3*s.reduce((a,v)=>a+v%256,0)/1275-1.2';
 		this.errorElem = null;
 		this.view = null;
 	}
