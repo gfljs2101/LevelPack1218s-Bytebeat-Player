@@ -41,7 +41,8 @@ jobs:
           cp index.html artifactRoot/
           cp style.css artifactRoot/
           cp favicon.png artifactRoot/
-
+          cp serviceworker.js artifactRoot/
+          
       - name: Install NPM dependencies
         id: install-npm
         run: npm install
@@ -80,4 +81,4 @@ jobs:
     steps:
       - name: Deploy page for all to see
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
