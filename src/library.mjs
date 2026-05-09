@@ -1,5 +1,5 @@
 import { ungzip } from 'pako';
-import { formatBytes } from './utils.mjs';
+import { formatBytes, formatDate } from './utils.mjs';
 
 export class Library {
 	constructor() {
@@ -35,10 +35,16 @@ export class Library {
 	}
 	generateEntryHTML({
 		author, code, codeFormLen, codeLen, codeMin, codeMinLen, coverName, coverUrl, date, description,
-		drawing, fileForm, fileMin, fileOrig, hash, mode, name, remix, sampleRate, songs, stereo, tags, url
+		drawing, fileForm, fileMin, fileOrig, hash, mode, name, remix, sampleRate, songs, stereo, triplet, tags, url
 	}, libName) {
 		const notAllLib = libName !== 'all' && libName !== 'recent';
 		if(songs) {
+			songs.sort((a, b) => {
+				const da = new Date(a.date);
+				const db = new Date(b.date);
+				return da - db; // ascending (oldest → newest)
+			});
+			
 			let songsStr = '';
 			const len = songs.length;
 			const maxVisible = 10;
@@ -89,7 +95,7 @@ export class Library {
 		}
 		str += ' <span class="code-info">';
 		if(date) {
-			str += date;
+			str += formatDate(date);
 		}
 		if(mode) {
 			str += ' ' + mode;
@@ -98,6 +104,9 @@ export class Library {
 		const outTags = [];
 		if(stereo) {
 			outTags.push('<span class="tag-stereo">stereo</span>');
+		}
+		if(triplet) {
+			outTags.push('<span class="tag-triplet">triplet</span>');
 		}
 		if(drawing) {
 			songObj.drawMode = drawing.mode;
@@ -124,7 +133,7 @@ export class Library {
 				outTags.push('<span class="tag-slow">slow</span>');
 				continue;
 			}
-			outTags.push('#' + tags[i]);
+			outTags.push(`<span class="tag-custom">${ tags[i] }</span>`);
 
 		}
 		if(outTags.length) {
@@ -219,7 +228,7 @@ export class Library {
 			waitElem.classList.add('hidden');
 			return;
 		}
-		containerElem.innerHTML = libName !== 'all' ? '' :
+		containerElem.innerHTML = libName !== 'all' && libName !== 'recent' ? '' :
 			`<label><input type="checkbox" id="library-show-all"${
 				this.showAllSongs ? ' checked' : '' }> Show all songs</label>`;
 		let libHTML = '';

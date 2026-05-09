@@ -110,6 +110,9 @@ function addSongForm() {
 								<option value="Signed Bytebeat">Signed Bytebeat</option>
 								<option value="Floatbeat">Floatbeat</option>
 								<option value="Funcbeat">Funcbeat</option>
+								<option value="RAW">RAW</option>
+								<option value="Signed RAW">Signed RAW</option>
+								<option value="FloatRAW">FloatRAW</option>
 							</select>
 							<input type="text" name="samplerate" placeholder="Sample rate (Hz)">
 							<label style="white-space: nowrap;"><input type="checkbox" name="stereo"> Stereo</label>
@@ -601,14 +604,14 @@ function databaseToFiles() {
 		$fileOrig = 0;
 		$fileForm = 0;
 		if (isset($song['code_minified']) && mb_strlen($song['code_minified']) > 1024) {
-			// Save big minified code into file
+			// Save minified larger than 1024 bytes code into file
 			file_put_contents($pathMinified . $song['hash'] . '.js', $song['code_minified']);
 			$fileMin = 1;
 		}
 		if (isset($song['code']) &&
-			(substr_count($song['code'], PHP_EOL) > 4 || mb_strlen($song['code']) > 1024)
+			(substr_count($song['code'], PHP_EOL) > 8 || mb_strlen($song['code']) > 1024)
 		) {
-			// Save big original code into file
+			// Save original code larger than 1024 bytes or 8 lines into file
 			file_put_contents($pathOriginal . $song['hash'] . '.js', $song['code']);
 			$fileOrig = 1;
 		}

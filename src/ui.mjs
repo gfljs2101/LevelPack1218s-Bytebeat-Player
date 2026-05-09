@@ -74,6 +74,7 @@ export class UI {
 		this.controlPlayForward = document.getElementById('control-play-forward');
 		this.controlRecord = document.getElementById('control-rec');
 		this.controlSampleRate = document.getElementById('control-samplerate');
+		this.controlSRDivisor = document.getElementById('control-srdivisor');
 		this.controlSampleRateSelect = document.getElementById('control-samplerate-select');
 		this.controlScale = document.getElementById('control-scale');
 		this.controlScaleDown = document.getElementById('control-scaledown');
@@ -107,7 +108,7 @@ export class UI {
 	}
 	setCodeSize(value) {
 		this.controlCodeSize.textContent =
-			`${ formatBytes(new Blob([value]).size, 1) } (${ window.location.href.length }c)`;
+			`${ formatBytes(new Blob([value]).size, 1) } ${new Blob([value]).size > 999 ? `(${ new Blob([value]).size }B)` : ``} (${ formatBytes(window.location.href.length, 1) })`;
 	}
 	okAlert(message, callback){
 		this.okDialogText.innerText = message;

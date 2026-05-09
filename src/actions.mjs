@@ -68,9 +68,9 @@ export class Actions { //Chasyxx's bakers chasyxx.github.io/minibaker
 						if (inString == initialCode[i]) {
 							inString = false
 						}
-					} else (
+					} else {
 						inString = initialCode[i]
-					)
+					}
 					output += c;
 				} break;
 				case '[': {

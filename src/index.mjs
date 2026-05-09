@@ -8,6 +8,7 @@ import { splashes } from './splashes.mjs';
 
 import { FavoriteGenerator } from './generator.mjs';
 import { Prec } from '@codemirror/state';
+import * as lame from '@breezystack/lamejs';
 
 const editor = new Editor();
 const library = new Library();
@@ -37,7 +38,7 @@ globalThis.bytebeat = new class {
 			showAllSongs: library.showAllSongs,
 			themeStyle: 'Default',
 			volume: .5,
-			divisor: 1,
+			srDivisor: 1,
 			audioSampleRate: 48000
 		};
 		this.isCompilationError = false;
@@ -55,6 +56,19 @@ globalThis.bytebeat = new class {
 		this.startError = null;
 		this.init();
 	}
+	get saveData() {
+		const a = document.body.appendChild(document.createElement('a'));
+		a.style.display = 'none';
+		const saveData = (blob, fileName) => {
+			const url = URL.createObjectURL(blob);
+			a.href = url;
+			a.download = fileName;
+			a.click();
+			setTimeout(() => window.URL.revokeObjectURL(url));
+		};
+		Object.defineProperty(this, 'saveData', { value: saveData });
+		return saveData;
+	}
 	handleEvent(e) {
 		let elem = e.target;
 		switch(e.type) {
@@ -70,6 +84,7 @@ globalThis.bytebeat = new class {
 			case 'control-color-timecursor': this.setColorTimeCursor(elem.value); break;
 			case 'control-color-waveform': this.setColorWaveform(elem.value); break;
 			case 'control-drawmode': this.setDrawMode(elem.value); break;
+			case 'control-srdivisor': this.setSRDivisor(+elem.value); break;
 			case 'control-mode': this.setPlaybackMode(elem.value); break;
 			case 'control-samplerate':
 			case 'control-samplerate-select': this.setSampleRate(+elem.value); break;
@@ -269,22 +284,40 @@ globalThis.bytebeat = new class {
 		this.audioWorkletNode.connect(this.audioGain);
 		const mediaDest = this.audioCtx.createMediaStreamDestination();
 		const audioRecorder = this.audioRecorder = new MediaRecorder(mediaDest.stream);
+		this.audioRecordChunks = [];
+
 		audioRecorder.addEventListener('dataavailable', e => this.audioRecordChunks.push(e.data));
-		audioRecorder.addEventListener('stop', () => {
-			let fileName, type;
-			const types = ['audio/webm', 'audio/ogg'];
-			const files = ['track.webm', 'track.ogg'];
-			while((fileName = files.pop()) && !MediaRecorder.isTypeSupported(type = types.pop())) {
-				if(types.length === 0) {
-					console.error('Recording is not supported in this browser!');
-					break;
-				}
+		audioRecorder.addEventListener('stop', async () => {
+			var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 320);
+			var mp3Data = [];
+
+			const recordedBlob = new Blob(this.audioRecordChunks, { type: 'audio/webm' });
+			const arrayBuffer = await recordedBlob.arrayBuffer();
+
+			const audioCtx2 = new AudioContext();
+			const decoded = await audioCtx2.decodeAudioData(arrayBuffer);
+
+			const leftChannel = decoded.getChannelData(0);
+			const rightChannel = decoded.getChannelData(1);
+
+			const samplesLeft = new Int16Array(leftChannel.length);
+			const samplesRight = new Int16Array(rightChannel.length);
+			for (let i = 0; i < leftChannel.length; i++) {
+				samplesLeft[i] = Math.max(-32768, Math.min(32767, leftChannel[i] * 32767));
+				samplesRight[i] = Math.max(-32768, Math.min(32767, rightChannel[i] * 32767));
 			}
-			const url = URL.createObjectURL(new Blob(this.audioRecordChunks, { type }));
-			ui.downloader.href = url;
-			ui.downloader.download = fileName;
-			ui.downloader.click();
-			setTimeout(() => window.URL.revokeObjectURL(url));
+
+			var sampleBlockSize = samplesLeft.length;
+			var leftChunk = samplesLeft.subarray(0, sampleBlockSize);
+			var rightChunk = samplesRight.subarray(0, sampleBlockSize);
+			var mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
+			if (mp3buf.length > 0) mp3Data.push(mp3buf);
+
+			mp3buf = mp3encoder.flush();
+			if (mp3buf.length > 0) mp3Data.push(new Int8Array(mp3buf));
+
+			const blob = new Blob(mp3Data, { type: 'audio/mp3' });
+			this.saveData(blob, 'track.mp3');
 		});
 		this.audioGain.connect(mediaDest);
 	}
@@ -352,6 +385,8 @@ globalThis.bytebeat = new class {
 		this.mode = ui.controlPlaybackMode.value = mode = mode || 'Bytebeat';
 		editor.setValue(code);
 		this.setSampleRate(ui.controlSampleRate.value = +sampleRate || 8000, false);
+		this.setSRDivisor(this.settings.srDivisor || 1);
+		ui.controlSRDivisor.value = this.settings.srDivisor || 1;
 		const data = {
 			mode,
 			sampleRate: this.sampleRate,
@@ -487,6 +522,7 @@ globalThis.bytebeat = new class {
 		this.settings.drawMode = scope.drawMode;
 		this.settings.drawScale = scope.drawScale;
 		this.settings.showAllSongs = library.showAllSongs;
+		this.settings.srDivisor = this.settings.srDivisor || 1;
 		localStorage.settings = JSON.stringify(this.settings);
 	}
 	sendData(data) {
@@ -532,6 +568,17 @@ globalThis.bytebeat = new class {
 		case 2: scope.colorChannels = [2, 0, 1]; break;
 		default: scope.colorChannels = [1, 0, 2];
 		}
+	}
+	setSRDivisor(value) {
+		value = Number(value);
+
+		if (!Number.isFinite(value) || value === 0) {
+			return;
+		}
+
+		ui.controlSRDivisor.value = this.settings.srDivisor = value;
+		this.saveSettings();
+		this.sendData({ srDivisor: value });
 	}
 	setColorDiagram(value) {
 		if(value !== undefined) {
@@ -823,7 +870,8 @@ globalThis.bytebeat = new class {
 					samplerate: this.sampleRate,
 					size: new Blob([editor.value]).size
 				},
-				url: window.location.hash
+				url: window.location.hash,
+				dateAdded: new Date().toISOString().split('T')[0]
 			});
 			localStorage.favorites = JSON.stringify(favorites);
 		} catch(e) {
@@ -842,6 +890,7 @@ globalThis.bytebeat = new class {
 					newFavorite.name = decodeURIComponent(i).split(': ').slice(1).join(': ');
 					newFavorite.info = decodeURIComponent(i).split(': ')[0];
 					newFavorite.url = decodeURIComponent(favorites[i]);
+					newFavourite.dateAdded = new Date().toISOString().split('T')[0];
 					newFavorites.push(newFavorite);
 				}
 				localStorage.favorites = JSON.stringify(newFavorites);
@@ -883,7 +932,8 @@ globalThis.bytebeat = new class {
 										samplerate: this.sampleRate,
 										size: new Blob([editor.value]).size
 									},
-									url: window.location.hash
+									url: window.location.hash,
+									dateAdded: favorites[i].dateAdded
 								};
 								localStorage.favorites = JSON.stringify(favorites);
 							} catch(e) {
@@ -912,6 +962,7 @@ globalThis.bytebeat = new class {
 						() => {}
 					);
 				});
+				
 				ui.favoritesList.appendChild(li);
 				ui.favoritesList.appendChild(document.createElement('hr'));
 			}
