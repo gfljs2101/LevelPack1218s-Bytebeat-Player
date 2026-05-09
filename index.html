@@ -71,6 +71,9 @@
 						<option value="48000">48000Hz</option>
 					</select>
 				</div>
+				<div class="controls-group controls-grow" width="128">
+					<input type="number" step="1" id="control-srdivisor" class="control-text" title="Set sample rate divisor then press Enter">
+				</div>
 				<div class="controls-group">
 					<button id="control-rec" class="control-button" title="Record to the file">
 						<svg><use xlink:href="#symbol-rec"></use></svg>
@@ -176,7 +179,7 @@
 					EdiTech's website is the fork of <a href="https://chasyxx.github.io/EnBeat_NEW/" target="_blank">CHASYXX Bytebeat Player</a> by <a href="https://github.com/chasyxx" target="_blank">Chasyxx</a>.<br />
 					Forked by EdiTech aka Kecomani. (it is stolen)
 					<br /><br />
-					This website is the fork of <a href="https://editech-mw.github.io/bytebeat/" target="_blank">EdiTech Bytebeats</a> by <a href="https://github.com/editech-mw" target="_blank">EdiTech</a>.<br />
+					This website is a fork of <a href="https://editech-mw.github.io/bytebeat/" target="_blank">EdiTech Bytebeats</a> by <a href="https://github.com/editech-mw" target="_blank">EdiTech</a>.<br />
 					Forked by LevelPack1218 aka GFLJS2100.
 					<br/><br />
 					Custom functions include: <ul>
@@ -320,6 +323,13 @@
 						Colors for stereo channels&nbsp;
 					</label>
 					<label class="settings-block">
+						<label>
+						  <input type="checkbox" id="use-service-worker">&nbsp;Use Service Workers
+						</label>
+						&nbsp;&nbsp;
+						<button id="apply-settings" class="control-button control-text-button">Apply</button>
+					</label>
+					<label class="settings-block">
 						Audio sample rate:&nbsp;&nbsp;
 						<div class="controls-group controls-grow">
 							<input value="48000" type="number" id="settings-audiorate" class="control-text" title="Set audio sample rate and click &quot;Apply&quot;">
@@ -409,5 +419,39 @@
 		</svg>
 	</div>
 	<a id="downloader" class="hidden"></a>
+	<script>
+// Initialize localStorage if it doesn't exist
+if (localStorage.getItem("useServiceWorker") === null) {
+    localStorage.setItem("useServiceWorker", "false");
+}
+
+const checkbox = document.getElementById("use-service-worker");
+checkbox.checked = localStorage.getItem("useServiceWorker") === "true";
+
+// Apply button
+document.getElementById("apply-settings").addEventListener("click", async () => {
+    const useSW = checkbox.checked;
+
+    // Save current state
+    localStorage.setItem("useServiceWorker", useSW);
+
+    if ("serviceWorker" in navigator) {
+        if (useSW) {
+            // Register SW if not already registered
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            if (!registrations.some(r => r.active)) {
+                await navigator.serviceWorker.register("./serviceworker.js");
+            }
+        } else {
+            // Unregister all SWs
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const reg of registrations) {
+                await reg.unregister();
+            }
+        }
+    }
+	window.location.reload();
+});
+</script>
 </body>
 </html>

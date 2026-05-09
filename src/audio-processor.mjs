@@ -20,7 +20,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		this.outValue = [0, 0];
 		this.sampleRate = 8000;
 		this.sampleRatio = 1;
-		this.sampleDivisor/*PRO*/ = 1;
+		this.srDivisor/*PRO*/ = 1;
 		this.soundMode = 'Bytebeat';
 		Object.seal(this);
 		audioProcessor.deleteGlobals();
@@ -123,7 +123,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		const isDiagram = this.drawMode === 'Combined' || this.drawMode === 'Diagram';
 		for(let i = 0; i < chDataLen; ++i) {
 			time += this.sampleRatio;
-			const currentTime = Math.floor(time);
+			const currentTime = Math.floor(time / this.srDivisor) * this.srDivisor;
 			if(this.lastTime !== currentTime) {
 				let funcValue;
 				const currentSample = Math.floor(byteSample);
@@ -241,10 +241,10 @@ class audioProcessor extends AudioWorkletProcessor {
 		if(data.sampleRatio !== undefined) {
 			this.setSampleRatio(data.sampleRatio);
 		}
-		if(data.divisor !== undefined) {
-			this.sampleDivisor/*PRO*/ = data.divisor;
+		if (data.srDivisor !== undefined) {
+			this.srDivisor/*PRO*/ = data.srDivisor;
 		}
-		if(data.DMode !== undefined) {
+		if(data.DMode !== undefined) {			
 			this.soundMode = data.DMode;
 		}
 		if(data.drawMode !== undefined) {
@@ -284,13 +284,13 @@ class audioProcessor extends AudioWorkletProcessor {
 			/*converts t into a string composed of it's bits, regex's that*/"regG": function (t, X) { return X.test(t.toString(2)) },
 
 			/*lehandsomeguy's functions*/
-			"fract": function (x) { return ((x%1)+1)%1 },
+			/*"fract": function (x) { return ((x%1)+1)%1 },
 			"mix": function (a,b,c) { return (a*(1-c))+(b*c) },
 			"tri": function (x) { return Math.asin(Math.sin(x))/(Math.PI/2.) },
 			"puls": function (x) { return (Math.floor(Math.sin(x))+0.5)*2. },
 			"saw": function (x) { return (gfjs.fract((x/2.)/Math.PI)-0.5)*2. },
 			"hash": function (x) { return gfjs.fract(Math.sin(x*1342.874+Math.sin(5212.42*x))*414.23) },
-			"noise": function (x) { return Math.sin((x+10)*Math.sin(Math.pow((x+10),gfjs.fract(x)+10))) },
+			"noise": function (x) { return Math.sin((x+10)*Math.sin(Math.pow((x+10),gfjs.fract(x)+10))) } */
 			
 			/*Chasyxx's exotic modes ported to a function by LevelPack1218*/
 			"LogHack2": function (x) { const neg = x < 0; return x == 0 ? 0 : ((Math.log2(Math.abs(x)) * (neg ? -16 : 16)) + (neg ? -127 : 128)) },

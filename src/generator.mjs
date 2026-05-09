@@ -1,4 +1,4 @@
-import { formatBytes } from './utils.mjs';
+import { formatBytes, formatDate } from './utils.mjs';
 
 export class FavoriteGenerator {
 	static buildFavoriteEntry(i, favorite, length, deleteCallback, overwriteCallback, renameCallback) {
@@ -10,6 +10,9 @@ export class FavoriteGenerator {
 	</span>
 	<span class="control-label favorite-info"> <!-- ig_infoSpan -->
 		ModeHz @ Size
+	</span>
+	<span class="control-label favorite-date"> <!-- ig_infoSpan -->
+		No Date
 	</span>
 </div>
 
@@ -38,6 +41,15 @@ export class FavoriteGenerator {
 				`${ favorite.info.mode }${ favorite.info.samplerate }Hz`+
 				` @ ${ formatBytes(favorite.info.size) }`;
 		}
+
+		let dateSpan = li.querySelector('.favorite-date');
+		if (!dateSpan) {
+		    dateSpan = document.createElement('span');
+		    dateSpan.className = 'favorite-date';
+		    li.appendChild(dateSpan);
+		}
+
+		dateSpan.textContent = formatDate(favorite.dateAdded) ?? 'No date';
 
 		const li_codeSpan = li.querySelector('.favorite-code');
 		li_codeSpan.addEventListener('click', () => {
