@@ -299,7 +299,7 @@ class audioProcessor extends AudioWorkletProcessor {
 			"Bitbeat": function (x) { return x & 1 && 255 },
 
 			/*My own functions*/
-			"gcd": function (a=0, b=0) { a=abs(a);b=abs(b);if(b===0){return a;};return gcd(b, a % b); }
+			"gcd": function (a=0, b=0) { a=Math.abs(a);b=Math.abs(b);if(b===0){return a;};return gcd(b, a % b); }
 		}
 		// Create shortened Math functions
 		const params = Object.getOwnPropertyNames(Math);
