@@ -69,13 +69,15 @@ export class Scope {
 			this.canvasCtx.fillStyle = 'black';
 			this.canvasCtx.fillRect(offsetX, offsetY, size, size);
 			this.canvasCtx.restore();
-			// Draw points directly onto the canvas using additive blending so points stand out.
+			// Draw lines connecting points using additive blending
 			const color = this.colorWaveform || [255, 255, 255];
 			this.canvasCtx.save();
 			// Use 'lighter' for additive brightness where channels overlap
 			this.canvasCtx.globalCompositeOperation = 'lighter';
 			this.canvasCtx.globalAlpha = 1.0;
-			this.canvasCtx.fillStyle = `rgb(${color[0]|0}, ${color[1]|0}, ${color[2]|0})`;
+			this.canvasCtx.strokeStyle = `rgb(${color[0]|0}, ${color[1]|0}, ${color[2]|0})`;
+			this.canvasCtx.lineWidth = 1;
+			this.canvasCtx.beginPath();
 			for (let i = 0; i < bufferLen; ++i) {
 				const vals = buffer[i].value;
 				if (!vals) continue;
@@ -86,9 +88,14 @@ export class Scope {
 				const x = Math.floor(((lx & 255) / 255) * (size - 1));
 				// invert Y so that 0 is bottom like other drawing code (they use 255 - y)
 				const y = Math.floor(((255 - (ry & 255)) / 255) * (size - 1));
-				// draw a single pixel (1x1 rect) at the computed position
-				this.canvasCtx.fillRect(offsetX + x, offsetY + y, 1, 1);
+				// draw line to this point
+				if (i === 0) {
+					this.canvasCtx.moveTo(offsetX + x, offsetY + y);
+				} else {
+					this.canvasCtx.lineTo(offsetX + x, offsetY + y);
+				}
 			}
+			this.canvasCtx.stroke();
 			this.canvasCtx.restore();
 			// keep last point in buffer
 			this.drawBuffer = [{ t: endTime, value: buffer[bufferLen - 1].value }];
