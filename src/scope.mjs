@@ -60,13 +60,21 @@ export class Scope {
 				this.canvasCtx.fillRect(0, 0, width, height);
 				this.canvasCtx.restore();
 			}
-			// Draw points directly onto the canvas using alpha blending so points persist and create a trailing effect.
-			// Using putImageData here would overwrite pixels and remove persistence across frames (producing a single dot).
-			const color = this.colorWaveform || [255, 255, 255];
-			// A small alpha makes repeated draws accumulate and form a trail; adjust for desired trail length
+			// Fade out previous points slightly each frame by drawing a translucent black overlay over the XY square.
+			// This causes older points to decay over time. Tune fadeAlpha for faster/slower decay.
+			const fadeAlpha = 0.06; // smaller -> longer trails, larger -> quicker fade
 			this.canvasCtx.save();
 			this.canvasCtx.globalCompositeOperation = 'source-over';
-			this.canvasCtx.globalAlpha = 0.12; // tweakable
+			this.canvasCtx.globalAlpha = fadeAlpha;
+			this.canvasCtx.fillStyle = 'black';
+			this.canvasCtx.fillRect(offsetX, offsetY, size, size);
+			this.canvasCtx.restore();
+			// Draw points directly onto the canvas using additive blending so points stand out.
+			const color = this.colorWaveform || [255, 255, 255];
+			this.canvasCtx.save();
+			// Use 'lighter' for additive brightness where channels overlap
+			this.canvasCtx.globalCompositeOperation = 'lighter';
+			this.canvasCtx.globalAlpha = 1.0;
 			this.canvasCtx.fillStyle = `rgb(${color[0]|0}, ${color[1]|0}, ${color[2]|0})`;
 			for (let i = 0; i < bufferLen; ++i) {
 				const vals = buffer[i].value;
