@@ -60,15 +60,13 @@ export class Scope {
 				this.canvasCtx.fillRect(0, 0, width, height);
 				this.canvasCtx.restore();
 			}
-			// Fade entire canvas by drawing a translucent black rectangle over it
-			// per your request use alpha = 0.125
 			this.canvasCtx.save();
 			this.canvasCtx.globalCompositeOperation = 'source-over';
-			this.canvasCtx.fillStyle = 'rgba(0,0,0,0.0625)';
+			this.canvasCtx.fillStyle = 'rgba(0,0,0,1)';
 			this.canvasCtx.fillRect(0, 0, width, height);
 			this.canvasCtx.restore();
 			// Draw points on top. Use a point alpha < 1 so fade can actually reduce persistent pixels over time.
-			const pointAlpha = 0.5; // you can tune this
+			const pointAlpha = 0.125; // you can tune this
 			const color = this.colorWaveform || [255, 255, 255];
 			this.canvasCtx.save();
 			this.canvasCtx.globalCompositeOperation = 'source-over';
