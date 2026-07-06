@@ -18,7 +18,7 @@ export class Scope {
 		this.drawEndBuffer = [];
 		this.drawMode = 'Combined';
 		this.drawScale = 5;
-		// Track previous draw mode so we can do one-time initialization when switching modes
+		// track previous draw mode for one-time initialization
 		this.previousDrawMode = null;
 	}
 	get timeCursorEnabled() {
@@ -53,28 +53,26 @@ export class Scope {
 			// center the square in the canvas
 			const offsetX = Math.floor((width - size) / 2);
 			const offsetY = Math.floor((height - size) / 2);
-			// When switching to XY mode clear the entire canvas to black once so old line-mode data doesn't remain
+			// Clear once when switching into XY mode
 			if (this.previousDrawMode !== 'XY') {
 				this.canvasCtx.save();
 				this.canvasCtx.fillStyle = 'black';
 				this.canvasCtx.fillRect(0, 0, width, height);
 				this.canvasCtx.restore();
 			}
-			// Fade out previous points slightly each frame by drawing a translucent black overlay over the XY square.
-			// This causes older points to decay over time. Tune fadeAlpha for faster/slower decay.
-			const fadeAlpha = 0.06; // smaller -> longer trails, larger -> quicker fade
+			// Fade entire canvas by drawing a translucent black rectangle over it
+			// per your request use alpha = 0.125
 			this.canvasCtx.save();
 			this.canvasCtx.globalCompositeOperation = 'source-over';
-			this.canvasCtx.globalAlpha = fadeAlpha;
-			this.canvasCtx.fillStyle = 'black';
-			this.canvasCtx.fillRect(offsetX, offsetY, size, size);
+			this.canvasCtx.fillStyle = 'rgba(0,0,0,0.125)';
+			this.canvasCtx.fillRect(0, 0, width, height);
 			this.canvasCtx.restore();
-			// Draw points directly onto the canvas using additive blending so points stand out.
+			// Draw points on top. Use a point alpha < 1 so fade can actually reduce persistent pixels over time.
+			const pointAlpha = 0.5; // you can tune this
 			const color = this.colorWaveform || [255, 255, 255];
 			this.canvasCtx.save();
-			// Use 'lighter' for additive brightness where channels overlap
-			this.canvasCtx.globalCompositeOperation = 'lighter';
-			this.canvasCtx.globalAlpha = 1.0;
+			this.canvasCtx.globalCompositeOperation = 'source-over';
+			this.canvasCtx.globalAlpha = pointAlpha;
 			this.canvasCtx.fillStyle = `rgb(${color[0]|0}, ${color[1]|0}, ${color[2]|0})`;
 			for (let i = 0; i < bufferLen; ++i) {
 				const vals = buffer[i].value;
@@ -86,7 +84,6 @@ export class Scope {
 				const x = Math.floor(((lx & 255) / 255) * (size - 1));
 				// invert Y so that 0 is bottom like other drawing code (they use 255 - y)
 				const y = Math.floor(((255 - (ry & 255)) / 255) * (size - 1));
-				// draw a single pixel (1x1 rect) at the computed position
 				this.canvasCtx.fillRect(offsetX + x, offsetY + y, 1, 1);
 			}
 			this.canvasCtx.restore();
