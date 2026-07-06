@@ -44,6 +44,42 @@ export class Scope {
 		let endX = Math.floor(startX + this.getX(endTime - startTime));
 		startX = Math.floor(startX);
 		let drawWidth = Math.abs(endX - startX) + 1;
+		// If XY mode - draw an X/Y oscilloscope (X = left channel, Y = right channel) into a square area
+		const isXY = this.drawMode === 'XY';
+		if (isXY) {
+			const size = Math.min(width, height);
+			// center the square in the canvas
+			const offsetX = Math.floor((width - size) / 2);
+			const offsetY = Math.floor((height - size) / 2);
+			const imageData = this.canvasCtx.createImageData(size, size);
+			const { data } = imageData;
+			// fill alpha channel
+			for (let i = 0, len = size * size; i < len; ++i) {
+				data[i * 4 + 3] = 255;
+			}
+			const color = this.colorWaveform || [255, 255, 255];
+			// Plot points: X = left channel (channel 0), Y = right channel (channel 1)
+			for (let i = 0; i < bufferLen; ++i) {
+				const vals = buffer[i].value;
+				if (!vals) continue;
+				const lx = vals[0];
+				const ry = vals[1];
+				if (isNaN(lx) || isNaN(ry)) continue;
+				// map 0..255 to 0..size-1
+				const x = Math.floor(((lx & 255) / 255) * (size - 1));
+				// invert Y so that 0 is bottom like other drawing code (they use 255 - y)
+				const y = Math.floor(((255 - (ry & 255)) / 255) * (size - 1));
+				const idx = (size * y + x) << 2;
+				data[idx] = color[0] | 0;
+				data[idx + 1] = color[1] | 0;
+				data[idx + 2] = color[2] | 0;
+			}
+			// put the square on the canvas centered
+			this.canvasCtx.putImageData(imageData, offsetX, offsetY);
+			// keep last point in buffer
+			this.drawBuffer = [{ t: endTime, value: buffer[bufferLen - 1].value }];
+			return;
+		}
 		// Truncate large segments (for high playback speed or 512px canvas)
 		if(drawWidth > width) {
 			startTime = (this.getX(endTime) - width) * (1 << scale);
@@ -234,15 +270,15 @@ export class Scope {
 		rightColor = `${ value[c[1]] }, 0, ${ value[c[2]] }`;
 		}
 		return `[ Left <span class="control-color-test" style="background: rgb(${ leftColor });"></span>
-		${ rgbTxt[0] }=${ value[c[0]] }, Right
-		<span class="control-color-test" style="background: rgb(${ rightColor });"></span>
-	${ rgbTxt[1] }=${ value[c[1]] } + ${ rgbTxt[2] }=${ value[c[2]] }] <br>[ Triples
-			<span class="control-color-test" style="background: rgb(${ triple2Color });"></span> 
-			${ rgbTxt[0] }=${ value[c[0]] }
-			<span class="control-color-test" style="background: rgb(${ triple1Color });"></span>
-			${ rgbTxt[1] }=${ value[c[1]] }
-			<span class="control-color-test" style="background: rgb(${ triple0Color });"></span>
-			${ rgbTxt[2] }=${ value[c[2]] } ]`;
+			${ rgbTxt[0] }=${ value[c[0]] }, Right
+			<span class="control-color-test" style="background: rgb(${ rightColor });"></span>
+		${ rgbTxt[1] }=${ value[c[1]] } + ${ rgbTxt[2] }=${ value[c[2]] }] <br>[ Triples
+				<span class="control-color-test" style="background: rgb(${ triple2Color });"></span> 
+				${ rgbTxt[0] }=${ value[c[0]] }
+				<span class="control-color-test" style="background: rgb(${ triple1Color });"></span>
+				${ rgbTxt[1] }=${ value[c[1]] }
+				<span class="control-color-test" style="background: rgb(${ triple0Color });"></span>
+				${ rgbTxt[2] }=${ value[c[2]] } ]`;
 	}
 	getX(t) {
 		return t / (1 << this.drawScale);
