@@ -62,7 +62,7 @@ export class Scope {
 			}
 			// Fade out previous points slightly each frame by drawing a translucent black overlay over the XY square.
 			// This causes older points to decay over time. Tune fadeAlpha for faster/slower decay.
-			const fadeAlpha = 0.125; // smaller -> longer trails, larger -> quicker fade
+			const fadeAlpha = 0.0625; // smaller -> longer trails, larger -> quicker fade
 			this.canvasCtx.save();
 			this.canvasCtx.globalCompositeOperation = 'source-over';
 			this.canvasCtx.globalAlpha = fadeAlpha;
