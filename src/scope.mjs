@@ -86,9 +86,9 @@ export class Scope {
 				const c = vals[2];
 				if (isNaN(lx) || isNaN(ry)) continue;
 				// map 0..255 to 0..size-1
-				const x = bufferLen !== 3 ? Math.floor(((lx & 255) / 255) * (size - 1)*(2/3)+((ry & 255) / 255) * (size - 1)/3) : Math.floor(((lx & 255) / 255) * (size - 1));
+				const x = /*bufferLen !== 3 ? Math.floor(((lx & 255) / 255) * (size - 1)*(2/3)+((ry & 255) / 255) * (size - 1)/3) : */Math.floor(((lx & 255) / 255) * (size - 1));
 				// invert Y so that 0 is bottom like other drawing code (they use 255 - y)
-				const y = bufferLen !== 3 ? Math.floor(((255 - (c & 255)) / 255) * (size - 1)*(2/3)+((ry & 255) / 255) * (size - 1)/3) : Math.floor(((ry & 255) / 255) * (size - 1));
+				const y = /*bufferLen !== 3 ? Math.floor(((255 - (c & 255)) / 255) * (size - 1)*(2/3)+((ry & 255) / 255) * (size - 1)/3) : */Math.floor(((ry & 255) / 255) * (size - 1));
 				// draw line to this point
 				if (i === 0) {
 					this.canvasCtx.moveTo(offsetX + x, offsetY + y);
