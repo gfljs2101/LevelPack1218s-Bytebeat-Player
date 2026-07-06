@@ -18,6 +18,8 @@ export class Scope {
 		this.drawEndBuffer = [];
 		this.drawMode = 'Combined';
 		this.drawScale = 5;
+		// Track previous draw mode so we can do one-time initialization when switching modes
+		this.previousDrawMode = null;
 	}
 	get timeCursorEnabled() {
 		return globalThis.bytebeat.sampleRate >> this.drawScale < 2000;
@@ -51,14 +53,21 @@ export class Scope {
 			// center the square in the canvas
 			const offsetX = Math.floor((width - size) / 2);
 			const offsetY = Math.floor((height - size) / 2);
-			const imageData = this.canvasCtx.createImageData(size, size);
-			const { data } = imageData;
-			// fill alpha channel
-			for (let i = 0, len = size * size; i < len; ++i) {
-				data[i * 4 + 3] = 255;
+			// When switching to XY mode clear the entire canvas to black once so old line-mode data doesn't remain
+			if (this.previousDrawMode !== 'XY') {
+				this.canvasCtx.save();
+				this.canvasCtx.fillStyle = 'black';
+				this.canvasCtx.fillRect(0, 0, width, height);
+				this.canvasCtx.restore();
 			}
+			// Draw points directly onto the canvas using alpha blending so points persist and create a trailing effect.
+			// Using putImageData here would overwrite pixels and remove persistence across frames (producing a single dot).
 			const color = this.colorWaveform || [255, 255, 255];
-			// Plot points: X = left channel (channel 0), Y = right channel (channel 1)
+			// A small alpha makes repeated draws accumulate and form a trail; adjust for desired trail length
+			this.canvasCtx.save();
+			this.canvasCtx.globalCompositeOperation = 'source-over';
+			this.canvasCtx.globalAlpha = 0.12; // tweakable
+			this.canvasCtx.fillStyle = `rgb(${color[0]|0}, ${color[1]|0}, ${color[2]|0})`;
 			for (let i = 0; i < bufferLen; ++i) {
 				const vals = buffer[i].value;
 				if (!vals) continue;
@@ -69,17 +78,16 @@ export class Scope {
 				const x = Math.floor(((lx & 255) / 255) * (size - 1));
 				// invert Y so that 0 is bottom like other drawing code (they use 255 - y)
 				const y = Math.floor(((255 - (ry & 255)) / 255) * (size - 1));
-				const idx = (size * y + x) << 2;
-				data[idx] = color[0] | 0;
-				data[idx + 1] = color[1] | 0;
-				data[idx + 2] = color[2] | 0;
+				// draw a single pixel (1x1 rect) at the computed position
+				this.canvasCtx.fillRect(offsetX + x, offsetY + y, 1, 1);
 			}
-			// put the square on the canvas centered
-			this.canvasCtx.putImageData(imageData, offsetX, offsetY);
+			this.canvasCtx.restore();
 			// keep last point in buffer
 			this.drawBuffer = [{ t: endTime, value: buffer[bufferLen - 1].value }];
+			this.previousDrawMode = 'XY';
 			return;
 		}
+		this.previousDrawMode = this.drawMode;
 		// Truncate large segments (for high playback speed or 512px canvas)
 		if(drawWidth > width) {
 			startTime = (this.getX(endTime) - width) * (1 << scale);
