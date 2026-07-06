@@ -66,7 +66,7 @@ export class Scope {
 			this.canvasCtx.fillRect(0, 0, width, height);
 			this.canvasCtx.restore();
 			// Draw points on top. Use a point alpha < 1 so fade can actually reduce persistent pixels over time.
-			const pointAlpha = 0.125; // you can tune this
+			const pointAlpha = 0.0625; // you can tune this
 			const color = this.colorWaveform || [255, 255, 255];
 			this.canvasCtx.save();
 			this.canvasCtx.globalCompositeOperation = 'source-over';
