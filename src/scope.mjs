@@ -46,64 +46,6 @@ export class Scope {
 		let endX = Math.floor(startX + this.getX(endTime - startTime));
 		startX = Math.floor(startX);
 		let drawWidth = Math.abs(endX - startX) + 1;
-		// If XY mode - draw an X/Y oscilloscope (X = left channel, Y = right channel) into a square area
-		const isXY = this.drawMode === 'XY';
-		if (isXY) {
-			const size = Math.min(width, height);
-			// center the square in the canvas
-			const offsetX = Math.floor((width - size) / 2);
-			const offsetY = Math.floor((height - size) / 2);
-			// When switching to XY mode clear the entire canvas to black once so old line-mode data doesn't remain
-			if (this.previousDrawMode !== 'XY') {
-				this.canvasCtx.save();
-				this.canvasCtx.fillStyle = 'black';
-				this.canvasCtx.fillRect(0, 0, width, height);
-				this.canvasCtx.restore();
-			}
-			// Fade out previous points slightly each frame by drawing a translucent black overlay over the XY square.
-			// This causes older points to decay over time. Tune fadeAlpha for faster/slower decay.
-			const fadeAlpha = 0.25; // smaller -> longer trails, larger -> quicker fade
-			this.canvasCtx.save();
-			this.canvasCtx.globalCompositeOperation = 'source-over';
-			this.canvasCtx.globalAlpha = fadeAlpha;
-			this.canvasCtx.fillStyle = 'black';
-			this.canvasCtx.fillRect(offsetX, offsetY, size, size);
-			this.canvasCtx.restore();
-			// Draw lines connecting points using additive blending
-			const color = this.colorWaveform || [255, 255, 255];
-			this.canvasCtx.save();
-			// Use 'lighter' for additive brightness where channels overlap
-			this.canvasCtx.globalCompositeOperation = 'lighter';
-			this.canvasCtx.globalAlpha = 1.0;
-			this.canvasCtx.strokeStyle = `rgb(${color[0]|0}, ${color[1]|0}, ${color[2]|0})`;
-			this.canvasCtx.lineWidth = 1;
-			this.canvasCtx.beginPath();
-			for (let i = 0; i < bufferLen; ++i) {
-				const vals = buffer[i].value;
-				if (!vals) continue;
-				const lx = vals[0];
-				const ry = vals[1];
-				const c = vals[2];
-				if (isNaN(lx) || isNaN(ry)) continue;
-				// map 0..255 to 0..size-1
-				const x = vals.length === 3 ? Math.floor(((lx & 255) / 255) * (size - 1)*(2/3)+((ry & 255) / 255) * (size - 1)/3) : Math.floor(((lx & 255) / 255) * (size - 1));
-				// invert Y so that 0 is bottom like other drawing code (they use 255 - y)
-				const y = vals.length === 3 ? Math.floor(((255 - (c & 255)) / 255) * (size - 1)*(2/3)+((ry & 255) / 255) * (size - 1)/3) : Math.floor(((ry & 255) / 255) * (size - 1));
-				// draw line to this point
-				if (i === 0) {
-					this.canvasCtx.moveTo(offsetX + x, offsetY + y);
-				} else {
-					this.canvasCtx.lineTo(offsetX + x, offsetY + y);
-				}
-			}
-			this.canvasCtx.stroke();
-			this.canvasCtx.restore();
-			// keep last point in buffer
-			this.drawBuffer = [{ t: endTime, value: buffer[bufferLen - 1].value }];
-			this.previousDrawMode = 'XY';
-			return;
-		}
-		this.previousDrawMode = this.drawMode;
 		// Truncate large segments (for high playback speed or 512px canvas)
 		if(drawWidth > width) {
 			startTime = (this.getX(endTime) - width) * (1 << scale);
