@@ -17,7 +17,7 @@ jobs:
     steps:
       # Step 1: Detect conflicts and force Dependabot to regenerate clean code
       - name: Force Dependabot Rebase on Conflict
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
