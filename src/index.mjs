@@ -266,7 +266,7 @@ globalThis.bytebeat = new class {
 				'this site has softened up from before and will still let you use it.\n' +
 				'Hopefully you find the original. Hope for the best.\n\n' +
 				` - Creator of ${ this.expectedDomain } bytebeat player`);
-			document.getElementById("splash").paragraph.hidden = false;
+			document.getElementById('splash').paragraph.hidden = false;
 		}
 	}
 	async initAudio() {
@@ -288,39 +288,60 @@ globalThis.bytebeat = new class {
 
 		audioRecorder.addEventListener('dataavailable', e => this.audioRecordChunks.push(e.data));
 		audioRecorder.addEventListener('stop', async () => {
-			var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 320);
-			var mp3Data = [];
-
-			const recordedBlob = new Blob(this.audioRecordChunks, { type: 'audio/webm' });
+			const mimeType = this.audioRecorder.mimeType || 'audio/webm';
+			const recordedBlob = new Blob(this.audioRecordChunks, { type: mimeType });
 			const arrayBuffer = await recordedBlob.arrayBuffer();
 
-			const audioCtx2 = new AudioContext();
-			const decoded = await audioCtx2.decodeAudioData(arrayBuffer);
+			try {
+				var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 320);
+				var mp3Data = [];
 
-			const leftChannel = decoded.getChannelData(0);
-			const rightChannel = decoded.getChannelData(1);
+				const audioCtx2 = new AudioContext();
+				const decoded = await audioCtx2.decodeAudioData(arrayBuffer);
 
-			const samplesLeft = new Int16Array(leftChannel.length);
-			const samplesRight = new Int16Array(rightChannel.length);
-			for (let i = 0; i < leftChannel.length; i++) {
-				samplesLeft[i] = Math.max(-32768, Math.min(32767, leftChannel[i] * 32767));
-				samplesRight[i] = Math.max(-32768, Math.min(32767, rightChannel[i] * 32767));
+				const leftChannel = decoded.getChannelData(0);
+				const rightChannel = decoded.getChannelData(1);
+
+				const samplesLeft = new Int16Array(leftChannel.length);
+				const samplesRight = new Int16Array(rightChannel.length);
+				for(let i = 0; i < leftChannel.length; i++) {
+					samplesLeft[i] = Math.max(-32768, Math.min(32767, leftChannel[i] * 32767));
+					samplesRight[i] = Math.max(-32768, Math.min(32767, rightChannel[i] * 32767));
+				}
+
+				var sampleBlockSize = samplesLeft.length;
+				var leftChunk = samplesLeft.subarray(0, sampleBlockSize);
+				var rightChunk = samplesRight.subarray(0, sampleBlockSize);
+				var mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
+				if(mp3buf.length > 0) mp3Data.push(mp3buf);
+
+				mp3buf = mp3encoder.flush();
+				if(mp3buf.length > 0) mp3Data.push(new Int8Array(mp3buf));
+
+				const blob = new Blob(mp3Data, { type: 'audio/mp3' });
+				const url = URL.createObjectURL(blob);
+				ui.downloader.href = url;
+				ui.downloader.download = 'track.mp3';
+				ui.downloader.click();
+				setTimeout(() => window.URL.revokeObjectURL(url));
+			} catch(e) {
+				console.error('Decoding/MP3 encoding failed, falling back to raw recording download:', e);
+				let extension = 'webm';
+				if(mimeType.includes('ogg')) {
+					extension = 'ogg';
+				} else if(mimeType.includes('mp4') || mimeType.includes('m4a')) {
+					extension = 'm4a';
+				} else if(mimeType.includes('aac')) {
+					extension = 'aac';
+				} else if(mimeType.includes('wav')) {
+					extension = 'wav';
+				}
+				const url = URL.createObjectURL(recordedBlob);
+				ui.downloader.href = url;
+				ui.downloader.download = 'track.' + extension;
+				ui.downloader.click();
+				setTimeout(() => window.URL.revokeObjectURL(url));
 			}
-
-			var sampleBlockSize = samplesLeft.length;
-			var leftChunk = samplesLeft.subarray(0, sampleBlockSize);
-			var rightChunk = samplesRight.subarray(0, sampleBlockSize);
-			var mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
-			if (mp3buf.length > 0) mp3Data.push(mp3buf);
-
-			mp3buf = mp3encoder.flush();
-			if (mp3buf.length > 0) mp3Data.push(new Int8Array(mp3buf));
-
-			const blob = new Blob(mp3Data, { type: 'audio/mp3' });
-			ui.downloader.href = blob;
-			ui.downloader.download = "track.mp3";
-			ui.downloader.click();
-			setTimeout(() => window.URL.revokeObjectURL(blob));
 		});
 		this.audioGain.connect(mediaDest);
 	}
@@ -335,7 +356,9 @@ globalThis.bytebeat = new class {
 			const detectedSampleRate = tempSource.context.sampleRate; // Extract detected sample rate
 			if(typeof detectedSampleRate == 'number') {
 				ui.yesNoAlert('The samplerate is ' + detectedSampleRate + 'Hz.' +
-					'\n\nApply this samplerate now?', ()=>{ this.setAudioSampleRate(detectedSampleRate) }, () => { });
+					'\n\nApply this samplerate now?', () => {
+					this.setAudioSampleRate(detectedSampleRate);
+				}, () => { });
 			} else {
 				ui.okAlert('I couldn\'t figure out the samplerate.');
 			}
@@ -360,19 +383,21 @@ globalThis.bytebeat = new class {
 				});
 				this.mediaInputSourceNode = this.audioCtx.createMediaStreamSource(this.micMedia);
 				this.mediaInputSourceNode.connect(this.audioWorkletNode);
-				ui.controlMic.innerHTML = "Mic Down";
-				ui.controlMic.title = "Mic is activated. Click to deactivate."
+				ui.controlMic.innerHTML = 'Mic Down';
+				ui.controlMic.title = 'Mic is activated. Click to deactivate.';
 			} catch(e) {
 				ui.yesNoAlert('Failed to activate mic. See error?', () => {
-					ui.yesNoAlert(e + '\n\nWant the correct samplerate to use?', () => { this.micTest() }, () => { });
+					ui.yesNoAlert(e + '\n\nWant the correct samplerate to use?', () => {
+						this.micTest();
+					}, () => { });
 				}, () => { });
 			}
 		} else {
 			this.mediaInputSourceNode.disconnect();
 			this.mediaInputSourceNode = null;
 			this.micMedia = null;
-			ui.controlMic.innerHTML = "Mic Up";
-			ui.controlMic.title = "Mic is deactivated. Click to activate."
+			ui.controlMic.innerHTML = 'Mic Up';
+			ui.controlMic.title = 'Mic is deactivated. Click to activate.';
 		}
 	}
 	setSplashtext() {
@@ -575,7 +600,7 @@ globalThis.bytebeat = new class {
 	setSRDivisor(value) {
 		value = Number(value);
 
-		if (!Number.isFinite(value) || value === 0) {
+		if(!Number.isFinite(value) || value === 0) {
 			return;
 		}
 
@@ -693,7 +718,7 @@ globalThis.bytebeat = new class {
 			const data = {
 				sampleRate: this.sampleRate,
 				sampleRatio: this.sampleRate / this.audioCtx.sampleRate
-			}
+			};
 			if(this.mode === 'Funcbeat') {
 				data.byteSample = this.settings.isSeconds ? Math.round(ui.controlTime.value * sampleRate) :
 					Math.round(ui.controlTime.value * sampleRate / oldSampleRate);
@@ -965,7 +990,7 @@ globalThis.bytebeat = new class {
 						() => {}
 					);
 				});
-				
+
 				ui.favoritesList.appendChild(li);
 				ui.favoritesList.appendChild(document.createElement('hr'));
 			}

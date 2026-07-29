@@ -1,0 +1,4 @@
+127.0.0.1 - - [29/Jul/2026 14:59:43] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [29/Jul/2026 14:59:43] "GET /style.css HTTP/1.1" 200 -
+127.0.0.1 - - [29/Jul/2026 14:59:43] "GET /build/audio-processor.mjs HTTP/1.1" 200 -
+127.0.0.1 - - [29/Jul/2026 14:59:43] "GET /build/index.js HTTP/1.1" 200 -
