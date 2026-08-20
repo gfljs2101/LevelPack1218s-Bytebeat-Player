@@ -285,7 +285,7 @@ globalThis.bytebeat = new class {
 		this.audioWorkletNode.connect(this.audioGain);
 		// Recorder for recording audio files
 		const mediaDest = this.audioCtx.createMediaStreamDestination();
-		const recTypes = ['audio/wav', 'audio/wave', 'audio/x-wav', 'audio/webm', 'audio/ogg', 'audio/mp4'];
+		const recTypes = ['audio/wav', 'audio/wave', 'audio/x-wav'];
 		let recType = recTypes.find(t => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported?.(t));
 		const audioRecorder = this.audioRecorder = recType ?
 			new MediaRecorder(mediaDest.stream, { mimeType: recType }) :
