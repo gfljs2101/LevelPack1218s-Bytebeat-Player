@@ -282,45 +282,25 @@ globalThis.bytebeat = new class {
 		this.audioWorkletNode.port.addEventListener('message', e => this.receiveData(e.data));
 		this.audioWorkletNode.port.start();
 		this.audioWorkletNode.connect(this.audioGain);
+		// Recorder for recording audio files
 		const mediaDest = this.audioCtx.createMediaStreamDestination();
 		const audioRecorder = this.audioRecorder = new MediaRecorder(mediaDest.stream);
-		this.audioRecordChunks = [];
-
-		audioRecorder.addEventListener('dataavailable', e => this.audioRecordChunks.push(e.data));
-		audioRecorder.addEventListener('stop', async () => {
-			var mp3encoder = new lame.Mp3Encoder(2, this.audioCtx.sampleRate, 320);
-			var mp3Data = [];
-
-			const recordedBlob = new Blob(this.audioRecordChunks, { type: 'audio/webm' });
-			const arrayBuffer = await recordedBlob.arrayBuffer();
-
-			const audioCtx2 = new AudioContext();
-			const decoded = await audioCtx2.decodeAudioData(arrayBuffer);
-
-			const leftChannel = decoded.getChannelData(0);
-			const rightChannel = decoded.getChannelData(1);
-
-			const samplesLeft = new Int16Array(leftChannel.length);
-			const samplesRight = new Int16Array(rightChannel.length);
-			for (let i = 0; i < leftChannel.length; i++) {
-				samplesLeft[i] = Math.max(-32768, Math.min(32767, leftChannel[i] * 32767));
-				samplesRight[i] = Math.max(-32768, Math.min(32767, rightChannel[i] * 32767));
+		audioRecorder.addEventListener('dataavailable', event => this.audioRecordChunks.push(event.data));
+		audioRecorder.addEventListener('stop', () => {
+			let fileName, type;
+			const types = ['audio/webm', 'audio/ogg'];
+			const files = ['track.webm', 'track.ogg'];
+			while((fileName = files.pop()) && !MediaRecorder.isTypeSupported(type = types.pop())) {
+				if(types.length === 0) {
+					console.error('Recording is not supported in this browser!');
+					break;
+				}
 			}
-
-			var sampleBlockSize = samplesLeft.length;
-			var leftChunk = samplesLeft.subarray(0, sampleBlockSize);
-			var rightChunk = samplesRight.subarray(0, sampleBlockSize);
-			var mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
-			if (mp3buf.length > 0) mp3Data.push(mp3buf);
-
-			mp3buf = mp3encoder.flush();
-			if (mp3buf.length > 0) mp3Data.push(new Int8Array(mp3buf));
-
-			const blob = new Blob(mp3Data, { type: 'audio/mp3' });
-			ui.downloader.href = blob;
-			ui.downloader.download = "track.mp3";
+			const url = URL.createObjectURL(new Blob(this.audioRecordChunks, { type }));
+			ui.downloader.href = url;
+			ui.downloader.download = fileName;
 			ui.downloader.click();
-			setTimeout(() => window.URL.revokeObjectURL(blob));
+			setTimeout(() => window.URL.revokeObjectURL(url));
 		});
 		this.audioGain.connect(mediaDest);
 	}
