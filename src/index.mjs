@@ -5,6 +5,7 @@ import { UI } from './ui.mjs';
 import { getCodeFromUrl, getUrlFromCode } from './url.mjs';
 import { Actions } from './actions.mjs';
 import { splashes } from './splashes.mjs';
+import { audioBufferToWav } from './utils.mjs';
 
 import { FavoriteGenerator } from './generator.mjs';
 import { Prec } from '@codemirror/state';
@@ -284,21 +285,31 @@ globalThis.bytebeat = new class {
 		this.audioWorkletNode.connect(this.audioGain);
 		// Recorder for recording audio files
 		const mediaDest = this.audioCtx.createMediaStreamDestination();
-		const audioRecorder = this.audioRecorder = new MediaRecorder(mediaDest.stream);
+		const recTypes = ['audio/wav', 'audio/wave', 'audio/x-wav', 'audio/webm', 'audio/ogg', 'audio/mp4'];
+		let recType = recTypes.find(t => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported?.(t));
+		const audioRecorder = this.audioRecorder = recType ?
+			new MediaRecorder(mediaDest.stream, { mimeType: recType }) :
+			new MediaRecorder(mediaDest.stream);
 		audioRecorder.addEventListener('dataavailable', event => this.audioRecordChunks.push(event.data));
-		audioRecorder.addEventListener('stop', () => {
-			let fileName, type;
-			const types = ['audio/webm', 'audio/ogg'];
-			const files = ['track.webm', 'track.ogg'];
-			while((fileName = files.pop()) && !MediaRecorder.isTypeSupported(type = types.pop())) {
-				if(types.length === 0) {
-					console.error('Recording is not supported in this browser!');
-					break;
+		audioRecorder.addEventListener('stop', async () => {
+			let wavBlob;
+			const mimeType = audioRecorder.mimeType || recType || '';
+			if (mimeType.includes('wav')) {
+				wavBlob = new Blob(this.audioRecordChunks, { type: 'audio/wav' });
+			} else {
+				const recordedBlob = new Blob(this.audioRecordChunks, { type: mimeType });
+				try {
+					const arrayBuffer = await recordedBlob.arrayBuffer();
+					const audioBuffer = await this.audioCtx.decodeAudioData(arrayBuffer);
+					wavBlob = audioBufferToWav(audioBuffer);
+				} catch (e) {
+					console.error('Failed to convert recording to WAV:', e);
+					wavBlob = recordedBlob;
 				}
 			}
-			const url = URL.createObjectURL(new Blob(this.audioRecordChunks, { type }));
+			const url = URL.createObjectURL(wavBlob);
 			ui.downloader.href = url;
-			ui.downloader.download = fileName;
+			ui.downloader.download = 'track.wav';
 			ui.downloader.click();
 			setTimeout(() => window.URL.revokeObjectURL(url));
 		});
