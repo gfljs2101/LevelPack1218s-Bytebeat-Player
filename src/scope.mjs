@@ -211,31 +211,85 @@ export class Scope {
 		}
 
 		// If Corrscope mode, run detection and draw a simple marker
-		if (this.drawMode === 'Corrscope') {
-			try {
-				const displaySamples = Math.min(bufferLen, 1024);
-				const readStart = Math.max(0, bufferLen - displaySamples);
-				const res = this._corrscope.trigger(readStart, displaySamples, {
-					sampleRate: globalThis.bytebeat.sampleRate,
-					edgeStrength: 0.8,
-					bufferStrength: 0.8,
-					responsiveness: 0.2,
-					slopeWidth: 0.5,
-					bufferFalloff: 0.5,
-					resetBelow: 0.2,
-					maxFreq: 4000
-				});
-				if(res && res.score > 0.05) {
-					const prevAlpha = this.canvasCtx.globalAlpha;
-					this.canvasCtx.fillStyle = `rgba(255,0,0,${Math.min(1, res.score)})`;
-					const x = Math.floor(width / 2);
-					this.canvasCtx.fillRect(x - 1, 0, 3, height);
-					this.canvasCtx.globalAlpha = prevAlpha;
+	if (this.drawMode === 'Corrscope') {
+		this.clearCanvas();
+		try {
+			const displaySamples = Math.min(bufferLen, 1024);
+			const readStart = Math.max(0, bufferLen - displaySamples);
+			const res = this._corrscope.trigger(readStart, displaySamples, {
+				sampleRate: globalThis.bytebeat.sampleRate,
+				edgeStrength: 0.8,
+				bufferStrength: 0.8,
+				responsiveness: 0.2,
+				slopeWidth: 0.5,
+				bufferFalloff: 0.5,
+				resetBelow: 0.2,
+				maxFreq: 4000
+			});
+			
+			if(res && res.score > 0.05) {
+				// Draw corrscope waveform lines
+				this.canvasCtx.strokeStyle = `rgba(0, 255, 0, ${Math.min(1, res.score * 1.5)})`;
+				this.canvasCtx.lineWidth = 2;
+				this.canvasCtx.beginPath();
+				
+				const centerY = height / 2;
+				let isFirstPoint = true;
+				
+				for(let i = 0; i < displaySamples; i++) {
+					const x = (i / displaySamples) * width;
+					// Get sample value from buffer
+					const bufIdx = Math.max(0, bufferLen - displaySamples + i);
+					const sample = buffer[bufIdx];
+					if(!sample) continue;
+					
+					const curY = sample.value;
+					let value = 0;
+					if(Array.isArray(curY)) {
+						// Average all channels for corrscope
+						value = (curY[0] + curY[1] + curY[2]) / 3;
+					} else if(typeof curY === 'number') {
+						value = curY;
+					}
+					
+					// Normalize to canvas space
+					const y = centerY - (value & 255) / 128 * centerY;
+					
+					if(isFirstPoint) {
+						this.canvasCtx.moveTo(x, y);
+						isFirstPoint = false;
+					} else {
+						this.canvasCtx.lineTo(x, y);
+					}
 				}
-			} catch (e) {
-				console.error('Corrscope trigger error', e);
+				
+				this.canvasCtx.stroke();
+				
+				// Draw center line
+				this.canvasCtx.strokeStyle = `rgba(255, 0, 0, 0.3)`;
+				this.canvasCtx.lineWidth = 1;
+				this.canvasCtx.beginPath();
+				this.canvasCtx.moveTo(0, centerY);
+				this.canvasCtx.lineTo(width, centerY);
+				this.canvasCtx.stroke();
+				
+				// Draw trigger position marker
+				if(res.offset >= 0) {
+					const markerX = (res.offset / displaySamples) * width;
+					this.canvasCtx.fillStyle = `rgba(255, 100, 0, ${Math.min(1, res.score)})`;
+					this.canvasCtx.fillRect(markerX - 2, 0, 4, height);
+				}
 			}
+		} catch (e) {
+			console.error('Corrscope trigger error', e);
 		}
+		
+		// Move the cursor to the end
+		if(this.timeCursorEnabled) {
+			this.canvasTimeCursor.style.left = '100%';
+		}
+		return; // Early exit for corrscope mode
+	}
 
 		// Move the cursor to the end of the segment
 		if(this.timeCursorEnabled) {
