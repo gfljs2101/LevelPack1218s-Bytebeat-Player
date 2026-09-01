@@ -1,5 +1,3 @@
-import { createCorrscope } from './corrscope.mjs';
-
 function mod(a, b) {
 	return ((a % b) + b) % b;
 }
@@ -22,32 +20,6 @@ export class Scope {
 		this.drawScale = 5;
 		// Track previous draw mode so we can do one-time initialization when switching modes
 		this.previousDrawMode = null;
-
-		// Corrscope instance (reads from this.drawBuffer)
-		this._corrscope = createCorrscope({
-			maxKernel: 1024,
-			maxData: 16384,
-			RING_BUFFER_MASK: 0xFFFFFFFF,
-			ringRead: (dst, dstOff, ringStart, count) => {
-				// ringStart is an index into this.drawBuffer (0 = oldest sample)
-				const buf = this.drawBuffer;
-				const len = buf.length;
-				let start = ringStart;
-				if (start < 0) start = 0;
-				for (let i = 0; i < count; i++) {
-					const idx = start + i;
-					let v = 0;
-					if (idx >= 0 && idx < len) {
-						const vv = buf[idx].value;
-						if (Array.isArray(vv)) v = vv[0] & 255;
-						else if (typeof vv === 'number') v = vv & 255;
-						else v = 0;
-					}
-					// normalize to approximately -1..1 as visualizer uses 0..255
-					dst[dstOff + i] = (v / 127.5) - 1;
-				}
-			}
-		});
 	}
 	get timeCursorEnabled() {
 		return globalThis.bytebeat.sampleRate >> this.drawScale < 2000;
@@ -209,88 +181,6 @@ export class Scope {
 		} else if(endX <= 0) {
 			this.canvasCtx.putImageData(imageData, startX + width, 0);
 		}
-
-		// If Corrscope mode, run detection and draw a simple marker
-	if (this.drawMode === 'Corrscope') {
-		this.clearCanvas();
-		try {
-			const displaySamples = Math.min(bufferLen, 1024);
-			const readStart = Math.max(0, bufferLen - displaySamples);
-			const res = this._corrscope.trigger(readStart, displaySamples, {
-				sampleRate: globalThis.bytebeat.sampleRate,
-				edgeStrength: 0.8,
-				bufferStrength: 0.8,
-				responsiveness: 0.2,
-				slopeWidth: 0.5,
-				bufferFalloff: 0.5,
-				resetBelow: 0.2,
-				maxFreq: 4000
-			});
-			
-			if(res && res.score > 0.05) {
-				// Draw corrscope waveform lines
-				this.canvasCtx.strokeStyle = `rgba(0, 255, 0, ${Math.min(1, res.score * 1.5)})`;
-				this.canvasCtx.lineWidth = 2;
-				this.canvasCtx.beginPath();
-				
-				const centerY = height / 2;
-				let isFirstPoint = true;
-				
-				for(let i = 0; i < displaySamples; i++) {
-					const x = (i / displaySamples) * width;
-					// Get sample value from buffer
-					const bufIdx = Math.max(0, bufferLen - displaySamples + i);
-					const sample = buffer[bufIdx];
-					if(!sample) continue;
-					
-					const curY = sample.value;
-					let value = 0;
-					if(Array.isArray(curY)) {
-						// Average all channels for corrscope
-						value = (curY[0] + curY[1] + curY[2]) / 3;
-					} else if(typeof curY === 'number') {
-						value = curY;
-					}
-					
-					// Normalize to canvas space
-					const y = centerY - (value & 255) / 128 * centerY;
-					
-					if(isFirstPoint) {
-						this.canvasCtx.moveTo(x, y);
-						isFirstPoint = false;
-					} else {
-						this.canvasCtx.lineTo(x, y);
-					}
-				}
-				
-				this.canvasCtx.stroke();
-				
-				// Draw center line
-				this.canvasCtx.strokeStyle = `rgba(255, 0, 0, 0.3)`;
-				this.canvasCtx.lineWidth = 1;
-				this.canvasCtx.beginPath();
-				this.canvasCtx.moveTo(0, centerY);
-				this.canvasCtx.lineTo(width, centerY);
-				this.canvasCtx.stroke();
-				
-				// Draw trigger position marker
-				if(res.offset >= 0) {
-					const markerX = (res.offset / displaySamples) * width;
-					this.canvasCtx.fillStyle = `rgba(255, 100, 0, ${Math.min(1, res.score)})`;
-					this.canvasCtx.fillRect(markerX - 2, 0, 4, height);
-				}
-			}
-		} catch (e) {
-			console.error('Corrscope trigger error', e);
-		}
-		
-		// Move the cursor to the end
-		if(this.timeCursorEnabled) {
-			this.canvasTimeCursor.style.left = '100%';
-		}
-		return; // Early exit for corrscope mode
-	}
-
 		// Move the cursor to the end of the segment
 		if(this.timeCursorEnabled) {
 			this.canvasTimeCursor.style.left = endX / width * 100 + '%';
@@ -298,15 +188,15 @@ export class Scope {
 		// Clear buffer
 		this.drawBuffer = [{ t: endTime, value: buffer[bufferLen - 1].value }];
 	}
-	drawPoint(data, i, color, colorCh, ch) {
-		data[i + colorCh[ch]] = color[colorCh[ch]];
-	}
-	/*drawSoftPoint(data, i, color, colorCh, ch) {
-		if (data[i + colorCh[ch]]) {
-			return;
-		}
-		data[i + colorCh[ch]] = color[colorCh[ch]];
-	}*/
+    drawPoint(data, i, color, colorCh, ch) {
+        data[i + colorCh[ch]] = color[colorCh[ch]];
+    }
+    /*drawSoftPoint(data, i, color, colorCh, ch) {
+        if (data[i + colorCh[ch]]) {
+            return;
+        }
+        data[i + colorCh[ch]] = color[colorCh[ch]];
+    }*/
 	getColorTest(colorMode, newValue) {
 		if(newValue) {
 			this[colorMode] = [
