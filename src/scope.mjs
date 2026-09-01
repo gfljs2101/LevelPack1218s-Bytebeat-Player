@@ -1,3 +1,5 @@
+import { createCorrscope } from './corrscope.mjs';
+
 function mod(a, b) {
 	return ((a % b) + b) % b;
 }
@@ -20,6 +22,32 @@ export class Scope {
 		this.drawScale = 5;
 		// Track previous draw mode so we can do one-time initialization when switching modes
 		this.previousDrawMode = null;
+
+		// Corrscope instance (reads from this.drawBuffer)
+		this._corrscope = createCorrscope({
+			maxKernel: 1024,
+			maxData: 16384,
+			RING_BUFFER_MASK: 0xFFFFFFFF,
+			ringRead: (dst, dstOff, ringStart, count) => {
+				// ringStart is an index into this.drawBuffer (0 = oldest sample)
+				const buf = this.drawBuffer;
+				const len = buf.length;
+				let start = ringStart;
+				if (start < 0) start = 0;
+				for (let i = 0; i < count; i++) {
+					const idx = start + i;
+					let v = 0;
+					if (idx >= 0 && idx < len) {
+						const vv = buf[idx].value;
+						if (Array.isArray(vv)) v = vv[0] & 255;
+						else if (typeof vv === 'number') v = vv & 255;
+						else v = 0;
+					}
+					// normalize to approximately -1..1 as visualizer uses 0..255
+					dst[dstOff + i] = (v / 127.5) - 1;
+				}
+			}
+		});
 	}
 	get timeCursorEnabled() {
 		return globalThis.bytebeat.sampleRate >> this.drawScale < 2000;
@@ -181,6 +209,34 @@ export class Scope {
 		} else if(endX <= 0) {
 			this.canvasCtx.putImageData(imageData, startX + width, 0);
 		}
+
+		// If Corrscope mode, run detection and draw a simple marker
+		if (this.drawMode === 'Corrscope') {
+			try {
+				const displaySamples = Math.min(bufferLen, 1024);
+				const readStart = Math.max(0, bufferLen - displaySamples);
+				const res = this._corrscope.trigger(readStart, displaySamples, {
+					sampleRate: globalThis.bytebeat.sampleRate,
+					edgeStrength: 0.8,
+					bufferStrength: 0.8,
+					responsiveness: 0.2,
+					slopeWidth: 0.5,
+					bufferFalloff: 0.5,
+					resetBelow: 0.2,
+					maxFreq: 4000
+				});
+				if(res && res.score > 0.05) {
+					const prevAlpha = this.canvasCtx.globalAlpha;
+					this.canvasCtx.fillStyle = `rgba(255,0,0,${Math.min(1, res.score)})`;
+					const x = Math.floor(width / 2);
+					this.canvasCtx.fillRect(x - 1, 0, 3, height);
+					this.canvasCtx.globalAlpha = prevAlpha;
+				}
+			} catch (e) {
+				console.error('Corrscope trigger error', e);
+			}
+		}
+
 		// Move the cursor to the end of the segment
 		if(this.timeCursorEnabled) {
 			this.canvasTimeCursor.style.left = endX / width * 100 + '%';
@@ -188,15 +244,15 @@ export class Scope {
 		// Clear buffer
 		this.drawBuffer = [{ t: endTime, value: buffer[bufferLen - 1].value }];
 	}
-    drawPoint(data, i, color, colorCh, ch) {
-        data[i + colorCh[ch]] = color[colorCh[ch]];
-    }
-    /*drawSoftPoint(data, i, color, colorCh, ch) {
-        if (data[i + colorCh[ch]]) {
-            return;
-        }
-        data[i + colorCh[ch]] = color[colorCh[ch]];
-    }*/
+	drawPoint(data, i, color, colorCh, ch) {
+		data[i + colorCh[ch]] = color[colorCh[ch]];
+	}
+	/*drawSoftPoint(data, i, color, colorCh, ch) {
+		if (data[i + colorCh[ch]]) {
+			return;
+		}
+		data[i + colorCh[ch]] = color[colorCh[ch]];
+	}*/
 	getColorTest(colorMode, newValue) {
 		if(newValue) {
 			this[colorMode] = [
