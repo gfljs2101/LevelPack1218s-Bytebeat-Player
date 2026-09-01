@@ -314,3 +314,23 @@ export function createCorrscope({
     _internals: { corrBuffer, workTriggerData, workAutocorrBuffer }
   };
 }
+
+// Global wrapper to match existing corrscopeTrigger(readStart, displaySamples, params) usage
+let _globalCorrscope = null;
+export function corrscopeTrigger(readStart, displaySamples, params = {}) {
+  if (!_globalCorrscope) {
+    const mask = (typeof RING_BUFFER_MASK !== 'undefined') ? RING_BUFFER_MASK : 0xFFFFFFFF;
+    _globalCorrscope = createCorrscope({
+      maxKernel: 1024,
+      maxData: 16384,
+      RING_BUFFER_MASK: mask,
+      ringRead: (dst, dstOff, ringStart, count) => {
+        // Assumes a global ringBuffer and RING_BUFFER_MASK exist in the environment
+        for (let i = 0; i < count; i++) {
+          dst[dstOff + i] = (typeof ringBuffer !== 'undefined') ? ringBuffer[(ringStart + i) & mask] : 0;
+        }
+      }
+    });
+  }
+  return _globalCorrscope.trigger(readStart, displaySamples, params);
+}
