@@ -1,4 +1,5 @@
 import { formatBytes } from './utils.mjs';
+import { postfixToInfix } from './postfix.mjs';
 
 export class UI {
 	constructor() {
@@ -70,6 +71,49 @@ export class UI {
 		this.controlDrawMode = document.getElementById('control-drawmode');
 		this.controlLag = document.getElementById('control-lag');
 		this.controlPlaybackMode = document.getElementById('control-mode');
+
+		// Formula notation is independent of the sound/output mode.
+		this.controlNotationMode = document.getElementById('control-notation-mode');
+		if(!this.controlNotationMode) {
+			this.controlPlaybackMode.insertAdjacentHTML('afterend', `
+				<select id="control-notation-mode" class="control-select controls-grow"
+					title="Formula notation" aria-label="Formula notation">
+					<option value="Infix">Infix</option>
+					<option value="Postfix">Postfix</option>
+				</select>`);
+			this.controlNotationMode = document.getElementById('control-notation-mode');
+		}
+		const savedNotationMode = localStorage.getItem('notationMode');
+		this.controlNotationMode.value = savedNotationMode === 'Postfix' ? 'Postfix' : 'Infix';
+
+		// Adapt code sent to the audio worklet while retaining the editor's original text.
+		const { bytebeat } = globalThis;
+		const originalSendData = bytebeat.sendData.bind(bytebeat);
+		let sourceCode = null;
+		let notationMode = this.controlNotationMode.value;
+		bytebeat.sendData = data => {
+			if(typeof data.setFunction === 'string') {
+				sourceCode = data.setFunction;
+				if(notationMode === 'Postfix') {
+					try {
+						data = { ...data, setFunction: postfixToInfix(sourceCode) };
+						document.getElementById('error').textContent = '';
+					} catch(error) {
+						document.getElementById('error').textContent = error.message;
+						return;
+					}
+				}
+			}
+			originalSendData(data);
+		};
+		this.controlNotationMode.addEventListener('change', () => {
+			notationMode = this.controlNotationMode.value;
+			localStorage.setItem('notationMode', notationMode);
+			if(sourceCode !== null) {
+				bytebeat.sendData({ setFunction: sourceCode });
+			}
+		});
+
 		this.controlPlayBackward = document.getElementById('control-play-backward');
 		this.controlPlayForward = document.getElementById('control-play-forward');
 		this.controlRecord = document.getElementById('control-rec');
