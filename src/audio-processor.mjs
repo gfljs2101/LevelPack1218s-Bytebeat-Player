@@ -244,8 +244,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		if (data.srDivisor !== undefined) {
 			this.srDivisor/*PRO*/ = data.srDivisor;
 		}
-		if(data.DMode !== undefined) {			
-			this.soundMode = data.DMode;
+		if(data.DMode !== undefined) {			this.soundMode = data.DMode;
 		}
 		if(data.drawMode !== undefined) {
 			this.drawMode = data.drawMode;
@@ -267,7 +266,7 @@ class audioProcessor extends AudioWorkletProcessor {
 	setFunction(codeText) {
 		const gfjs = {
 			/*Chasyxx's exotic functions*/
-			
+
 			/*bit*/        "bitC": function (x, y, z) { return x & y ? z : 0 },
 			/*bit reverse*/"br": function (x, size = 8) {
 				if (size > 32) { throw new Error("br() Size cannot be greater than 32") } else {
@@ -291,7 +290,7 @@ class audioProcessor extends AudioWorkletProcessor {
 			"saw": function (x) { return (gfjs.fract((x/2.)/Math.PI)-0.5)*2. },
 			"hash": function (x) { return gfjs.fract(Math.sin(x*1342.874+Math.sin(5212.42*x))*414.23) },
 			"noise": function (x) { return Math.sin((x+10)*Math.sin(Math.pow((x+10),gfjs.fract(x)+10))) } */
-			
+
 			/*Chasyxx's exotic modes ported to a function by LevelPack1218*/
 			"LogHack2": function (x) { const neg = x < 0; return x == 0 ? 0 : ((Math.log2(Math.abs(x)) * (neg ? -16 : 16)) + (neg ? -127 : 128)) },
 			"LogHack": function (x) { return Math.log2(Math.abs(x)) * ((x < 0) ? -32 : 32) },
@@ -316,16 +315,19 @@ class audioProcessor extends AudioWorkletProcessor {
 			const trimmedCode = codeText.trim();
 			const explicitPostfix = trimmedCode.slice(0, 8).toLowerCase() === 'postfix:';
 			const postfixText = explicitPostfix ? trimmedCode.slice(8).trim() : trimmedCode;
-			const tokens = postfixText ? postfixText.split(/\s+/) : [];
+			// Postfix formulas may include ordinary JavaScript line or block comments.
+			const tokens = postfixText.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '').trim().split(/\s+/).filter(Boolean);
 			const binaryOps = ['/', '+', '-', '*', '%', '>>', '<<', '|', '&', '^', '&&', '||', '>', '<', '='];
 			const stackOps = ['dup', 'swap', 'pick', 'drop', 'put'];
 			const mathOps = ['abs', 'sqrt', 'round', 'tan', 'log', 'exp', 'sin', 'cos', 'floor', 'ceil', 'int', 'max', 'min', 'pow', 'random'];
-			const isPostfix = explicitPostfix || tokens.some(token => stackOps.includes(token) || mathOps.includes(token)) ||
+			const isPostfix = explicitPostfix || tokens.some(token =>
+				stackOps.includes(token.toLowerCase()) || mathOps.includes(token.toLowerCase())) ||
 				(tokens.length >= 3 && binaryOps.includes(tokens[tokens.length - 1]) && !postfixText.includes('(') && !postfixText.includes(')'));
 			if(isPostfix) {
 				const steps = [];
 				for(const token of tokens) {
-					switch(token) {
+					const normalizedToken = token.toLowerCase();
+					switch(normalizedToken) {
 					case '>':
 						steps.push('var v1 = stack.pop();', 'var v2 = stack.pop();', 'stack.push((v1 < v2) ? 0xFFFFFFFF : 0);');
 						break;
@@ -343,10 +345,10 @@ class audioProcessor extends AudioWorkletProcessor {
 					case 'pick': steps.push('var a0 = stack.pop();', 'stack.push(stack.pick(a0));'); break;
 					case 'put': steps.push('var a0 = stack.pop();', 'var a1 = stack.pick(0);', 'stack.put(a0, a1);'); break;
 					case 'abs': case 'sqrt': case 'round': case 'tan': case 'log': case 'exp': case 'sin': case 'cos': case 'floor': case 'ceil': case 'int':
-						steps.push('var a0 = stack.pop();', 'stack.push(' + token + '(a0));');
+						steps.push('var a0 = stack.pop();', 'stack.push(' + normalizedToken + '(a0));');
 						break;
 					case 'max': case 'min': case 'pow':
-						steps.push('var a0 = stack.pop();', 'var a1 = stack.pop();', 'stack.push(' + token + '(a1, a0));');
+						steps.push('var a0 = stack.pop();', 'var a1 = stack.pop();', 'stack.push(' + normalizedToken + '(a1, a0));');
 						break;
 					case 'random': steps.push('stack.push(random());'); break;
 					case '/': case '+': case '-': case '*': case '%': case '>>': case '<<': case '|': case '&': case '^': case '&&': case '||':
@@ -357,8 +359,8 @@ class audioProcessor extends AudioWorkletProcessor {
 						if(token === 'micL') steps.push('stack.push(_micSample[0]);');
 						else if(token === 'micR') steps.push('stack.push(_micSample[1]);');
 						else if(token === 'micM') steps.push('stack.push(_micSample[2]);');
-						else if(token === 'true') steps.push('stack.push(1);');
-						else if(token === 'false') steps.push('stack.push(0);');
+						else if(normalizedToken === 'true') steps.push('stack.push(1);');
+						else if(normalizedToken === 'false') steps.push('stack.push(0);');
 						else if(/^-?(?:0[xX][0-9a-fA-F]+|(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)$/.test(token)) steps.push('stack.push(' + token + ');');
 						else if(/^[A-Za-z_$][\w$]*$/.test(token)) steps.push('stack.push(' + token + ');');
 						else throw new Error('Unknown postfix token: ' + token);
@@ -374,14 +376,14 @@ class audioProcessor extends AudioWorkletProcessor {
 			} else if(this.isRAW || this.isSignedRAW || this.isFloatRAW) {
 				// Optimize code like eval(unescape(escape`XXXX`.replace(/u(..)/g,"$1%")))
 				codeText = codeText.trim().replace(
-					/^eval\(unescape\(escape(?:`|\('|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(\/u\(\.\.\)\/g,["'`]\$1%["'`]\)\)\)$/,
+					/^eval\(unescape\(escape(?:`|\('\s*|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(\/u\(\.\.\)\/g,["'`]\$1%["'`]\)\)\)$/,
 					(match, m1) => unescape(escape(m1).replace(/u(..)/g, '$1%')));
 				this.func = new Function(...params, '_micSample', `return function (t) {${ codeText || 0 }};`)
 					.bind(globalThis, ...values);
 			} else {
 				// Optimize code like eval(unescape(escape`XXXX`.replace(/u(..)/g,"$1%")))
 				codeText = codeText.trim().replace(
-					/^eval\(unescape\(escape(?:`|\('|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(\/u\(\.\.\)\/g,["'`]\$1%["'`]\)\)\)$/,
+					/^eval\(unescape\(escape(?:`|\('\s*|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(\/u\(\.\.\)\/g,["'`]\$1%["'`]\)\)\)$/,
 					(match, m1) => unescape(escape(m1).replace(/u(..)/g, '$1%')));
 				this.func = new Function(...params, 't', '_micSample', `return 0,\n${ codeText || 0 };`)
 					.bind(globalThis, ...values);
