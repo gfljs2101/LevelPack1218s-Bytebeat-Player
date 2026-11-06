@@ -394,8 +394,11 @@ globalThis.bytebeat = new class {
 		this.setSampleRate(ui.controlSampleRate.value = +sampleRate || 8000, false);
 		this.setSRDivisor(this.settings.srDivisor || 1);
 		ui.controlSRDivisor.value = this.settings.srDivisor || 1;
+
+		const notation = ui.controlNotation?.value || new URLSearchParams(window.location.search).get('notation') || 'infix';
 		const data = {
 			mode,
+			notation,
 			sampleRate: this.sampleRate,
 			sampleRatio: this.sampleRate / this.audioCtx.sampleRate
 		};
