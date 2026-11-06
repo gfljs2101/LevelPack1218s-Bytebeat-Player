@@ -275,7 +275,7 @@ globalThis.bytebeat = new class {
 	setNotation(notation) {
 		this.settings.notation = notation;
 		this.saveSettings();
-		this.sendData({ notation });
+		this.sendData({ notation, setFunction: editor.value });
 	}
 	async initAudio() {
 		this.audioCtx = new AudioContext({
