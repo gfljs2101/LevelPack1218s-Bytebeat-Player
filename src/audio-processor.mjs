@@ -22,6 +22,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		this.isRAW = false;
 		this.isSignedRAW = false;
 		this.isFloatRAW = false;
+		this.isPostfix = true;
 		this.getValuesVisualizer = (_s) => 0;
 		this.isPlaying = false;
 		this.playbackSpeed = 1;
@@ -327,12 +328,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		try {
 			const functionBody = body => withSavedFunctions(body, this.savedFunctions)
 			const trimmedCode = codeText.trim();
-			if(this.isPostfix) {
-				codeText = notationToPostfix(codeText, 'postfix');
-				this.postfixStack = createPostfixStack();
-				this.func = new Function(...params, 'postfixStack', 't', 'sr', 'sec', functionBody(postfixToFunction(codeText)))
-					.bind(globalThis, ...values, this.postfixStack);
-			} else if(this.isFuncbeat) {
+			if(this.isFuncbeat && !this.isPostfix) {
 				this.func = new Function(...params, codeText).bind(globalThis, ...values);
 			} else if(this.isRAW || this.isSignedRAW || this.isFloatRAW) {
 				// Optimize code like eval(unescape(escape`XXXX`.replace(/u(..)/g,"$1%")))
@@ -342,15 +338,22 @@ class audioProcessor extends AudioWorkletProcessor {
 				this.func = new Function(...params, '_micSample', `return function (t) {${ codeText || 0 }};`)
 					.bind(globalThis, ...values);
 			} else {
-				// Optimize code like eval(unescape(escape`XXXX`.replace(/u(..)/g,"$1%")))
-				codeText = codeText.trim().replace(
-					/^eval\(unescape\(escape(?:`|\('|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(\/u\(\.\.\)\/g,["'`]\$1%["'`]\)\)\)$/,
-					(match, m1) => unescape(escape(m1).replace(/u(..)/g, '$1%')));
-				this.func = new Function(...params, 't', '_micSample', `return 0,\n${ codeText || 0 };`)
-					.bind(globalThis, ...values);
+				if(this.isPostfix) {
+					codeText = notationToPostfix(codeText, this.expressionFormat);
+					this.postfixStack = createPostfixStack();
+					this.func = new Function(...params, 'postfixStack', 't', 'sr', 'sec', functionBody(postfixToFunction(codeText)))
+						.bind(globalThis, ...values, this.postfixStack);
+				} else {
+					// Optimize code like eval(unescape(escape`XXXX`.replace(/u(..)/g,"$1%")))
+					codeText = codeText.trim().replace(
+						/^eval\(unescape\(escape(?:`|\('|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(\/u\(\.\.\)\/g,["'`]\$1%["'`]\)\)\)$/,
+						(match, m1) => unescape(escape(m1).replace(/u(..)/g, '$1%')));
+					this.func = new Function(...params, 't', '_micSample', `return 0,\n${ codeText || 0 };`)
+						.bind(globalThis, ...values);
+				}
 			}
 			isCompiled = true;
-			if(this.isFuncbeat) {
+			if(this.isFuncbeat && !this.isPostfix) {
 				this.func = this.func();
 				this.func(0, this.sampleRate, 0, [0, 0, 0]);
 			} else if(this.isRAW || this.isSignedRAW || this.isFloatRAW) {
@@ -358,6 +361,7 @@ class audioProcessor extends AudioWorkletProcessor {
 				this.func(0, [0, 0, 0]);
 			} else {
 				this.func(0, [0, 0, 0]);
+				if(this.isPostfix) this.postfixStack.reset();
 			}
 		} catch(err) {
 			if(!isCompiled) {
