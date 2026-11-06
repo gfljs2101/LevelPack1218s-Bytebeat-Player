@@ -1,3 +1,14 @@
+import { notationToPostfix, createPostfixStack, postfixToFunction } from './postfix.mjs';
+
+function withSavedFunctions(body, definitions = []) {
+	if(!definitions.length) return body;
+	const declarations = definitions.map(item =>
+		`const ${item.name}=(${item.params})=>(\n${item.body}\n);`).join('\n');
+	// A nested block lets saved functions shadow built-in parameter names, as
+	// the old IIFE did, while retaining access to t, sr, sec and the stack.
+	return `{\n${declarations}\n${body}\n}`;
+}
+
 class audioProcessor extends AudioWorkletProcessor {
 	constructor(...args) {
 		super(...args);
@@ -27,6 +38,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		audioProcessor.freezeGlobals();
 		this.port.addEventListener('message', e => this.receiveData(e.data));
 		this.port.start();
+		this.postfixStack = createPostfixStack();
 	}
 	static deleteGlobals() {
 		// Delete single letter variables to prevent persistent variable errors (covers a good enough range)
@@ -262,6 +274,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		this.audioSample = 0;
 		this.lastTime = -1;
 		this.outValue = [0, 0, 0];
+		this.postfixStack.reset();
 	}
 	setFunction(codeText) {
 		const gfjs = {
@@ -312,6 +325,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		let isCompiled = false;
 		const oldFunc = this.func;
 		try {
+			const functionBody = body => withSavedFunctions(body, this.savedFunctions)
 			const trimmedCode = codeText.trim();
 			if(this.isPostfix) {
 				codeText = notationToPostfix(codeText, 'postfix');
