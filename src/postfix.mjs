@@ -52,7 +52,7 @@ const reservedWords = new Set(('break case catch class const continue debugger d
 const isOperand = token => numberToken.test(token) || identifierToken.test(token) && !reservedWords.has(token);
 const unexpectedToken = (format, token) => new SyntaxError(
 	`${format}: unexpected token ${JSON.stringify(token)}. Use space-separated ${format} notation ` +
-	`(for example, ${format === 'prefix' ? '& t >> t 8' : 't t 8 >> &'}). ` +
+	`(for example, ${format === 'prefix' ? '& t >> t 8' : 't t 8 >> &' }). ` +
 	'Choose infix for JavaScript formulas.');
 
 // Resolve aliases to the actual binding, preserving distinct names such as TRI/tri.
@@ -228,9 +228,114 @@ function pop(stack, token) {
 	return stack.pop();
 }
 
+// Stack words need runtime values: converting them to nested infix strings can
+// duplicate an operand, and previously rejected PICK expressions with a
+// computed index. Keep ordinary formulas as simple infix, but evaluate these
+// stack programs once, in order, at each sample.
+function postfixStackToExpression(tokens) {
+	const steps = ['const postfixValues = [];'];
+	let stackSize = 0;
+	const requireValues = (count, token) => {
+		if(stackSize < count) throw new SyntaxError(`postfix: missing operand for ${ token }`);
+	};
+	for(const token of tokens) {
+		const normalizedToken = token.toLowerCase();
+		const functionName = resolveFunction(token);
+		if(isOperand(token) && !binaryOperators.has(token) && !functionName &&
+			!['drop', 'dup', 'swap', 'pick', 'put', 'random', '~'].includes(normalizedToken)) {
+			steps.push(`postfixValues.push((${ token }));`);
+			stackSize++;
+			continue;
+		}
+		if(normalizedToken === '>' || normalizedToken === '<' || normalizedToken === '=') {
+			requireValues(2, token);
+			steps.push('const postfixRight = postfixValues.pop();');
+			steps.push('const postfixLeft = postfixValues.pop();');
+			const comparison = normalizedToken === '>' ? 'postfixLeft > postfixRight' :
+				normalizedToken === '<' ? 'postfixLeft < postfixRight' :
+				'postfixLeft == postfixRight';
+			steps.push(`postfixValues.push((${ comparison }) ? 0xFFFFFFFF : 0);`);
+			stackSize--;
+			continue;
+		}
+		if(binaryOperators.has(token)) {
+			requireValues(2, token);
+			steps.push('const postfixRight = postfixValues.pop();');
+			steps.push('const postfixLeft = postfixValues.pop();');
+			steps.push(`postfixValues.push((postfixLeft ${ binaryOperators.get(token) } postfixRight) | 0);`);
+			stackSize--;
+			continue;
+		}
+		if(normalizedToken === '~') {
+			requireValues(1, token);
+			steps.push('postfixValues.push(~postfixValues.pop());');
+			continue;
+		}
+		if(functionName) {
+			const arity = functionArity(functionName);
+			requireValues(arity, token);
+			const args = [];
+			for(let i = 0; i < arity; i++) args.unshift('postfixValues.pop()');
+			steps.push(`postfixValues.push(${ functionName }(${ args.join(',') }));`);
+			stackSize += 1 - arity;
+			continue;
+		}
+		if(normalizedToken === 'random') {
+			steps.push('postfixValues.push(random());');
+			stackSize++;
+			continue;
+		}
+		if(normalizedToken === 'dup') {
+			requireValues(1, token);
+			steps.push('postfixValues.push(postfixValues[postfixValues.length - 1]);');
+			stackSize++;
+			continue;
+		}
+		if(normalizedToken === 'drop') {
+			requireValues(1, token);
+			steps.push('postfixValues.pop();');
+			stackSize--;
+			continue;
+		}
+		if(normalizedToken === 'pick') {
+			requireValues(1, token);
+			steps.push('const postfixIndex = Math.floor(Number(postfixValues.pop()));');
+			steps.push('const postfixPick = postfixValues.length - 1 - postfixIndex;');
+			steps.push('postfixValues.push(postfixPick >= 0 && postfixPick < postfixValues.length ? postfixValues[postfixPick] : 0);');
+			continue;
+		}
+		if(normalizedToken === 'put') {
+			requireValues(2, token);
+			steps.push('const postfixIndex = Math.floor(Number(postfixValues.pop()));');
+			steps.push('const postfixPut = postfixValues.length - 1 - postfixIndex;');
+			steps.push('if(postfixPut >= 0 && postfixPut < postfixValues.length) postfixValues[postfixPut] = postfixValues[postfixValues.length - 1];');
+			stackSize--;
+			continue;
+		}
+		if(normalizedToken === 'swap') {
+			requireValues(2, token);
+			steps.push('const postfixRight = postfixValues.pop();');
+			steps.push('const postfixLeft = postfixValues.pop();');
+			steps.push('postfixValues.push(postfixRight, postfixLeft);');
+			continue;
+		}
+		validateExpression(token, 'postfix');
+		steps.push(`postfixValues.push((${ token }));`);
+		stackSize++;
+	}
+	if(stackSize !== 1) {
+		throw new SyntaxError(`postfix: expected one result, got ${ stackSize }`);
+	}
+	steps.push('return postfixValues.pop();');
+	return `(() => {\n${ steps.join('\n') }\n})()`;
+}
+
 export function postfixToInfix(code) {
 	const stack = [];
 	const tokens = tokenize(code);
+	if(tokens.some(token => ['drop', 'dup', 'swap', 'pick', 'put'].includes(token.toLowerCase()))) {
+		return postfixStackToExpression(tokens);
+	}
 	for(const token of tokens) {
 		const normalizedToken = token.toLowerCase();
 		const functionName = resolveFunction(token);
@@ -261,40 +366,6 @@ export function postfixToInfix(code) {
 		}
 		if(normalizedToken === 'random') {
 			stack.push('random()');
-			continue;
-		}
-		if(normalizedToken === 'dup') {
-			stack.push(stack[stack.length - 1]);
-			continue;
-		}
-		if(normalizedToken === 'drop') {
-			pop(stack, token);
-			continue;
-		}
-		if(normalizedToken === 'pick') {
-			const index = pop(stack, token);
-			if(!numberToken.test(index)) {
-				throw new SyntaxError(`postfix: dynamic pick is not supported for ${ index }`);
-			}
-			const offset = Math.floor(Number(index));
-			stack.push(offset >= 0 && offset < stack.length ? stack[stack.length - 1 - offset] : '0');
-			continue;
-		}
-		if(normalizedToken === 'put') {
-			const index = pop(stack, token);
-			if(!numberToken.test(index)) {
-				throw new SyntaxError(`postfix: dynamic put is not supported for ${ index }`);
-			}
-			const offset = Math.floor(Number(index));
-			if(offset >= 0 && offset < stack.length) {
-				stack[stack.length - 1 - offset] = stack[stack.length - 1];
-			}
-			continue;
-		}
-		if(normalizedToken === 'swap') {
-			const right = pop(stack, token);
-			const left = pop(stack, token);
-			stack.push(right, left);
 			continue;
 		}
 		validateExpression(token, 'postfix');
