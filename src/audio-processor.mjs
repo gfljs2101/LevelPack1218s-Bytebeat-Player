@@ -295,7 +295,7 @@ class audioProcessor extends AudioWorkletProcessor {
 			const trimmedCode = codeText.trim();
 			if(this.isFuncbeat && !this.isPostfix) {
 				this.func = new Function(...params, codeText).bind(globalThis, ...values);
-			} else if(this.isRAW || this.isSignedRAW || this.isFloatRAW) {
+			} else if((this.isRAW || this.isSignedRAW || this.isFloatRAW) && !this.isPostfix) {
 				// Optimize code like eval(unescape(escape`XXXX`.replace(/u(..)/g,"$1%")))
 				codeText = codeText.trim().replace(
 					/^eval\(unescape\(escape(?:`|\('|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(\/u\(\.\.\)\/g,["'`]\$1%["'`]\)\)\)$/,
@@ -321,7 +321,7 @@ class audioProcessor extends AudioWorkletProcessor {
 			if(this.isFuncbeat && !this.isPostfix) {
 				this.func = this.func();
 				this.func(0, this.sampleRate, 0, [0, 0, 0]);
-			} else if(this.isRAW || this.isSignedRAW || this.isFloatRAW) {
+			} else if((this.isRAW || this.isSignedRAW || this.isFloatRAW) && !this.isPostfix) {
 				this.func = this.func();
 				this.func(0, [0, 0, 0]);
 			} else {
