@@ -249,8 +249,8 @@ function postfixStackToExpression(tokens) {
 		}
 		if(normalizedToken === '>' || normalizedToken === '<' || normalizedToken === '=') {
 			requireValues(2, token);
-			steps.push('const postfixRight = postfixValues.pop();');
-			steps.push('const postfixLeft = postfixValues.pop();');
+			steps.push('var postfixRight = postfixValues.pop();');
+			steps.push('var postfixLeft = postfixValues.pop();');
 			const comparison = normalizedToken === '>' ? 'postfixLeft > postfixRight' :
 				normalizedToken === '<' ? 'postfixLeft < postfixRight' :
 				'postfixLeft == postfixRight';
@@ -260,8 +260,8 @@ function postfixStackToExpression(tokens) {
 		}
 		if(binaryOperators.has(token)) {
 			requireValues(2, token);
-			steps.push('const postfixRight = postfixValues.pop();');
-			steps.push('const postfixLeft = postfixValues.pop();');
+			steps.push('var postfixRight = postfixValues.pop();');
+			steps.push('var postfixLeft = postfixValues.pop();');
 			steps.push(`postfixValues.push((postfixLeft ${ binaryOperators.get(token) } postfixRight) | 0);`);
 			stackSize--;
 			continue;
@@ -299,23 +299,23 @@ function postfixStackToExpression(tokens) {
 		}
 		if(normalizedToken === 'pick') {
 			requireValues(1, token);
-			steps.push('const postfixIndex = Math.floor(Number(postfixValues.pop()));');
-			steps.push('const postfixPick = postfixValues.length - 1 - postfixIndex;');
+			steps.push('var postfixIndex = Math.floor(Number(postfixValues.pop()));');
+			steps.push('var postfixPick = postfixValues.length - 1 - postfixIndex;');
 			steps.push('postfixValues.push(postfixPick >= 0 && postfixPick < postfixValues.length ? postfixValues[postfixPick] : 0);');
 			continue;
 		}
 		if(normalizedToken === 'put') {
 			requireValues(2, token);
-			steps.push('const postfixIndex = Math.floor(Number(postfixValues.pop()));');
-			steps.push('const postfixPut = postfixValues.length - 1 - postfixIndex;');
+			steps.push('var postfixIndex = Math.floor(Number(postfixValues.pop()));');
+			steps.push('var postfixPut = postfixValues.length - 1 - postfixIndex;');
 			steps.push('if(postfixPut >= 0 && postfixPut < postfixValues.length) postfixValues[postfixPut] = postfixValues[postfixValues.length - 1];');
 			stackSize--;
 			continue;
 		}
 		if(normalizedToken === 'swap') {
 			requireValues(2, token);
-			steps.push('const postfixRight = postfixValues.pop();');
-			steps.push('const postfixLeft = postfixValues.pop();');
+			steps.push('var postfixRight = postfixValues.pop();');
+			steps.push('var postfixLeft = postfixValues.pop();');
 			steps.push('postfixValues.push(postfixRight, postfixLeft);');
 			continue;
 		}
