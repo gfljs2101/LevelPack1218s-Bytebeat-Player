@@ -339,9 +339,9 @@ class audioProcessor extends AudioWorkletProcessor {
 					.bind(globalThis, ...values);
 			} else {
 				if(this.isPostfix) {
-					codeText = notationToPostfix(codeText, this.expressionFormat);
+					codeText = notationToPostfix(codeText, 'Postfix');
 					this.postfixStack = createPostfixStack();
-					this.func = new Function(...params, 'postfixStack', 't', 'sr', 'sec', functionBody(postfixToFunction(codeText)))
+					this.func = new Function(...params, 'postfixStack', 't', functionBody(postfixToFunction(codeText)))
 						.bind(globalThis, ...values, this.postfixStack);
 				} else {
 					// Optimize code like eval(unescape(escape`XXXX`.replace(/u(..)/g,"$1%")))
