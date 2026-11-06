@@ -245,12 +245,12 @@ globalThis.bytebeat = new class {
 		this.setColorTimeCursor();
 		this.setScale(0);
 		ui.settingsAudioRate.value = this.settings.audioSampleRate;
-		this.parseUrl();
 
 		const urlParams = new URLSearchParams(window.location.search);
 		const notation = urlParams.get('notation') || 'infix';
 		ui.controlNotation.value = notation;
 		this.sendData({ drawMode: scope.drawMode });
+		this.parseUrl();
 		
 		ui.controlDrawMode.value = scope.drawMode;
 		ui.controlThemeStyle.value = this.settings.themeStyle;
