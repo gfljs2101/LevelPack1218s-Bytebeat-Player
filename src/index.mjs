@@ -246,7 +246,12 @@ globalThis.bytebeat = new class {
 		this.setScale(0);
 		ui.settingsAudioRate.value = this.settings.audioSampleRate;
 		this.parseUrl();
+
+		const urlParams = new URLSearchParams(window.location.search);
+		const notation = urlParams.get('notation') || 'infix';
+		ui.controlNotation.value = notation;
 		this.sendData({ drawMode: scope.drawMode });
+		
 		ui.controlDrawMode.value = scope.drawMode;
 		ui.controlThemeStyle.value = this.settings.themeStyle;
 		ui.controlCodeStyle.value = this.settings.codeStyle;
@@ -273,8 +278,9 @@ globalThis.bytebeat = new class {
 		}
 	}
 	setNotation(notation) {
-		ui.controlNotation.value = notation;
-		this.saveSettings();
+		const url = new URL(window.location);
+		url.searchParams.set('notation', notation);
+		window.history.replaceState({}, '', url);
 		this.sendData({ notation, setFunction: editor.value });
 	}
 	async initAudio() {
@@ -382,21 +388,16 @@ globalThis.bytebeat = new class {
 		else ui.splashElem.innerHTML = splashes[Math.random()*splashes.length|0];
 
 	}
-	loadCode({ code, sampleRate, mode, drawMode, scale, notation }, isPlay = true) {
+	loadCode({ code, sampleRate, mode, drawMode, scale }, isPlay = true) {
 		this.mode = ui.controlPlaybackMode.value = mode = mode || 'Bytebeat';
 		editor.setValue(code);
 		this.setSampleRate(ui.controlSampleRate.value = +sampleRate || 8000, false);
 		this.setSRDivisor(this.settings.srDivisor || 1);
 		ui.controlSRDivisor.value = this.settings.srDivisor || 1;
-
-		const currentNotation = notation || 'infix';
-		ui.controlNotation = currentNotation;
-		
 		const data = {
 			mode,
 			sampleRate: this.sampleRate,
-			sampleRatio: this.sampleRate / this.audioCtx.sampleRate,
-			notation: currentNotation
+			sampleRatio: this.sampleRate / this.audioCtx.sampleRate
 		};
 		if(isPlay) {
 			data.playbackSpeed = this.playbackSpeed = 1;

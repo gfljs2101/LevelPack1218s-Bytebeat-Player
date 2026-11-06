@@ -8,7 +8,6 @@ export function getCodeFromUrl(hash) {
 			songData = {
 				mode: ['Bytebeat', 'Signed Bytebeat', 'Floatbeat', 'Funcbeat', 'RAW', 'Signed RAW', 'FloatRAW'][dataArr[0]],
 				sampleRate: new DataView(dataArr.buffer).getFloat32(1, 1),
-				notation: dataArr.length > 5 && dataArr[5] === 1 ? 'postfix': 'infix',
 				code: inflateRaw(new Uint8Array(dataArr.buffer, 8), { to: 'string' })
 			};
 		} catch(err) {
@@ -41,7 +40,6 @@ export function getUrlFromCode(code, mode, sampleRate) {
 	const outputArr = new Uint8Array(8 + codeArr.length);
 	outputArr[0] = ['Bytebeat', 'Signed Bytebeat', 'Floatbeat', 'Funcbeat', 'RAW', 'Signed RAW', 'FloatRAW'].indexOf(mode);
 	outputArr.set(new Uint8Array(new Float32Array([sampleRate]).buffer), 1);
-	outputArr[5] = notation === 'postfix' ? 1 : 0;
 	outputArr.set(codeArr, 8);
 	// since we're dealing with Uint8Array I should use the non-map method I think - Chasyxx
 	let str = "";
