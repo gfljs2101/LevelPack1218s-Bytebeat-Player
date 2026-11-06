@@ -29,6 +29,7 @@ export class UI {
 		this.controlVolume = null;
 		this.controlVolumeDisplay = null;
 		this.controlMic = null;
+		this.controlNotation = null;
 		this.actionAutoformat = null;
 		this.controlMaxParens = null;
 		this.actionMinibake = null;
@@ -85,6 +86,7 @@ export class UI {
 		this.controlVolume = document.getElementById('control-volume');
 		this.controlVolumeDisplay = document.getElementById('control-volume-display');
 		this.controlMic = document.getElementById('control-mic');
+		this.controlNotation = document.getElementById('control-notation');
 		this.actionAutoformat = document.getElementById('actions-format');
 		this.controlMaxParens = document.getElementById('control-maxparens');
 		this.actionMinibake = document.getElementById('actions-minibake');

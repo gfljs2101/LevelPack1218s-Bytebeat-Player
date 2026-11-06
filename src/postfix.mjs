@@ -133,10 +133,18 @@ export function createPostfixStack(size = 256) {
 			pointer %= size;
 		},
 		pick(index) {
-			return values[wrapIndex(pointer - Math.floor(index) - 1, size)];
+			let i = pointer - Math.floor(index) - 1;
+      		while (i < 0) {
+        		i += size;
+    		}
+    		return values[i % size];
 		},
 		put(index, value) {
-			values[wrapIndex(pointer - Math.floor(index), size)] = value;
+			let i = pointer - Math.floor(index);
+      		while (i < 0) {
+        		i += size;
+    		}
+    		return values[i % size] = value;
 		},
 		reset() {
 			pointer = 0;

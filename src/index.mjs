@@ -87,6 +87,7 @@ globalThis.bytebeat = new class {
 			case 'control-drawmode': this.setDrawMode(elem.value); break;
 			case 'control-srdivisor': this.setSRDivisor(+elem.value); break;
 			case 'control-mode': this.setPlaybackMode(elem.value); break;
+			case 'control-notation': this.setNotation(elem.value); break;
 			case 'control-samplerate':
 			case 'control-samplerate-select': this.setSampleRate(+elem.value); break;
 			case 'control-theme-style': this.setThemeStyle(elem.value); break;
@@ -249,6 +250,7 @@ globalThis.bytebeat = new class {
 		ui.controlDrawMode.value = scope.drawMode;
 		ui.controlThemeStyle.value = this.settings.themeStyle;
 		ui.controlCodeStyle.value = this.settings.codeStyle;
+		ui.controlNotation.value = this.settings.notation || 'infix';
 		ui.mainElem.addEventListener('click', this);
 		ui.mainElem.addEventListener('change', this);
 		ui.containerFixed.addEventListener('input', this);
@@ -269,6 +271,11 @@ globalThis.bytebeat = new class {
 				` - Creator of ${ this.expectedDomain } bytebeat player`);
 			document.getElementById("splash").paragraph.hidden = false;
 		}
+	}
+	setNotation(notation) {
+		this.settings.notation = notation;
+		this.saveSettings();
+		this.sendData({ notation });
 	}
 	async initAudio() {
 		this.audioCtx = new AudioContext({

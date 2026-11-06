@@ -22,7 +22,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		this.isRAW = false;
 		this.isSignedRAW = false;
 		this.isFloatRAW = false;
-		this.isPostfix = true;
+		this.isPostfix = false;
 		this.postfixStack = createPostfixStack();
 		this.getValuesVisualizer = (_s) => 0;
 		this.isPlaying = false;
@@ -212,6 +212,9 @@ class audioProcessor extends AudioWorkletProcessor {
 			this.playbackSpeed = data.playbackSpeed;
 			this.setSampleRatio(sampleRatio);
 		}
+		if(data.notation !== undefined) {
+			this.isPostfix = data.notation === 'postfix';
+		}
 		if(data.mode !== undefined) {
 			this.isFuncbeat = data.mode === 'Funcbeat';
 			this.isRAW = data.mode === 'RAW';
@@ -257,7 +260,8 @@ class audioProcessor extends AudioWorkletProcessor {
 		if (data.srDivisor !== undefined) {
 			this.srDivisor/*PRO*/ = data.srDivisor;
 		}
-		if(data.DMode !== undefined) {			this.soundMode = data.DMode;
+		if(data.DMode !== undefined) {
+			this.soundMode = data.DMode;
 		}
 		if(data.drawMode !== undefined) {
 			this.drawMode = data.drawMode;
@@ -275,52 +279,13 @@ class audioProcessor extends AudioWorkletProcessor {
 		this.audioSample = 0;
 		this.lastTime = -1;
 		this.outValue = [0, 0, 0];
-		this.postfixStack.reset();
 	}
 	setFunction(codeText) {
-		const gfjs = {
-			/*Chasyxx's exotic functions*/
-			
-			/*bit*/        "bitC": function (x, y, z) { return x & y ? z : 0 },
-			/*bit reverse*/"br": function (x, size = 8) {
-				if (size > 32) { throw new Error("br() Size cannot be greater than 32") } else {
-					let result = 0;
-					for (let idx = 0; idx < (size - 0); idx++) {
-						result += gfjs.bitC(x, 2 ** idx, 2 ** (size - (idx + 1)))
-					}
-					return result
-				}
-			},
-			/*sin that loops every 128 "steps", instead of every pi steps*/"sinf": function (x) { return Math.sin(x / (128 / Math.PI)) },
-			/*cos that loops every 128 "steps", instead of every pi steps*/"cosf": function (x) { return Math.cos(x / (128 / Math.PI)) },
-			/*tan that loops every 128 "steps", instead of every pi steps*/"tanf": function (x) { return Math.tan(x / (128 / Math.PI)) },
-			/*converts t into a string composed of it's bits, regex's that*/"regG": function (t, X) { return X.test(t.toString(2)) },
-
-			/*lehandsomeguy's functions*/
-			/*"fract": function (x) { return ((x%1)+1)%1 },
-			"mix": function (a,b,c) { return (a*(1-c))+(b*c) },
-			"tri": function (x) { return Math.asin(Math.sin(x))/(Math.PI/2.) },
-			"puls": function (x) { return (Math.floor(Math.sin(x))+0.5)*2. },
-			"saw": function (x) { return (gfjs.fract((x/2.)/Math.PI)-0.5)*2. },
-			"hash": function (x) { return gfjs.fract(Math.sin(x*1342.874+Math.sin(5212.42*x))*414.23) },
-			"noise": function (x) { return Math.sin((x+10)*Math.sin(Math.pow((x+10),gfjs.fract(x)+10))) } */
-			
-			/*Chasyxx's exotic modes ported to a function by LevelPack1218*/
-			"LogHack2": function (x) { const neg = x < 0; return x == 0 ? 0 : ((Math.log2(Math.abs(x)) * (neg ? -16 : 16)) + (neg ? -127 : 128)) },
-			"LogHack": function (x) { return Math.log2(Math.abs(x)) * ((x < 0) ? -32 : 32) },
-			"Logmode": function (x) { return Math.log2(x) * 32 },
-			"Bitbeat": function (x) { return x & 1 && 255 },
-
-			/*My own functions*/
-			"gcd": function (a=0, b=0) { a=Math.abs(a);b=Math.abs(b);if(b===0){return a;};return gfjs.gcd(b, a % b); }
-		}
 		// Create shortened Math functions
 		const params = Object.getOwnPropertyNames(Math);
 		const values = params.map(k => Math[k]);
-		const gfjsNames = Object.getOwnPropertyNames(gfjs);
-		const gfjsFuncs = gfjsNames.map(k => gfjs[k]);
-		params.push('int', 'window', ...gfjsNames);
-		values.push(Math.floor, globalThis, ...gfjsFuncs);
+		params.push('int', 'window');
+		values.push(Math.floor, globalThis);
 		audioProcessor.deleteGlobals();
 		// Code testing
 		let isCompiled = false;
