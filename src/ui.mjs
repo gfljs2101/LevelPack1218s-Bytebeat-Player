@@ -70,6 +70,43 @@ export class UI {
 		this.controlDrawMode = document.getElementById('control-drawmode');
 		this.controlLag = document.getElementById('control-lag');
 		this.controlPlaybackMode = document.getElementById('control-mode');
+
+		// Formula notation is independent of the sound/output mode.
+		this.controlNotationMode = document.getElementById('control-notation-mode');
+		if(!this.controlNotationMode) {
+			this.controlPlaybackMode.insertAdjacentHTML('afterend', `
+				<select id="control-notation-mode" class="control-select controls-grow"
+					title="Formula notation" aria-label="Formula notation">
+					<option value="Infix">Infix</option>
+					<option value="Postfix">Postfix</option>
+				</select>`);
+			this.controlNotationMode = document.getElementById('control-notation-mode');
+		}
+		const savedNotationMode = localStorage.getItem('notationMode');
+		this.controlNotationMode.value = savedNotationMode === 'Postfix' ? 'Postfix' : 'Infix';
+
+		// Keep editor source in its selected notation and let the audio processor compile it.
+		const { bytebeat } = globalThis;
+		const originalSendData = bytebeat.sendData.bind(bytebeat);
+		let sourceCode = null;
+		let notationMode = this.controlNotationMode.value;
+		bytebeat.sendData = data => {
+			if(typeof data.setFunction === 'string') {
+				sourceCode = data.setFunction;
+				if(notationMode === 'Postfix' && !/^\s*postfix\s*:/i.test(sourceCode)) {
+					data = { ...data, setFunction: `postfix: ${ sourceCode }` };
+				}
+			}
+			originalSendData(data);
+		};
+		this.controlNotationMode.addEventListener('change', () => {
+			notationMode = this.controlNotationMode.value;
+			localStorage.setItem('notationMode', notationMode);
+			if(sourceCode !== null) {
+				bytebeat.sendData({ setFunction: sourceCode });
+			}
+		});
+
 		this.controlPlayBackward = document.getElementById('control-play-backward');
 		this.controlPlayForward = document.getElementById('control-play-forward');
 		this.controlRecord = document.getElementById('control-rec');
