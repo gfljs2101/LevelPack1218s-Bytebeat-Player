@@ -273,7 +273,7 @@ globalThis.bytebeat = new class {
 		}
 	}
 	setNotation(notation) {
-		this.settings.notation = notation;
+		ui.controlNotation.value = notation;
 		this.saveSettings();
 		this.sendData({ notation, setFunction: editor.value });
 	}
@@ -382,16 +382,21 @@ globalThis.bytebeat = new class {
 		else ui.splashElem.innerHTML = splashes[Math.random()*splashes.length|0];
 
 	}
-	loadCode({ code, sampleRate, mode, drawMode, scale }, isPlay = true) {
+	loadCode({ code, sampleRate, mode, drawMode, scale, notation }, isPlay = true) {
 		this.mode = ui.controlPlaybackMode.value = mode = mode || 'Bytebeat';
 		editor.setValue(code);
 		this.setSampleRate(ui.controlSampleRate.value = +sampleRate || 8000, false);
 		this.setSRDivisor(this.settings.srDivisor || 1);
 		ui.controlSRDivisor.value = this.settings.srDivisor || 1;
+
+		const currentNotation = notation || 'infix';
+		ui.controlNotation = currentNotation;
+		
 		const data = {
 			mode,
 			sampleRate: this.sampleRate,
-			sampleRatio: this.sampleRate / this.audioCtx.sampleRate
+			sampleRatio: this.sampleRate / this.audioCtx.sampleRate,
+			notation: currentNotation
 		};
 		if(isPlay) {
 			data.playbackSpeed = this.playbackSpeed = 1;
@@ -851,7 +856,7 @@ globalThis.bytebeat = new class {
 	updateUrl() {
 		const code = editor.value;
 		ui.setCodeSize(code);
-		getUrlFromCode(code, this.mode, this.sampleRate);
+		getUrlFromCode(code, this.mode, this.sampleRate, ui.controlNotation.value);
 	}
 	favoriteErrorBox(error) {
 		ui.yesNoAlert(`${ error.message }\n\n${ error.stack }\n\n` +
