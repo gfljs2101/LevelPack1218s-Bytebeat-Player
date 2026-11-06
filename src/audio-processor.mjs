@@ -23,6 +23,7 @@ class audioProcessor extends AudioWorkletProcessor {
 		this.isSignedRAW = false;
 		this.isFloatRAW = false;
 		this.isPostfix = true;
+		this.postfixStack = createPostfixStack();
 		this.getValuesVisualizer = (_s) => 0;
 		this.isPlaying = false;
 		this.playbackSpeed = 1;
@@ -34,9 +35,6 @@ class audioProcessor extends AudioWorkletProcessor {
 		this.sampleRatio = 1;
 		this.srDivisor/*PRO*/ = 1;
 		this.soundMode = 'Bytebeat';
-		// Declare every instance field before sealing the object: setFunction
-		// may replace this stack, but the property itself must already exist.
-		this.postfixStack = createPostfixStack();
 		Object.seal(this);
 		audioProcessor.deleteGlobals();
 		audioProcessor.freezeGlobals();
@@ -335,7 +333,7 @@ class audioProcessor extends AudioWorkletProcessor {
 			} else if(this.isRAW || this.isSignedRAW || this.isFloatRAW) {
 				// Optimize code like eval(unescape(escape`XXXX`.replace(/u(..)/g,"$1%")))
 				codeText = codeText.trim().replace(
-					/^eval\(unescape\(escape(?:`|\('\|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(/u\(\.\.\)/g,["'`]\$1%["'`]\)\)\)$/,
+					/^eval\(unescape\(escape(?:`|\('|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(\/u\(\.\.\)\/g,["'`]\$1%["'`]\)\)\)$/,
 					(match, m1) => unescape(escape(m1).replace(/u(..)/g, '$1%')));
 				this.func = new Function(...params, '_micSample', `return function (t) {${ codeText || 0 }};`)
 					.bind(globalThis, ...values);
@@ -348,7 +346,7 @@ class audioProcessor extends AudioWorkletProcessor {
 				} else {
 					// Optimize code like eval(unescape(escape`XXXX`.replace(/u(..)/g,"$1%")))
 					codeText = codeText.trim().replace(
-						/^eval\(unescape\(escape(?:`|\('\|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(/u\(\.\.\)/g,["'`]\$1%["'`]\)\)\)$/,
+						/^eval\(unescape\(escape(?:`|\('|\("|\(`)(.*?)(?:`|'\)|"\)|`\)).replace\(\/u\(\.\.\)\/g,["'`]\$1%["'`]\)\)\)$/,
 						(match, m1) => unescape(escape(m1).replace(/u(..)/g, '$1%')));
 					this.func = new Function(...params, 't', '_micSample', `return 0,\n${ codeText || 0 };`)
 						.bind(globalThis, ...values);
