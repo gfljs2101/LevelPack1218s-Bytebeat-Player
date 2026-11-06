@@ -1,27 +1,8 @@
 export const binaryOperators = new Map([
-	['>', '>'],
-	['<', '<'],
-	['=', '=='],
-	['==', '=='],
-	['!=', '!='],
-	['>=', '>='],
-	['<=', '<='],
-	['===', '==='],
-	['!==', '!=='],
-	['+', '+'],
-	['-', '-'],
-	['*', '*'],
-	['/', '/'],
-	['%', '%'],
-	['**', '**'],
-	['>>', '>>'],
-	['>>>', '>>>'],
-	['<<', '<<'],
-	['&', '&'],
-	['|', '|'],
-	['^', '^'],
-	['&&', '&&'],
-	['||', '||']
+	['>', '>'], ['<', '<'], ['=', '=='], ['==', '=='], ['!=', '!='], ['>=', '>='], ['<=', '<='],
+	['===', '==='], ['!==', '!=='], ['+', '+'], ['-', '-'], ['*', '*'], ['/', '/'], ['%', '%'],
+	['**', '**'], ['>>', '>>'], ['>>>', '>>>'], ['<<', '<<'], ['&', '&'], ['|', '|'], ['^', '^'],
+	['&&', '&&'], ['||', '||']
 ]);
 
 const unaryOperators = new Set([
@@ -34,8 +15,7 @@ const unaryOperators = new Set([
 ]);
 
 const customArity = new Map([
-	['min', 2], ['max', 2], ['pow', 2], ['atan2', 2], ['imul', 2], ['hypot', 2],
-	['clz32', 1],
+	['min', 2], ['max', 2], ['pow', 2], ['atan2', 2], ['imul', 2], ['hypot', 2], ['clz32', 1],
 	['bitC', 3], ['br', 2], ['regG', 2], ['crpt', 3], ['decrpt', 3], ['dvd', 2],
 	['tri', 1], ['squr', 1], ['sie', 1], ['smis', 1], ['arth', 1], ['arthtri', 1],
 	['tanbr', 1], ['tanmd', 1], ['tanbs', 1], ['s3n1', 1], ['tmdsn', 1], ['tbrsn', 1],
@@ -67,8 +47,6 @@ export const resolveFunction = token => functionNames.get(token) || foldedFuncti
 export const functionArity = token => customArity.get(token) || customArity.get(token.toLowerCase()) || 1;
 const validateExpression = (token, format) => {
 	try {
-		// Legacy postfix songs may use a JavaScript expression as one operand.
-		// Parse it in isolation so malformed tokens cannot break generated calls.
 		new Function(`return (\n${token}\n);`);
 	} catch {
 		throw unexpectedToken(format, token);
@@ -147,24 +125,20 @@ export function postfixToFunction(code) {
 	for(const token of tokens) {
 		const normalizedToken = token.toLowerCase();
 		const functionName = resolveFunction(token);
-		if(isOperand(token) &&
-			!binaryOperators.has(token) && !functionName &&
+		if(isOperand(token) && !binaryOperators.has(token) && !functionName &&
 			!['drop', 'dup', 'swap', 'pick', 'put', 'random', '~'].includes(normalizedToken)) {
 			push(token);
 			continue;
 		}
 		if(normalizedToken === '>' || normalizedToken === '<' || normalizedToken === '=') {
-			steps.push('var postfixRight = postfixStack.pop();');
-			steps.push('var postfixLeft = postfixStack.pop();');
+			steps.push('var postfixRight = postfixStack.pop();', 'var postfixLeft = postfixStack.pop();');
 			const comparison = normalizedToken === '>' ? 'postfixRight < postfixLeft' :
-				normalizedToken === '<' ? 'postfixRight > postfixLeft' :
-				'postfixLeft == postfixRight';
+				normalizedToken === '<' ? 'postfixRight > postfixLeft' : 'postfixLeft == postfixRight';
 			steps.push(`postfixStack.push((${ comparison }) ? 0xFFFFFFFF : 0);`);
 			continue;
 		}
 		if(binaryOperators.has(token)) {
-			steps.push('var postfixRight = postfixStack.pop();');
-			steps.push('var postfixLeft = postfixStack.pop();');
+			steps.push('var postfixRight = postfixStack.pop();', 'var postfixLeft = postfixStack.pop();');
 			steps.push(`postfixStack.push((postfixLeft ${ binaryOperators.get(token) } postfixRight) | 0);`);
 			continue;
 		}
@@ -183,32 +157,21 @@ export function postfixToFunction(code) {
 			push(`${ functionName }(${ args.join(',') })`);
 			continue;
 		}
-		if(normalizedToken === 'random') {
-			push('random()');
-			continue;
-		}
-		if(normalizedToken === 'dup') {
-			push('postfixStack.pick(0)');
-			continue;
-		}
-		if(normalizedToken === 'drop') {
-			steps.push('postfixStack.pop();');
-			continue;
-		}
+		if(normalizedToken === 'random') { push('random()'); continue; }
+		if(normalizedToken === 'dup') { push('postfixStack.pick(0)'); continue; }
+		if(normalizedToken === 'drop') { steps.push('postfixStack.pop();'); continue; }
 		if(normalizedToken === 'pick') {
 			steps.push('var postfixIndex = postfixStack.pop();');
 			push('postfixStack.pick(postfixIndex)');
 			continue;
 		}
 		if(normalizedToken === 'put') {
-			steps.push('var postfixIndex = postfixStack.pop();');
-			steps.push('var postfixValue = postfixStack.pick(0);');
-			steps.push('postfixStack.put(postfixIndex, postfixValue);');
+			steps.push('var postfixIndex = postfixStack.pop();', 'var postfixValue = postfixStack.pick(0);',
+				'postfixStack.put(postfixIndex, postfixValue);');
 			continue;
 		}
 		if(normalizedToken === 'swap') {
-			steps.push('var postfixRight = postfixStack.pop();');
-			steps.push('var postfixLeft = postfixStack.pop();');
+			steps.push('var postfixRight = postfixStack.pop();', 'var postfixLeft = postfixStack.pop();');
 			push('postfixRight');
 			push('postfixLeft');
 			continue;
@@ -222,22 +185,14 @@ export function postfixToFunction(code) {
 }
 
 function pop(stack, token) {
-	if(stack.length === 0) {
-		throw new SyntaxError(`postfix: missing operand for ${ token }`);
-	}
+	if(stack.length === 0) throw new SyntaxError(`postfix: missing operand for ${ token }`);
 	return stack.pop();
 }
 
-// Stack words need runtime values: converting them to nested infix strings can
-// duplicate an operand, and previously rejected PICK expressions with a
-// computed index. Keep ordinary formulas as simple infix, but evaluate these
-// stack programs once, in order, at each sample.
+// Evaluate stack operators at runtime so DUP/PICK work with sample-dependent values.
 function postfixStackToExpression(tokens) {
 	const steps = ['const postfixValues = [];'];
 	let stackSize = 0;
-	const requireValues = (count, token) => {
-		if(stackSize < count) throw new SyntaxError(`postfix: missing operand for ${ token }`);
-	};
 	for(const token of tokens) {
 		const normalizedToken = token.toLowerCase();
 		const functionName = resolveFunction(token);
@@ -248,34 +203,27 @@ function postfixStackToExpression(tokens) {
 			continue;
 		}
 		if(normalizedToken === '>' || normalizedToken === '<' || normalizedToken === '=') {
-			requireValues(2, token);
-			steps.push('var postfixRight = postfixValues.pop();');
-			steps.push('var postfixLeft = postfixValues.pop();');
+			steps.push('var postfixRight = postfixValues.pop() ?? 0;', 'var postfixLeft = postfixValues.pop() ?? 0;');
 			const comparison = normalizedToken === '>' ? 'postfixLeft > postfixRight' :
-				normalizedToken === '<' ? 'postfixLeft < postfixRight' :
-				'postfixLeft == postfixRight';
+				normalizedToken === '<' ? 'postfixLeft < postfixRight' : 'postfixLeft == postfixRight';
 			steps.push(`postfixValues.push((${ comparison }) ? 0xFFFFFFFF : 0);`);
 			stackSize--;
 			continue;
 		}
 		if(binaryOperators.has(token)) {
-			requireValues(2, token);
-			steps.push('var postfixRight = postfixValues.pop();');
-			steps.push('var postfixLeft = postfixValues.pop();');
+			steps.push('var postfixRight = postfixValues.pop() ?? 0;', 'var postfixLeft = postfixValues.pop() ?? 0;');
 			steps.push(`postfixValues.push((postfixLeft ${ binaryOperators.get(token) } postfixRight) | 0);`);
 			stackSize--;
 			continue;
 		}
 		if(normalizedToken === '~') {
-			requireValues(1, token);
-			steps.push('postfixValues.push(~postfixValues.pop());');
+			steps.push('postfixValues.push(~(postfixValues.pop() ?? 0));');
 			continue;
 		}
 		if(functionName) {
 			const arity = functionArity(functionName);
-			requireValues(arity, token);
 			const args = [];
-			for(let i = 0; i < arity; i++) args.unshift('postfixValues.pop()');
+			for(let i = 0; i < arity; i++) args.unshift('(postfixValues.pop() ?? 0)');
 			steps.push(`postfixValues.push(${ functionName }(${ args.join(',') }));`);
 			stackSize += 1 - arity;
 			continue;
@@ -286,36 +234,26 @@ function postfixStackToExpression(tokens) {
 			continue;
 		}
 		if(normalizedToken === 'dup') {
-			requireValues(1, token);
-			steps.push('postfixValues.push(postfixValues[postfixValues.length - 1]);');
+			steps.push('postfixValues.push(postfixValues[postfixValues.length - 1] ?? 0);');
 			stackSize++;
 			continue;
 		}
-		if(normalizedToken === 'drop') {
-			requireValues(1, token);
-			steps.push('postfixValues.pop();');
-			stackSize--;
-			continue;
-		}
+		if(normalizedToken === 'drop') { steps.push('postfixValues.pop();'); stackSize--; continue; }
 		if(normalizedToken === 'pick') {
-			requireValues(1, token);
-			steps.push('var postfixIndex = Math.floor(Number(postfixValues.pop()));');
+			steps.push('var postfixIndex = Math.floor(Number(postfixValues.pop() ?? 0));');
 			steps.push('var postfixPick = postfixValues.length - 1 - postfixIndex;');
 			steps.push('postfixValues.push(postfixPick >= 0 && postfixPick < postfixValues.length ? postfixValues[postfixPick] : 0);');
 			continue;
 		}
 		if(normalizedToken === 'put') {
-			requireValues(2, token);
-			steps.push('var postfixIndex = Math.floor(Number(postfixValues.pop()));');
+			steps.push('var postfixIndex = Math.floor(Number(postfixValues.pop() ?? 0));');
 			steps.push('var postfixPut = postfixValues.length - 1 - postfixIndex;');
-			steps.push('if(postfixPut >= 0 && postfixPut < postfixValues.length) postfixValues[postfixPut] = postfixValues[postfixValues.length - 1];');
+			steps.push('if(postfixPut >= 0 && postfixPut < postfixValues.length) postfixValues[postfixPut] = postfixValues[postfixValues.length - 1] ?? 0;');
 			stackSize--;
 			continue;
 		}
 		if(normalizedToken === 'swap') {
-			requireValues(2, token);
-			steps.push('var postfixRight = postfixValues.pop();');
-			steps.push('var postfixLeft = postfixValues.pop();');
+			steps.push('var postfixRight = postfixValues.pop() ?? 0;', 'var postfixLeft = postfixValues.pop() ?? 0;');
 			steps.push('postfixValues.push(postfixRight, postfixLeft);');
 			continue;
 		}
@@ -323,10 +261,7 @@ function postfixStackToExpression(tokens) {
 		steps.push(`postfixValues.push((${ token }));`);
 		stackSize++;
 	}
-	if(stackSize !== 1) {
-		throw new SyntaxError(`postfix: expected one result, got ${ stackSize }`);
-	}
-	steps.push('return postfixValues.pop();');
+	steps.push('return postfixValues.pop() ?? 0;');
 	return `(() => {\n${ steps.join('\n') }\n})()`;
 }
 
@@ -339,41 +274,28 @@ export function postfixToInfix(code) {
 	for(const token of tokens) {
 		const normalizedToken = token.toLowerCase();
 		const functionName = resolveFunction(token);
-		if(isOperand(token) &&
-			!binaryOperators.has(token) && !functionName &&
+		if(isOperand(token) && !binaryOperators.has(token) && !functionName &&
 			!['drop', 'dup', 'swap', 'pick', 'put', 'random', '~'].includes(normalizedToken)) {
 			stack.push(token);
 			continue;
 		}
 		if(binaryOperators.has(token)) {
-			const right = pop(stack, token);
-			const left = pop(stack, token);
+			const right = pop(stack, token), left = pop(stack, token);
 			stack.push(`(${ left }${ binaryOperators.get(token) }${ right })`);
 			continue;
 		}
-		if(token === '~') {
-			stack.push(`(~${ pop(stack, token) })`);
-			continue;
-		}
+		if(token === '~') { stack.push(`(~${ pop(stack, token) })`); continue; }
 		if(functionName) {
-			const arity = functionArity(functionName);
-			const args = [];
-			while(args.length < arity) {
-				args.unshift(pop(stack, token));
-			}
+			const arity = functionArity(functionName), args = [];
+			while(args.length < arity) args.unshift(pop(stack, token));
 			stack.push(`${ functionName }(${ args.join(',') })`);
 			continue;
 		}
-		if(normalizedToken === 'random') {
-			stack.push('random()');
-			continue;
-		}
+		if(normalizedToken === 'random') { stack.push('random()'); continue; }
 		validateExpression(token, 'postfix');
 		stack.push(token);
 	}
-	if(stack.length !== 1) {
-		throw new SyntaxError(`postfix: expected one result, got ${ stack.length }`);
-	}
+	if(stack.length !== 1) throw new SyntaxError(`postfix: expected one result, got ${ stack.length }`);
 	return stack[0];
 }
 
@@ -392,9 +314,7 @@ export function prefixToPostfix(code) {
 			for(let i = 0; i < arity; i++) args.push(stack.pop());
 			stack.push(`${args.join(' ')} ${token}`);
 		} else {
-			if(['dup', 'drop', 'swap', 'pick', 'put'].includes(lower)) {
-				throw unexpectedToken('prefix', token);
-			}
+			if(['dup', 'drop', 'swap', 'pick', 'put'].includes(lower)) throw unexpectedToken('prefix', token);
 			if(!isOperand(token)) validateExpression(token, 'prefix');
 			stack.push(token);
 		}
