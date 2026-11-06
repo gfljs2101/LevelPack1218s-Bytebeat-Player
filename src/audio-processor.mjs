@@ -339,7 +339,7 @@ class audioProcessor extends AudioWorkletProcessor {
 					.bind(globalThis, ...values);
 			} else {
 				if(this.isPostfix) {
-					codeText = notationToPostfix(codeText, 'Postfix');
+					codeText = notationToPostfix(codeText, 'postfix');
 					this.postfixStack = createPostfixStack();
 					this.func = new Function(...params, 'postfixStack', 't', functionBody(postfixToFunction(codeText)))
 						.bind(globalThis, ...values, this.postfixStack);
