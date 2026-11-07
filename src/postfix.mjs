@@ -145,6 +145,10 @@ export function createPostfixStack(size = 256) {
         		i += size;
     		}
     		return values[i % size] = value;
+		},
+		reset() {
+			pointer = 0;
+			values.fill(0);
 		}
 	};
 }
