@@ -287,19 +287,19 @@ globalThis.bytebeat = new class {
 		if(ui.controlNotation) {
 			ui.controlNotation.value = notation;
 		}
-		const isStack = notation === 'postfix' || notation === 'glitch';
+		const isPostfix = notation === 'postfix';
 		if(ui.controlPlaybackMode) {
 			const unsupportedModes = ['Funcbeat', 'RAW', 'Signed RAW', 'FloatRAW'];
 			let selectedUnsupported = false;
 			for(const option of ui.controlPlaybackMode.options) {
 				if(unsupportedModes.includes(option.value)) {
-					option.disabled = isStack;
-					if(isStack && option.selected) {
+					option.disabled = isPostfix;
+					if(isPostfix && option.selected) {
 						selectedUnsupported = true;
 					}
 				}
 			}
-			if(isStack && selectedUnsupported) {
+			if(isPostfix && selectedUnsupported) {
 				ui.controlPlaybackMode.value = 'Bytebeat';
 				this.setPlaybackMode('Bytebeat');
 			}
