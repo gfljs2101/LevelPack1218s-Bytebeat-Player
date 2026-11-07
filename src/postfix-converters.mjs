@@ -111,3 +111,82 @@ export function prefixToPostfix(code) {
 	if(stack.length !== 1) throw new SyntaxError('prefix: expected one expression');
 	return stack[0];
 }
+
+const ByteBeatCompiler = {
+	removeCommentsAndLineBreaks(x) {
+		return x.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n\r]*/g, '').replace(/[\r\n]+/g, ' ');
+	}
+};
+
+export const glitchToPostfix = (function() {
+	const glitchToPostfixConversion = {
+		'a': 't',
+		'b': 'put',
+		'c': 'drop',
+
+		'd': '*',
+		'e': '/',
+		'f': '+',
+		'g': '-',
+		'h': '%',
+
+		'j': '<<',
+		'k': '>>',
+		'l': '&',
+		'm': '|',
+		'n': '^',
+		'o': '~',
+
+		'p': 'dup',
+		'q': 'pick',
+		'r': 'swap',
+
+		's': '<',
+		't': '>',
+		'u': '=',
+		'/': '//',
+
+		'!': '\n',
+		'.': ' ',
+	};
+
+	const isCapitalHex = function(c) {
+		return ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F'));
+	};
+
+	return function(x) {
+		// Convert to postfix
+		const postfix = [];
+
+		x = x.replace('glitch://', ''); // remove "glitch:"
+		x = ByteBeatCompiler.removeCommentsAndLineBreaks(x);
+		x = x.replace('glitch:', ''); // remove "glitch:"
+		x = x.replace(/^[^!]*!/, ''); // remove label
+
+		for (let i = 0; i < x.length; ++i) {
+			let done = false;
+			let imd = '';
+
+			// NOTE: works by magic when number is at end. While gathering
+			// imd if we're at the end of the string 'c' will be undefined
+			// which will fail isCapitalHex and so the last imd will be put in
+			// correctly.
+			let c;
+			while (!done) {
+				c = x[i];
+				if (isCapitalHex(c)) {
+					imd = imd + c;
+					++i;
+				} else {
+					done = true;
+					if (imd.length) {
+						--i;
+						c = '0x' + imd;
+					}
+				}
+			}
+			postfix.push(glitchToPostfixConversion[c] || c);
+		}
+		return postfix.join(' ');
+	};
+}());
