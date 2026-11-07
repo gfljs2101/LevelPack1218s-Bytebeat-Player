@@ -268,7 +268,6 @@ globalThis.bytebeat = new class {
 		ui.controlDrawMode.value = scope.drawMode;
 		ui.controlThemeStyle.value = this.settings.themeStyle;
 		ui.controlCodeStyle.value = this.settings.codeStyle;
-		ui.controlNotation.value = this.settings.notation || 'infix';
 		ui.mainElem.addEventListener('click', this);
 		ui.mainElem.addEventListener('change', this);
 		ui.containerFixed.addEventListener('input', this);
@@ -292,6 +291,9 @@ globalThis.bytebeat = new class {
 	}
 	setNotation(notation) {
 		const isPostfix = notation === 'postfix';
+		if(ui.controlNotation) {
+			ui.controlNotation.value = notation;
+		}
 		if(ui.controlPlaybackMode) {
 			const unsupportedModes = ['Funcbeat', 'RAW', 'Signed RAW', 'FloatRAW'];
 			let selectedUnsupported = false;
@@ -898,10 +900,9 @@ globalThis.bytebeat = new class {
 			for(const [key, value] of oldParams) {
 				url.searchParams.set(key, value);
 			}
-		} else {
-			const currentNotation = ui.controlNotation?.value || 'infix';
-			url.searchParams.set('notation', currentNotation);
 		}
+		const currentNotation = ui.controlNotation?.value || 'infix';
+		url.searchParams.set('notation', currentNotation);
 		window.history.replaceState({}, '', url);
 	}
 	favoriteErrorBox(error) {
