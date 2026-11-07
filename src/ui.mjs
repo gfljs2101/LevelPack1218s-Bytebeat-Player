@@ -87,16 +87,6 @@ export class UI {
 		this.controlVolumeDisplay = document.getElementById('control-volume-display');
 		this.controlMic = document.getElementById('control-mic');
 		this.controlNotation = document.getElementById('control-notation');
-		if(this.controlNotation) {
-			const urlParams = new URLSearchParams(window.location.search);
-			const notation = urlParams.get('notation');
-			if(notation) {
-				this.controlNotation.value = notation;
-				for(const option of this.controlNotation.options) {
-					option.selected = (option.value === notation);
-				}
-			}
-		}
 		this.actionAutoformat = document.getElementById('actions-format');
 		this.controlMaxParens = document.getElementById('control-maxparens');
 		this.actionMinibake = document.getElementById('actions-minibake');

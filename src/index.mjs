@@ -48,6 +48,7 @@ globalThis.bytebeat = new class {
 		this.isPlaying = false;
 		this.isRecording = false;
 		this.mode = 'Floatbeat';
+		this.notation = 'infix';
 		this.playbackSpeed = 1;
 		this.sampleRate = 32000;
 		this.settings = this.defaultSettings;
@@ -246,23 +247,15 @@ globalThis.bytebeat = new class {
 		this.setScale(0);
 		ui.settingsAudioRate.value = this.settings.audioSampleRate;
 
-		const urlParams = new URLSearchParams(window.location.search);
-		const notation = urlParams.get('notation') || 'infix';
-		if (ui.controlNotation) {
-			ui.controlNotation.value = notation;
+		if(window.location.search.includes('notation=')) {
+			const url = new URL(window.location);
+			url.searchParams.delete('notation');
+			window.history.replaceState({}, '', url.pathname + (url.search ? url.search : '') + url.hash);
 		}
+
 		this.parseUrl();
 
-		this.setNotation(notation);
-		
-		window.addEventListener('pageshow', () => {
-			const currentParams = new URLSearchParams(window.location.search);
-			const currentNotation = currentParams.get('notation') || 'infix';
-			if(ui.controlNotation) {
-				ui.controlNotation.value = currentNotation;
-			}
-			this.setNotation(currentNotation);
-		});
+		window.addEventListener('hashchange', () => this.parseUrl());
 		this.sendData({ drawMode: scope.drawMode });
 		
 		ui.controlDrawMode.value = scope.drawMode;
@@ -289,11 +282,12 @@ globalThis.bytebeat = new class {
 			document.getElementById("splash").paragraph.hidden = false;
 		}
 	}
-	setNotation(notation) {
-		const isPostfix = notation === 'postfix';
+	setNotation(notation, isUpdateUrl = true) {
+		this.notation = notation;
 		if(ui.controlNotation) {
 			ui.controlNotation.value = notation;
 		}
+		const isPostfix = notation === 'postfix';
 		if(ui.controlPlaybackMode) {
 			const unsupportedModes = ['Funcbeat', 'RAW', 'Signed RAW', 'FloatRAW'];
 			let selectedUnsupported = false;
@@ -310,9 +304,9 @@ globalThis.bytebeat = new class {
 				this.setPlaybackMode('Bytebeat');
 			}
 		}
-		const url = new URL(window.location);
-		url.searchParams.set('notation', notation);
-		window.history.replaceState({}, '', url);
+		if(isUpdateUrl) {
+			this.updateUrl();
+		}
 		this.sendData({ notation, setFunction: editor.value });
 	}
 	async initAudio() {
@@ -420,17 +414,18 @@ globalThis.bytebeat = new class {
 		else ui.splashElem.innerHTML = splashes[Math.random()*splashes.length|0];
 
 	}
-	loadCode({ code, sampleRate, mode, drawMode, scale }, isPlay = true) {
+	loadCode({ code, sampleRate, mode, drawMode, scale, notation }, isPlay = true) {
 		this.mode = ui.controlPlaybackMode.value = mode = mode || 'Bytebeat';
 		editor.setValue(code);
 		this.setSampleRate(ui.controlSampleRate.value = +sampleRate || 8000, false);
 		this.setSRDivisor(this.settings.srDivisor || 1);
 		ui.controlSRDivisor.value = this.settings.srDivisor || 1;
 
-		const notation = ui.controlNotation?.value || new URLSearchParams(window.location.search).get('notation') || 'infix';
+		this.setNotation(notation || 'infix', false);
+
 		const data = {
 			mode,
-			notation,
+			notation: this.notation,
 			sampleRate: this.sampleRate,
 			sampleRatio: this.sampleRate / this.audioCtx.sampleRate
 		};
@@ -892,18 +887,7 @@ globalThis.bytebeat = new class {
 	updateUrl() {
 		const code = editor.value;
 		ui.setCodeSize(code);
-		const searchParams = window.location.search;
-		getUrlFromCode(code, this.mode, this.sampleRate);
-		const url = new URL(window.location);
-		if(searchParams) {
-			const oldParams = new URLSearchParams(searchParams);
-			for(const [key, value] of oldParams) {
-				url.searchParams.set(key, value);
-			}
-		}
-		const currentNotation = ui.controlNotation?.value || 'infix';
-		url.searchParams.set('notation', currentNotation);
-		window.history.replaceState({}, '', url);
+		getUrlFromCode(code, this.mode, this.sampleRate, this.notation);
 	}
 	favoriteErrorBox(error) {
 		ui.yesNoAlert(`${ error.message }\n\n${ error.stack }\n\n` +
