@@ -251,6 +251,15 @@ globalThis.bytebeat = new class {
 		ui.controlNotation.value = notation;
 		this.sendData({ drawMode: scope.drawMode });
 		this.parseUrl();
+
+		window.addEventListener('pageshow', () => {
+			const currentParams = new URLSearchParams(window.location.search);
+			const currentNotation = currentParams.get('notation') || 'infix';
+			if(ui.controlNotation) {
+				ui.controlNotation.value = currentNotation;
+			}
+			this.setNotation(currentNotation);
+		});
 		
 		ui.controlDrawMode.value = scope.drawMode;
 		ui.controlThemeStyle.value = this.settings.themeStyle;
