@@ -290,6 +290,8 @@ globalThis.bytebeat = new class {
 	}
 	setNotation(notation) {
 		const isPostfix = notation === 'postfix';
+
+		// Disable or enable unsupported sound modes when postfix is active
 		if(ui.controlPlaybackMode) {
 			const unsupportedModes = ['Funcbeat', 'RAW', 'Signed RAW', 'FloatRAW'];
 			let selectedUnsupported = false;
@@ -301,14 +303,19 @@ globalThis.bytebeat = new class {
 					}
 				}
 			}
+			// Fallback to Bytebeat if a disabled mode was active when switching to postfix
 			if(isPostfix && selectedUnsupported) {
 				ui.controlPlaybackMode.value = 'Bytebeat';
 				this.setPlaybackMode('Bytebeat');
 			}
 		}
+
+		// Update URL query parameter ?notation=... while preserving other parameters
 		const url = new URL(window.location);
 		url.searchParams.set('notation', notation);
 		window.history.replaceState({}, '', url);
+
+		// Send notation and recompile audio function
 		this.sendData({ notation, setFunction: editor.value });
 	}
 	async initAudio() {
