@@ -869,7 +869,16 @@ globalThis.bytebeat = new class {
 	updateUrl() {
 		const code = editor.value;
 		ui.setCodeSize(code);
+		const searchParams = window.location.search;
 		getUrlFromCode(code, this.mode, this.sampleRate, ui.controlNotation.value);
+		if(searchParams) {
+			const url = new URL(window.location);
+			const oldParams = new URLSearchParams(searchParams);
+			for(const [key, value] of oldParams) {
+				url.searchParams.set(key, value);
+			}
+			window.history.replaceState({}, '', url);
+		}
 	}
 	favoriteErrorBox(error) {
 		ui.yesNoAlert(`${ error.message }\n\n${ error.stack }\n\n` +
