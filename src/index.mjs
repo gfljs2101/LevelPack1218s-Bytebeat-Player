@@ -248,8 +248,9 @@ globalThis.bytebeat = new class {
 
 		const urlParams = new URLSearchParams(window.location.search);
 		const notation = urlParams.get('notation') || 'infix';
-		ui.controlNotation.value = notation;
-		this.sendData({ drawMode: scope.drawMode });
+		if (ui.controlNotation) {
+			ui.controlNotation.value = notation;
+		}
 		this.parseUrl();
 
 		this.setNotation(notation);
@@ -262,6 +263,7 @@ globalThis.bytebeat = new class {
 			}
 			this.setNotation(currentNotation);
 		});
+		this.sendData({ drawMode: scope.drawMode });
 		
 		ui.controlDrawMode.value = scope.drawMode;
 		ui.controlThemeStyle.value = this.settings.themeStyle;
@@ -290,8 +292,6 @@ globalThis.bytebeat = new class {
 	}
 	setNotation(notation) {
 		const isPostfix = notation === 'postfix';
-
-		// Disable or enable unsupported sound modes when postfix is active
 		if(ui.controlPlaybackMode) {
 			const unsupportedModes = ['Funcbeat', 'RAW', 'Signed RAW', 'FloatRAW'];
 			let selectedUnsupported = false;
@@ -303,19 +303,14 @@ globalThis.bytebeat = new class {
 					}
 				}
 			}
-			// Fallback to Bytebeat if a disabled mode was active when switching to postfix
 			if(isPostfix && selectedUnsupported) {
 				ui.controlPlaybackMode.value = 'Bytebeat';
 				this.setPlaybackMode('Bytebeat');
 			}
 		}
-
-		// Update URL query parameter ?notation=... while preserving other parameters
 		const url = new URL(window.location);
 		url.searchParams.set('notation', notation);
 		window.history.replaceState({}, '', url);
-
-		// Send notation and recompile audio function
 		this.sendData({ notation, setFunction: editor.value });
 	}
 	async initAudio() {
@@ -895,16 +890,11 @@ globalThis.bytebeat = new class {
 	updateUrl() {
 		const code = editor.value;
 		ui.setCodeSize(code);
-		const searchParams = window.location.search;
+		const currentNotation = ui.controlNotation?.value || new URLSearchParams(window.location.search).get('notation') || 'infix';
 		getUrlFromCode(code, this.mode, this.sampleRate, ui.controlNotation.value);
-		if(searchParams) {
-			const url = new URL(window.location);
-			const oldParams = new URLSearchParams(searchParams);
-			for(const [key, value] of oldParams) {
-				url.searchParams.set(key, value);
-			}
-			window.history.replaceState({}, '', url);
-		}
+		const url = new URL(window.location);
+		url.searchParams.set('notation', currentNotation(;
+		window.history.replaceState({}, '', url);
 	}
 	favoriteErrorBox(error) {
 		ui.yesNoAlert(`${ error.message }\n\n${ error.stack }\n\n` +
