@@ -279,7 +279,6 @@ class audioProcessor extends AudioWorkletProcessor {
 		this.audioSample = 0;
 		this.lastTime = -1;
 		this.outValue = [0, 0, 0];
-		this.postfixStack.reset();
 	}
 	setFunction(codeText) {
 		// Create shortened Math functions
