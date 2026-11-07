@@ -40,11 +40,11 @@ export function postfixToFunction(code) {
 				steps.push(`var ${argument} = postfixStack.pop();`);
 				args.unshift(argument);
 			}
-			push(`postfixStack.push(${ functionName }(${ args.join(',') }))`);
+			push(`${ functionName }(${ args.join(',') })`);
 			continue;
 		}
 		if(normalizedToken === 'random') {
-			push('postfixStack.push(random())');
+			push('random()');
 			continue;
 		}
 		if(normalizedToken === 'dup') {
@@ -69,8 +69,8 @@ export function postfixToFunction(code) {
 		if(normalizedToken === 'swap') {
 			steps.push('var postfixRight = postfixStack.pop();');
 			steps.push('var postfixLeft = postfixStack.pop();');
-			push('postfixStack.push(postfixRight)');
-			push('postfixStack.push(postfixLeft)');
+			push('postfixRight');
+			push('postfixLeft');
 			continue;
 		}
 		validateExpression(token, 'postfix');
