@@ -213,7 +213,8 @@ class audioProcessor extends AudioWorkletProcessor {
 			this.setSampleRatio(sampleRatio);
 		}
 		if(data.notation !== undefined) {
-			this.isPostfix = data.notation === 'postfix';
+			this.notation = data.notation;
+			this.isPostfix = data.notation === 'postfix' || data.notation === 'glitch';
 		}
 		if(data.mode !== undefined) {
 			this.isFuncbeat = data.mode === 'Funcbeat';
@@ -304,7 +305,7 @@ class audioProcessor extends AudioWorkletProcessor {
 					.bind(globalThis, ...values);
 			} else {
 				if(this.isPostfix) {
-					codeText = notationToPostfix(codeText, 'postfix');
+					codeText = notationToPostfix(codeText, this.notation || 'postfix');
 					this.postfixStack = createPostfixStack();
 					this.func = new Function(...params, 'postfixStack', 't', functionBody(postfixToFunction(codeText)))
 						.bind(globalThis, ...values, this.postfixStack);
