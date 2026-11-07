@@ -893,7 +893,7 @@ globalThis.bytebeat = new class {
 		const currentNotation = ui.controlNotation?.value || new URLSearchParams(window.location.search).get('notation') || 'infix';
 		getUrlFromCode(code, this.mode, this.sampleRate, ui.controlNotation.value);
 		const url = new URL(window.location);
-		url.searchParams.set('notation', currentNotation(;
+		url.searchParams.set('notation', currentNotation);
 		window.history.replaceState({}, '', url);
 	}
 	favoriteErrorBox(error) {
