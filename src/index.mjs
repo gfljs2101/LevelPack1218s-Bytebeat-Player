@@ -890,13 +890,8 @@ globalThis.bytebeat = new class {
 	updateUrl() {
 		const code = editor.value;
 		ui.setCodeSize(code);
-		
-		// Capture existing search parameters (e.g. ?notation=postfix) before getUrlFromCode updates the URL
 		const searchParams = window.location.search;
-		
 		getUrlFromCode(code, this.mode, this.sampleRate);
-		
-		// Restore and preserve search parameters so notation mode is never wiped out
 		const url = new URL(window.location);
 		if(searchParams) {
 			const oldParams = new URLSearchParams(searchParams);
