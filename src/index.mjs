@@ -252,6 +252,8 @@ globalThis.bytebeat = new class {
 		this.sendData({ drawMode: scope.drawMode });
 		this.parseUrl();
 
+		this.setNotation(notation);
+		
 		window.addEventListener('pageshow', () => {
 			const currentParams = new URLSearchParams(window.location.search);
 			const currentNotation = currentParams.get('notation') || 'infix';
@@ -287,6 +289,23 @@ globalThis.bytebeat = new class {
 		}
 	}
 	setNotation(notation) {
+		const isPostfix = notation === 'postfix';
+		if(ui.controlPlaybackMode) {
+			const unsupportedModes = ['Funcbeat', 'RAW', 'Signed RAW', 'FloatRAW'];
+			let selectedUnsupported = false;
+			for(const option of ui.controlPlaybackMode.options) {
+				if(unsupportedModes.includes(option.value)) {
+					option.disabled = isPostfix;
+					if(isPostfix && option.selected) {
+						selectedUnsupported = true;
+					}
+				}
+			}
+			if(isPostfix && selectedUnsupported) {
+				ui.controlPlaybackMode.value = 'Bytebeat';
+				this.setPlaybackMode('Bytebeat');
+			}
+		}
 		const url = new URL(window.location);
 		url.searchParams.set('notation', notation);
 		window.history.replaceState({}, '', url);
