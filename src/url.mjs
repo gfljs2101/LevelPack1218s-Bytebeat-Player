@@ -6,8 +6,9 @@ export function getCodeFromUrl(hash) {
 		const dataArr = Uint8Array.from(atob(hash.substring(2)), el => el.charCodeAt());
 		try {
 			songData = {
-				mode: ['Bytebeat', 'Signed Bytebeat', 'Floatbeat', 'Funcbeat', 'RAW', 'Signed RAW', 'FloatRAW'][dataArr[0]],
+				mode: ['Bytebeat', 'Signed Bytebeat', 'Floatbeat', 'Funcbeat', 'RAW', 'Signed RAW', 'FloatRAW'][dataArr[0] & 0x7F],
 				sampleRate: new DataView(dataArr.buffer).getFloat32(1, 1),
+				notation: (dataArr[5] === 1 || (dataArr[0] & 128) !== 0) ? 'postfix' : 'infix',
 				code: inflateRaw(new Uint8Array(dataArr.buffer, 8), { to: 'string' })
 			};
 		} catch(err) {
@@ -22,8 +23,9 @@ export function getCodeFromUrl(hash) {
 				if(songData.formula) { // XXX: old format
 					songData.code = songData.formula;
 				}
+				songData.notation = songData.notation || 'infix';
 			} else { // XXX: old format
-				songData = { code: songData };
+				songData = { code: songData, notation: 'infix' };
 			}
 		} catch(err) {
 			console.error(`Couldn't load data from url: ${ err }`);
@@ -34,12 +36,13 @@ export function getCodeFromUrl(hash) {
 	return songData;
 }
 
-export function getUrlFromCode(code, mode, sampleRate) {
+export function getUrlFromCode(code, mode, sampleRate, notation = 'infix') {
 	const codeArr = deflateRaw(code);
-	// First byte is mode, next 7 bytes is sampleRate, then the code
+	// Byte 0 is mode, bytes 1-4 is sampleRate (Float32), byte 5 is notation mode (0=infix, 1=postfix), bytes 6-7 reserved, byte 8+ is code
 	const outputArr = new Uint8Array(8 + codeArr.length);
 	outputArr[0] = ['Bytebeat', 'Signed Bytebeat', 'Floatbeat', 'Funcbeat', 'RAW', 'Signed RAW', 'FloatRAW'].indexOf(mode);
 	outputArr.set(new Uint8Array(new Float32Array([sampleRate]).buffer), 1);
+	outputArr[5] = notation === 'postfix' ? 1 : 0;
 	outputArr.set(codeArr, 8);
 	// since we're dealing with Uint8Array I should use the non-map method I think - Chasyxx
 	let str = "";
