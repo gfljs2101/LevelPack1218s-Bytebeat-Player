@@ -890,10 +890,23 @@ globalThis.bytebeat = new class {
 	updateUrl() {
 		const code = editor.value;
 		ui.setCodeSize(code);
-		const currentNotation = ui.controlNotation?.value || new URLSearchParams(window.location.search).get('notation') || 'infix';
-		getUrlFromCode(code, this.mode, this.sampleRate, ui.controlNotation.value);
+		
+		// Capture existing search parameters (e.g. ?notation=postfix) before getUrlFromCode updates the URL
+		const searchParams = window.location.search;
+		
+		getUrlFromCode(code, this.mode, this.sampleRate);
+		
+		// Restore and preserve search parameters so notation mode is never wiped out
 		const url = new URL(window.location);
-		url.searchParams.set('notation', currentNotation);
+		if(searchParams) {
+			const oldParams = new URLSearchParams(searchParams);
+			for(const [key, value] of oldParams) {
+				url.searchParams.set(key, value);
+			}
+		} else {
+			const currentNotation = ui.controlNotation?.value || 'infix';
+			url.searchParams.set('notation', currentNotation);
+		}
 		window.history.replaceState({}, '', url);
 	}
 	favoriteErrorBox(error) {
